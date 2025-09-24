@@ -78,7 +78,6 @@ export default function DashboardPage() {
             <div className="p-4 border border-gray-200">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium">Discussions</h4>
-                <span>💬</span>
               </div>
               <p className="text-2xl font-bold">0</p>
               <p className="text-sm text-gray-600">Start your first discussion</p>
@@ -87,7 +86,6 @@ export default function DashboardPage() {
             <div className="p-4 border border-gray-200">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium">Branches</h4>
-                <span>🌳</span>
               </div>
               <p className="text-2xl font-bold">0</p>
               <p className="text-sm text-gray-600">Create your first branch</p>
@@ -96,7 +94,6 @@ export default function DashboardPage() {
             <div className="p-4 border border-gray-200">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="font-medium">Connections</h4>
-                <span>🤝</span>
               </div>
               <p className="text-2xl font-bold">0</p>
               <p className="text-sm text-gray-600">Connect with others</p>
