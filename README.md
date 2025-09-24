@@ -1,2 +1,2 @@
 # Branchera
-The platform for progress
+Where Progress Happens
