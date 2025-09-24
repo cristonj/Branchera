@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "Branchera - Where Progress Happens",
-  description: "Branchera is where progress happens. Transform your ideas into reality with our innovative platform.",
-  keywords: ["Branchera", "progress", "innovation", "platform", "productivity", "development"],
+  description: "Branchera is the social platform where clarity and logic beat distraction and misinformation. Our mission is to provide the best and most accssible social experience for critical discussion.",
+  keywords: ["Branchera", "social", "platform", "critical", "discussion", "clarity", "logic", "debate", "misinformation", "distraction"],
   authors: [{ name: "Branchera Team" }],
   creator: "Branchera",
   publisher: "Branchera",
@@ -23,11 +23,11 @@ export const metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://branchera.com'), // Update this with your actual domain
+  metadataBase: new URL('https://branchera.org'), // Update this with your actual domain
   openGraph: {
     title: "Branchera - Where Progress Happens",
-    description: "Branchera is where progress happens. Transform your ideas into reality with our innovative platform.",
-    url: 'https://branchera.com', // Update this with your actual domain
+    description: "Branchera is the social platform where clarity and logic beat distraction and misinformation. Our mission is to provide the best and most accssible social experience for critical discussion.",
+    url: 'https://branchera.org', // Update this with your actual domain
     siteName: 'Branchera',
     images: [
       {
@@ -44,7 +44,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: "Branchera - Where Progress Happens",
-    description: "Branchera is where progress happens. Transform your ideas into reality with our innovative platform.",
+    description: "Branchera is the social platform where clarity and logic beat distraction and misinformation. Our mission is to provide the best and most accssible social experience for critical discussion.",
     images: ['/og-image.svg'], // Twitter will use this image
     creator: '@branchera', // Update this with your actual Twitter handle
   },
