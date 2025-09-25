@@ -18,6 +18,7 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == resource.data.authorId;
       allow update: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.authorId;
     }
   }
 }
@@ -33,6 +34,12 @@ service firebase.storage {
   match /b/{bucket}/o {
     // Allow users to upload audio files to their own directory
     match /discussions/{userId}/{filename} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow users to upload reply audio files to their own directory
+    match /replies/{userId}/{filename} {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
@@ -62,7 +69,7 @@ service firebase.storage {
 
 ### Storage Rules:
 - **Read**: Any authenticated user can read audio files
-- **Write**: Users can only upload files to their own directory (`discussions/{userId}/`)
+- **Write**: Users can only upload files to their own directory (`discussions/{userId}/` and `replies/{userId}/`)
 
 These rules ensure security while allowing the app to function properly.
 

@@ -83,6 +83,11 @@ service firebase.storage {
       allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
+    
+    match /replies/{userId}/{filename} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
   }
 }
 ```

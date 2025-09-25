@@ -3,7 +3,7 @@
 import { useFirestore } from './useFirestore';
 
 export function useDatabase() {
-  const { addDocument, getDocuments, orderBy, limit } = useFirestore();
+  const { addDocument, getDocuments, getDocument, deleteDocument, updateDocument, orderBy, limit } = useFirestore();
 
   // Create a discussion with proper validation
   const createDiscussion = async (discussionData) => {
@@ -24,7 +24,10 @@ export function useDatabase() {
         authorName: discussionData.authorName || 'Anonymous',
         authorPhoto: discussionData.authorPhoto || null,
         likes: 0,
+        likedBy: [], // Track which users have liked this discussion
         plays: 0,
+        replies: [], // Array of reply objects
+        replyCount: 0,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         // Add metadata for better querying
@@ -78,6 +81,32 @@ export function useDatabase() {
     }
   };
 
+  // Delete a discussion (only by author)
+  const deleteDiscussion = async (discussionId, userId) => {
+    try {
+      console.log('Deleting discussion:', discussionId, 'by user:', userId);
+      
+      // First check if the user is the author
+      const discussion = await getDocument('discussions', discussionId);
+      
+      if (!discussion) {
+        throw new Error('Discussion not found');
+      }
+      
+      if (discussion.authorId !== userId) {
+        throw new Error('Only the author can delete this discussion');
+      }
+      
+      await deleteDocument('discussions', discussionId);
+      console.log('Discussion deleted successfully');
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting discussion:', error);
+      throw error;
+    }
+  };
+
   // Simple setup that just validates we can connect
   const setupDatabase = async () => {
     try {
@@ -102,9 +131,92 @@ export function useDatabase() {
     }
   };
 
+  // Add a reply to a discussion
+  const addReply = async (discussionId, replyData) => {
+    try {
+      console.log('Adding reply to discussion:', discussionId, 'with data:', replyData);
+      
+      // Validate required fields
+      if (!replyData.audioUrl || !replyData.authorId) {
+        throw new Error('Missing required fields: audioUrl or authorId');
+      }
+
+      // Get the current discussion
+      const discussion = await getDocument('discussions', discussionId);
+      if (!discussion) {
+        throw new Error('Discussion not found');
+      }
+
+      // Create the reply object
+      const reply = {
+        id: Date.now().toString(), // Simple ID for replies
+        audioUrl: replyData.audioUrl,
+        duration: replyData.duration || 0,
+        authorId: replyData.authorId,
+        authorName: replyData.authorName || 'Anonymous',
+        authorPhoto: replyData.authorPhoto || null,
+        createdAt: new Date().toISOString()
+      };
+
+      // Add reply to the discussion's replies array
+      const updatedReplies = [...(discussion.replies || []), reply];
+      
+      await updateDocument('discussions', discussionId, {
+        replies: updatedReplies,
+        replyCount: updatedReplies.length
+      });
+
+      console.log('Reply added successfully');
+      return reply;
+    } catch (error) {
+      console.error('Error adding reply:', error);
+      throw error;
+    }
+  };
+
+  // Delete a reply from a discussion
+  const deleteReply = async (discussionId, replyId, userId) => {
+    try {
+      console.log('Deleting reply:', replyId, 'from discussion:', discussionId, 'by user:', userId);
+      
+      // Get the current discussion
+      const discussion = await getDocument('discussions', discussionId);
+      if (!discussion) {
+        throw new Error('Discussion not found');
+      }
+
+      // Find the reply and check if user is the author
+      const reply = discussion.replies?.find(r => r.id === replyId);
+      if (!reply) {
+        throw new Error('Reply not found');
+      }
+
+      if (reply.authorId !== userId) {
+        throw new Error('Only the author can delete this reply');
+      }
+
+      // Remove reply from the array
+      const updatedReplies = discussion.replies.filter(r => r.id !== replyId);
+      
+      await updateDocument('discussions', discussionId, {
+        replies: updatedReplies,
+        replyCount: updatedReplies.length
+      });
+
+      console.log('Reply deleted successfully');
+      return true;
+    } catch (error) {
+      console.error('Error deleting reply:', error);
+      throw error;
+    }
+  };
+
   return {
     createDiscussion,
     getDiscussions,
+    deleteDiscussion,
+    addReply,
+    deleteReply,
     setupDatabase
   };
 }
