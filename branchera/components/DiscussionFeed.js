@@ -28,6 +28,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const [replyingToReply, setReplyingToReply] = useState(null); // Reply being replied to (for nested replies)
   const [selectedReplyForPoints, setSelectedReplyForPoints] = useState(null); // Reply context for AI points
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentSearchType, setCurrentSearchType] = useState('all');
   const [currentFilters, setCurrentFilters] = useState({});
   const [currentSort, setCurrentSort] = useState('newest');
   
@@ -576,8 +577,13 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
           discussions={discussions}
           onResults={setFilteredDiscussions}
           onSearchChange={setSearchQuery}
+          onSearchTypeChange={setCurrentSearchType}
           onFilterChange={setCurrentFilters}
           onSortChange={setCurrentSort}
+          initialSearchQuery={searchQuery}
+          initialSearchType={currentSearchType}
+          initialSortBy={currentSort}
+          initialFilters={currentFilters}
         />
         <div className="text-center py-12">
           <h3 className="text-lg font-medium text-gray-900 mb-2">No matching discussions found</h3>
@@ -608,8 +614,13 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         discussions={discussions}
         onResults={setFilteredDiscussions}
         onSearchChange={setSearchQuery}
+        onSearchTypeChange={setCurrentSearchType}
         onFilterChange={setCurrentFilters}
         onSortChange={setCurrentSort}
+        initialSearchQuery={searchQuery}
+        initialSearchType={currentSearchType}
+        initialSortBy={currentSort}
+        initialFilters={currentFilters}
       />
 
       {filteredDiscussions.map((discussion) => {

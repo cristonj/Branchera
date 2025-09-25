@@ -6,20 +6,25 @@ export default function SearchFilterSort({
   discussions, 
   onResults, 
   onSearchChange, 
+  onSearchTypeChange,
   onFilterChange, 
-  onSortChange 
-}) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchType, setSearchType] = useState('all');
-  const [sortBy, setSortBy] = useState('newest');
-  const [filters, setFilters] = useState({
+  onSortChange,
+  initialSearchQuery = '',
+  initialSearchType = 'all',
+  initialSortBy = 'newest',
+  initialFilters = {
     hasReplies: false,
     hasFactCheck: false,
     dateRange: 'all',
     author: '',
     minLikes: 0,
     minViews: 0
-  });
+  }
+}) {
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
+  const [searchType, setSearchType] = useState(initialSearchType);
+  const [sortBy, setSortBy] = useState(initialSortBy);
+  const [filters, setFilters] = useState(initialFilters);
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Search function that searches through discussions and replies
@@ -295,9 +300,10 @@ export default function SearchFilterSort({
 
     onResults?.(processed);
     onSearchChange?.(searchQuery);
+    onSearchTypeChange?.(searchType);
     onFilterChange?.(filters);
     onSortChange?.(sortBy);
-  }, [discussions, searchQuery, searchType, sortBy, filters, searchContent, filterDiscussions, sortDiscussions, onResults, onSearchChange, onFilterChange, onSortChange]);
+  }, [discussions, searchQuery, searchType, sortBy, filters, searchContent, filterDiscussions, sortDiscussions, onResults, onSearchChange, onSearchTypeChange, onFilterChange, onSortChange]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({
