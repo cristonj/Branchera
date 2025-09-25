@@ -619,23 +619,22 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         const isExpanded = expandedDiscussions.has(discussion.id);
         return (
           <div key={discussion.id} className="rounded-lg border border-black/20">
-            {/* Header Row - shows title and controls */}
-            <div className={`px-4 py-3 flex items-center justify-between ${isExpanded ? 'h-0' : ''}`}>
-              <button
+                              <button
                 onClick={() => toggleDiscussion(discussion.id)}
-                className="flex items-center gap-3 text-left flex-1 min-w-0"
+                className={`flex ${isExpanded ? '' : 'hidden'} w-full justify-end `}
                 title={isExpanded ? 'Collapse' : 'Expand'}
               >
-                <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-90 mt-4' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <svg className={`w-5 h-5 rotate-90 mr-4 mt-4`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-                {/* Hide title when expanded to avoid duplication */}
+              </button>
+            {/* Header Row - shows title and controls */}
+            <div className={`px-4 py-3 flex items-center justify-between ${isExpanded ? 'h-0' : ''}`}>
                 {!isExpanded && (
-                  <span className="font-semibold text-gray-900 truncate flex-1 min-w-0 mr-2">
+                  <span className="font-semibold text-gray-900 truncate flex-1 min-w-0 mr-4">
                     <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
                   </span>
                 )}
-              </button>
               {/* Hide action buttons when expanded - only show likes and replies count */}
               {!isExpanded && (
                 <div className="flex items-center gap-4">
@@ -658,16 +657,26 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                   </svg>
                   {discussion.likes || 0}
                 </button>
+
+                <button
+                onClick={() => toggleDiscussion(discussion.id)}
+                className="flex items-center gap-3 text-left flex-1 min-w-0"
+                title={isExpanded ? 'Collapse' : 'Expand'}
+              >
+                <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
                 </div>
               )}
             </div>
 
             {/* Expanded Content */}
             {isExpanded && (
-              <div className="px-4 pb-4">
+              <div className="px-4 pb-4 -mt-12">
                 {/* Title and author info */}
-                <div className="pt-3 pb-2">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3 ml-10 -mt-7">
+                <div className="pb-2">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 -mt-4 mr-12">
                     <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
                   </h3>
                   <div className="flex items-center gap-3">
@@ -675,6 +684,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                       <SearchHighlight text={discussion.authorName} searchQuery={searchQuery} /> · {formatDate(discussion.createdAt)}
                     </div>
                   </div>
+                  
                 </div>
 
                 {/* Content */}
