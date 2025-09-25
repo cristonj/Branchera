@@ -12,7 +12,8 @@ export default function TextReplyForm({
   onCancel, 
   selectedPoint = null, 
   replyType = 'general',
-  replyingToReply = null
+  replyingToReply = null,
+  selectedReplyForPoints = null
 }) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -108,24 +109,28 @@ export default function TextReplyForm({
   };
 
   const getReplyTypeLabel = (type) => {
-    switch (type) {
-      case 'agree': return 'Agreeing with';
-      case 'challenge': return 'Challenging';
-      case 'expand': return 'Expanding on';
-      case 'clarify': return 'Clarifying';
-      default: return 'Replying to';
-    }
+    // Always just say "Replying to" regardless of type
+    return 'Replying to';
   };
 
   return (
-    <div className="bg-white rounded border border-black/15 p-3">
+    <div className="bg-white rounded border border-black/20 p-3">
       {selectedPoint ? (
         <div className="mb-3">
           <div className="text-xs font-semibold text-gray-900 mb-1">
             {getReplyTypeIcon(replyType)} {getReplyTypeLabel(replyType)}
+            {selectedReplyForPoints && ` ${selectedReplyForPoints.authorName}'s point`}
           </div>
-          <div className="p-2 rounded border border-black/15 bg-white">
+          <div className="p-3 rounded border border-black/15 bg-white">
             <p className="text-xs text-gray-900">{selectedPoint.text}</p>
+            {selectedReplyForPoints && (
+              <div className="mt-2 pt-2 border-t border-black/10">
+                <div className="text-[10px] text-gray-600 mb-1">From reply:</div>
+                <p className="text-[10px] text-gray-700 italic truncate">
+                  &ldquo;{selectedReplyForPoints.content.slice(0, 100)}...&rdquo;
+                </p>
+              </div>
+            )}
           </div>
         </div>
       ) : replyingToReply ? (
@@ -133,7 +138,7 @@ export default function TextReplyForm({
           <div className="text-xs font-semibold text-gray-900 mb-1">
             💬 Replying to {replyingToReply.authorName}
           </div>
-          <div className="p-2 rounded border border-black/15 bg-white">
+          <div className="p-3 rounded border border-black/15 bg-white">
             <p className="text-xs text-gray-900">{replyingToReply.content}</p>
           </div>
         </div>
@@ -152,7 +157,7 @@ export default function TextReplyForm({
             disabled={isSubmitting}
             required
           />
-          <div className="text-[11px] text-gray-600 mt-1">
+          <div className="text-xs text-gray-600 mt-1">
             {content.length} characters
           </div>
         </div>

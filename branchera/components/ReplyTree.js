@@ -12,6 +12,7 @@ export default function ReplyTree({
   onReplyToReply, 
   onDeleteReply,
   onReplyView,
+  onPointClick,
   maxLevel = 3 
 }) {
   const { user } = useAuth();
@@ -132,7 +133,7 @@ export default function ReplyTree({
 
   const renderReplyContent = (reply, level, hasChildren, isExpanded, canReply) => {
     return (
-      <div className={`rounded border border-black/15 bg-white p-3 pl-3 border-l-2 ${getReplyTypeStyle(reply.type)}`}>
+      <div className={`rounded border border-black/20 bg-white p-3 pl-3 border-l-2 ${getReplyTypeStyle(reply.type)}`}>
         <div className="flex items-center gap-3 mb-2">
           <span className="text-base">{getReplyTypeIcon(reply.type)}</span>
           {reply.authorPhoto ? (
@@ -212,13 +213,31 @@ export default function ReplyTree({
         )}
         
         {Array.isArray(reply.aiPoints) && reply.aiPoints.length > 0 && (
-          <div className="mt-2 border border-black/15 rounded p-2 bg-white">
-            <div className="text-[11px] font-semibold text-gray-900 mb-1">Reply points</div>
+          <div className="mt-2 border border-black/15 rounded p-3 bg-white">
+            <div className="text-xs font-semibold text-gray-900 mb-1">Reply points</div>
             <ul className="space-y-1">
               {reply.aiPoints.map((p) => (
-                <li key={p.id} className="flex items-start gap-2">
-                  <div className="w-1 h-1 bg-black rounded-full mt-2"></div>
-                  <div className="text-xs text-gray-900">{p.text}</div>
+                <li key={p.id}>
+                  <button
+                    onClick={() => onPointClick && onPointClick(reply, p)}
+                    className="w-full flex items-start gap-2 p-2 text-left rounded hover:bg-gray-50 border border-transparent hover:border-black/20"
+                    disabled={!user || !onPointClick}
+                  >
+                    <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs text-gray-900">{p.text}</div>
+                      {p.type && (
+                        <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
+                          {p.type}
+                        </span>
+                      )}
+                      {user && onPointClick && (
+                        <div className="text-[10px] text-gray-600 mt-1">
+                          Click to reply to this point
+                        </div>
+                      )}
+                    </div>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -238,11 +257,11 @@ export default function ReplyTree({
         return (
           <div key={pointId} className="space-y-2">
             {point && (
-              <div className="border border-black/20 rounded p-2 bg-white">
+              <div className="border border-black/20 rounded p-3 bg-white">
                 <div className="flex items-start gap-2">
                   <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
                   <div>
-                    <div className="text-sm font-semibold text-gray-900">“{point.text}”</div>
+                    <div className="text-sm font-semibold text-gray-900">&ldquo;{point.text}&rdquo;</div>
                     {point.type && (
                       <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
                         {point.type}
