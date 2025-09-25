@@ -105,23 +105,10 @@ export default function ReplyTree({
     const canReply = level < maxLevel && user;
 
     return (
-      <div key={reply.id} className={`${level > 0 ? 'ml-8 mt-2' : 'mt-3'}`}>
-        {level > 0 && (
-          <div className="flex items-start">
-            <div className="flex-shrink-0 w-6 h-6 mr-2">
-              <div className="w-3 h-3 border-l border-b border-black rounded-bl-sm"></div>
-            </div>
-            <div className="flex-1">
-              {renderReplyContent(reply, level, hasChildren, isExpanded, canReply)}
-            </div>
-          </div>
-        )}
-
-        {level === 0 && renderReplyContent(reply, level, hasChildren, isExpanded, canReply)}
-
+      <div key={reply.id} className={`${level > 0 ? 'ml-4 mt-2' : 'mt-3'}`}>
+        {renderReplyContent(reply, level, hasChildren, isExpanded, canReply)}
         {hasChildren && isExpanded && (
-          <div className="relative">
-            <div className="absolute left-3 top-0 bottom-0 w-px bg-black/60"></div>
+          <div className="ml-4 mt-2">
             {reply.children.map(childReply => renderReply(childReply, level + 1))}
           </div>
         )}
@@ -131,7 +118,7 @@ export default function ReplyTree({
 
   const renderReplyContent = (reply, level, hasChildren, isExpanded, canReply) => {
     return (
-      <div className={`rounded p-3 border-l-2 ${getReplyTypeStyle(reply.type)} ${level === 0 ? '' : 'border border-black/20'}`}>
+      <div className={`rounded border border-black/15 bg-white p-3 pl-3 border-l-2 ${getReplyTypeStyle(reply.type)}`}>
         <div className="flex items-center gap-3 mb-2">
           <span className="text-base">{getReplyTypeIcon(reply.type)}</span>
           {reply.authorPhoto ? (
@@ -192,9 +179,8 @@ export default function ReplyTree({
         <div>
           <p className="text-gray-900 text-sm whitespace-pre-wrap leading-relaxed">{reply.content}</p>
         </div>
-        {/* If reply has AI points, show a compact list to anchor sub-replies */}
         {Array.isArray(reply.aiPoints) && reply.aiPoints.length > 0 && (
-          <div className="mt-2 border border-black/20 rounded p-2">
+          <div className="mt-2 border border-black/15 rounded p-2 bg-white">
             <div className="text-[11px] font-semibold text-gray-900 mb-1">Reply points</div>
             <ul className="space-y-1">
               {reply.aiPoints.map((p) => (
