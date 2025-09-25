@@ -368,7 +368,7 @@ export default function DiscussionFeed({ newDiscussion }) {
         const isExpanded = expandedDiscussions.has(discussion.id);
         return (
           <div key={discussion.id} className="bg-white rounded-lg border border-black/20">
-            {/* Collapsed Header Row */}
+            {/* Header Row */}
             <div className="px-4 py-3 flex items-center justify-between">
               <button
                 onClick={() => toggleDiscussion(discussion.id)}
@@ -378,77 +378,130 @@ export default function DiscussionFeed({ newDiscussion }) {
                 <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-                <span className="font-semibold text-gray-900 truncate flex-1 min-w-0">{discussion.title}</span>
+                <span className={`font-semibold text-gray-900 flex-1 min-w-0 ${isExpanded ? '' : 'truncate'}`}>
+                  {discussion.title}
+                </span>
               </button>
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={() => handleReplyClick(discussion)}
-                  className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
-                  disabled={!user}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                  </svg>
-                  Reply
-                </button>
-                <button
-                  onClick={() => toggleReplies(discussion.id)}
-                  className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                  {discussion.replyCount || 0}
-                  <svg className={`w-3 h-3 transition-transform ${expandedReplies.has(discussion.id) ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => handleLike(discussion.id)}
-                  className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
-                  disabled={!user}
-                >
-                  <svg className="w-4 h-4" fill={user && (discussion.likedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                  {discussion.likes || 0}
-                </button>
-                {user && discussion.authorId === user.uid && (
+              {!isExpanded && (
+                <div className="flex items-center gap-4">
                   <button
-                    onClick={() => handleDelete(discussion.id)}
-                    className="p-1 text-gray-800 hover:text-black"
-                    title="Delete discussion"
+                    onClick={() => handleReplyClick(discussion)}
+                    className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
+                    disabled={!user}
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                    </svg>
+                    Reply
+                  </button>
+                  <button
+                    onClick={() => toggleReplies(discussion.id)}
+                    className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    {discussion.replyCount || 0}
+                    <svg className={`w-3 h-3 transition-transform ${expandedReplies.has(discussion.id) ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                )}
-              </div>
+                  <button
+                    onClick={() => handleLike(discussion.id)}
+                    className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
+                    disabled={!user}
+                  >
+                    <svg className="w-4 h-4" fill={user && (discussion.likedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    {discussion.likes || 0}
+                  </button>
+                  {user && discussion.authorId === user.uid && (
+                    <button
+                      onClick={() => handleDelete(discussion.id)}
+                      className="p-1 text-gray-800 hover:text-black"
+                      title="Delete discussion"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Expanded Content */}
             {isExpanded && (
               <div className="px-4 pb-4 border-t border-black/10">
                 {/* Author and meta */}
-                <div className="flex items-center gap-3 py-3">
-                  {discussion.authorPhoto ? (
-                    <Image
-                      src={discussion.authorPhoto}
-                      alt={discussion.authorName}
-                      width={28}
-                      height={28}
-                      className="w-7 h-7 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-7 h-7 rounded-full border border-black/40 flex items-center justify-center">
-                      <span className="text-xs text-gray-900 font-medium">
-                        {discussion.authorName?.charAt(0)?.toUpperCase() || '?'}
-                      </span>
+                <div className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-3">
+                    {discussion.authorPhoto ? (
+                      <Image
+                        src={discussion.authorPhoto}
+                        alt={discussion.authorName}
+                        width={28}
+                        height={28}
+                        className="w-7 h-7 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-7 h-7 rounded-full border border-black/40 flex items-center justify-center">
+                        <span className="text-xs text-gray-900 font-medium">
+                          {discussion.authorName?.charAt(0)?.toUpperCase() || '?'}
+                        </span>
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-600">
+                      {discussion.authorName} · {formatDate(discussion.createdAt)}
                     </div>
-                  )}
-                  <div className="text-xs text-gray-600">
-                    {discussion.authorName} · {formatDate(discussion.createdAt)}
+                  </div>
+                  
+                  {/* Controls in expanded view */}
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => handleReplyClick(discussion)}
+                      className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
+                      disabled={!user}
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                      </svg>
+                      Reply
+                    </button>
+                    <button
+                      onClick={() => toggleReplies(discussion.id)}
+                      className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      {discussion.replyCount || 0}
+                      <svg className={`w-3 h-3 transition-transform ${expandedReplies.has(discussion.id) ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => handleLike(discussion.id)}
+                      className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
+                      disabled={!user}
+                    >
+                      <svg className="w-4 h-4" fill={user && (discussion.likedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
+                      {discussion.likes || 0}
+                    </button>
+                    {user && discussion.authorId === user.uid && (
+                      <button
+                        onClick={() => handleDelete(discussion.id)}
+                        className="p-1 text-gray-800 hover:text-black"
+                        title="Delete discussion"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </div>
 

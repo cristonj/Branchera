@@ -12,12 +12,19 @@ export default function TextDiscussionForm({ onDiscussionCreated }) {
   
   const { user } = useAuth();
   const { createDiscussion, updateAIPoints } = useDatabase();
+  
+  const TITLE_CHAR_LIMIT = 100;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!title.trim() || !content.trim()) {
       alert('Please provide both a title and content for your discussion.');
+      return;
+    }
+    
+    if (title.length > TITLE_CHAR_LIMIT) {
+      alert(`Title must be ${TITLE_CHAR_LIMIT} characters or less.`);
       return;
     }
 
@@ -95,12 +102,28 @@ export default function TextDiscussionForm({ onDiscussionCreated }) {
             type="text"
             id="title"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value.length <= TITLE_CHAR_LIMIT) {
+                setTitle(e.target.value);
+              }
+            }}
             placeholder="What would you like to discuss?"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              title.length > TITLE_CHAR_LIMIT * 0.9 ? 'border-orange-300' : 'border-gray-300'
+            }`}
             disabled={isSubmitting}
             required
+            maxLength={TITLE_CHAR_LIMIT}
           />
+          <div className={`text-sm mt-1 ${
+            title.length > TITLE_CHAR_LIMIT * 0.9 
+              ? title.length >= TITLE_CHAR_LIMIT 
+                ? 'text-red-500' 
+                : 'text-orange-500'
+              : 'text-gray-500'
+          }`}>
+            {title.length}/{TITLE_CHAR_LIMIT} characters
+          </div>
         </div>
 
         {/* Content Textarea */}
