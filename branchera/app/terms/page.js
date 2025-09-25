@@ -21,7 +21,7 @@ export default function TermsOfService() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Acceptance of Terms</h2>
               <p className="text-gray-700 mb-4">
-                By accessing and using Branchera ("the Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+                By accessing and using Branchera (&quot;the Service&quot;), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
               </p>
             </section>
 
@@ -42,7 +42,7 @@ export default function TermsOfService() {
                 <li>Impersonate any person or entity or falsely state or otherwise misrepresent your affiliation with a person or entity</li>
                 <li>Post content that infringes on the intellectual property rights of others</li>
                 <li>Engage in spamming or other unsolicited advertising</li>
-                <li>Attempt to gain unauthorized access to other users' accounts or the Service's systems</li>
+                <li>Attempt to gain unauthorized access to other users&apos; accounts or the Service&apos;s systems</li>
               </ul>
             </section>
 
@@ -73,7 +73,7 @@ export default function TermsOfService() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Disclaimer</h2>
               <p className="text-gray-700 mb-4">
-                The information on this Service is provided on an "as is" basis. To the fullest extent permitted by law, Branchera excludes all representations, warranties, conditions and terms whether express or implied.
+                The information on this Service is provided on an &quot;as is&quot; basis. To the fullest extent permitted by law, Branchera excludes all representations, warranties, conditions and terms whether express or implied.
               </p>
             </section>
 

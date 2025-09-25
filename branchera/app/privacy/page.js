@@ -110,12 +110,12 @@ export default function PrivacyPolicy() {
                 Our Service may contain links to third-party websites or services. We are not responsible for the privacy practices of these third parties. We encourage you to read their privacy policies.
               </p>
               <p className="text-gray-700 mb-4">
-                We use Google Authentication for sign-in services. Google's privacy policy applies to the information they collect through their services.
+                We use Google Authentication for sign-in services. Google&apos;s privacy policy applies to the information they collect through their services.
               </p>
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Children's Privacy</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Children&apos;s Privacy</h2>
               <p className="text-gray-700 mb-4">
                 Our Service is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If we become aware that a child under 13 has provided us with personal information, we will delete such information.
               </p>
@@ -131,7 +131,7 @@ export default function PrivacyPolicy() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Changes to This Privacy Policy</h2>
               <p className="text-gray-700 mb-4">
-                We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date.
+                We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the &quot;Last updated&quot; date.
               </p>
             </section>
 
