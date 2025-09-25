@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import TextReplyForm from './TextReplyForm';
 import AIPointSelectionModal from './AIPointSelectionModal';
 import ReplyTree from './ReplyTree';
+import FactCheckResults from './FactCheckResults';
 import { AIService } from '@/lib/aiService';
 
 export default function DiscussionFeed({ newDiscussion }) {
@@ -489,6 +490,14 @@ export default function DiscussionFeed({ newDiscussion }) {
                     {discussion.content}
                   </p>
                 </div>
+
+                {/* Fact Check Results */}
+                {discussion.factCheckResults && (
+                  <FactCheckResults 
+                    factCheckResults={discussion.factCheckResults} 
+                    isLoading={false} 
+                  />
+                )}
 
                 {/* AI points (monochrome) */}
                 {discussion.aiPoints && discussion.aiPoints.length > 0 && (

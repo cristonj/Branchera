@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDatabase } from '@/hooks/useDatabase';
+import { AIService } from '@/lib/aiService';
+import FactCheckResults from './FactCheckResults';
 
 export default function TextReplyForm({ 
   discussionId, 
@@ -14,9 +16,11 @@ export default function TextReplyForm({
 }) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFactChecking, setIsFactChecking] = useState(false);
+  const [factCheckResults, setFactCheckResults] = useState(null);
   
   const { user } = useAuth();
-  const { addReply } = useDatabase();
+  const { addReply, updateReplyFactCheckResults } = useDatabase();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,8 +50,30 @@ export default function TextReplyForm({
       const createdReply = await addReply(discussionId, replyData);
       console.log('Reply added successfully:', createdReply);
       
+      // Fact check the reply content
+      setIsFactChecking(true);
+      try {
+        console.log('Fact checking reply content...');
+        const factCheck = await AIService.factCheckContent(replyData.content, 'Reply');
+        
+        // Update the reply with fact check results
+        await updateReplyFactCheckResults(discussionId, createdReply.id, factCheck);
+        console.log('Reply fact check results saved:', factCheck);
+        
+        // Update the created reply object with fact check results
+        createdReply.factCheckResults = factCheck;
+        createdReply.factCheckGenerated = true;
+        setFactCheckResults(factCheck);
+      } catch (factCheckError) {
+        console.error('Error fact checking reply:', factCheckError);
+        // Don't fail the reply creation if fact checking fails
+      } finally {
+        setIsFactChecking(false);
+      }
+      
       // Reset form
       setContent('');
+      setFactCheckResults(null);
       
       // Notify parent component
       if (onReplyAdded) {
@@ -147,6 +173,12 @@ export default function TextReplyForm({
           </button>
         </div>
       </form>
+
+      {/* Fact Check Results */}
+      <FactCheckResults 
+        factCheckResults={factCheckResults} 
+        isLoading={isFactChecking} 
+      />
     </div>
   );
 }

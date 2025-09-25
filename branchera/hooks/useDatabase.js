@@ -30,6 +30,8 @@ export function useDatabase() {
         viewedBy: [], // Track which users have viewed this discussion
         aiPoints: [], // AI-generated points for anchored replies
         aiPointsGenerated: false, // Track if AI points have been generated
+        factCheckResults: null, // AI fact check results
+        factCheckGenerated: false, // Track if fact checking has been performed
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         // Add metadata for better querying
@@ -162,6 +164,8 @@ export function useDatabase() {
         level: replyData.level || 0, // Nesting level (0 = top level, 1 = reply to reply, etc.)
         views: 0, // Track how many times this reply has been viewed (expanded)
         viewedBy: [], // Track which users have viewed this reply
+        factCheckResults: null, // AI fact check results for this reply
+        factCheckGenerated: false, // Track if fact checking has been performed for this reply
         createdAt: new Date().toISOString()
       };
 
@@ -350,6 +354,52 @@ export function useDatabase() {
     }
   };
 
+  // Update fact check results for a discussion
+  const updateFactCheckResults = async (discussionId, factCheckResults) => {
+    try {
+      console.log('Updating fact check results for discussion:', discussionId);
+      
+      await updateDocument('discussions', discussionId, {
+        factCheckResults: factCheckResults,
+        factCheckGenerated: true
+      });
+
+      console.log('Fact check results updated successfully');
+      return true;
+    } catch (error) {
+      console.error('Error updating fact check results:', error);
+      throw error;
+    }
+  };
+
+  // Update fact check results for a specific reply within a discussion
+  const updateReplyFactCheckResults = async (discussionId, replyId, factCheckResults) => {
+    try {
+      console.log('Updating fact check results for reply:', replyId, 'in discussion:', discussionId);
+
+      const discussion = await getDocument('discussions', discussionId);
+      if (!discussion) {
+        throw new Error('Discussion not found');
+      }
+
+      const updatedReplies = (discussion.replies || []).map((reply) =>
+        reply.id === replyId
+          ? { ...reply, factCheckResults: factCheckResults, factCheckGenerated: true }
+          : reply
+      );
+
+      await updateDocument('discussions', discussionId, {
+        replies: updatedReplies
+      });
+
+      console.log('Reply fact check results updated successfully');
+      return true;
+    } catch (error) {
+      console.error('Error updating reply fact check results:', error);
+      throw error;
+    }
+  };
+
   return {
     createDiscussion,
     getDiscussions,
@@ -361,6 +411,8 @@ export function useDatabase() {
     setupDatabase,
     updateReplyAIPoints,
     incrementDiscussionView,
-    incrementReplyView
+    incrementReplyView,
+    updateFactCheckResults,
+    updateReplyFactCheckResults
   };
 }
