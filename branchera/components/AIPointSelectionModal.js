@@ -7,7 +7,8 @@ export default function AIPointSelectionModal({
   onClose, 
   aiPoints, 
   onPointSelected,
-  discussionTitle 
+  discussionTitle,
+  contextLabel
 }) {
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [selectedType, setSelectedType] = useState('agree');
@@ -54,7 +55,13 @@ export default function AIPointSelectionModal({
             </button>
           </div>
           <p className="text-sm text-gray-600 mt-2">
-            Select a key point from &ldquo;{discussionTitle}&rdquo; to respond to:
+            {contextLabel ? (
+              <>
+                Select a key point from &ldquo;{contextLabel}&rdquo; to respond to:
+              </>
+            ) : (
+              <>Select a key point from &ldquo;{discussionTitle}&rdquo; to respond to:</>
+            )}
           </p>
         </div>
 
