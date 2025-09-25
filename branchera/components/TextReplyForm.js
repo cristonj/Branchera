@@ -98,15 +98,6 @@ export default function TextReplyForm({
     }
   };
 
-  const getReplyTypeIcon = (type) => {
-    switch (type) {
-      case 'agree': return '👍';
-      case 'challenge': return '🤔';
-      case 'expand': return '💡';
-      case 'clarify': return '❓';
-      default: return '💬';
-    }
-  };
 
   const getReplyTypeLabel = (type) => {
     // Always just say "Replying to" regardless of type
@@ -118,7 +109,7 @@ export default function TextReplyForm({
       {selectedPoint ? (
         <div className="mb-3">
           <div className="text-xs font-semibold text-gray-900 mb-1">
-            {getReplyTypeIcon(replyType)} {getReplyTypeLabel(replyType)}
+            {getReplyTypeLabel(replyType)}
             {selectedReplyForPoints && ` ${selectedReplyForPoints.authorName}'s point`}
           </div>
           <div className="p-3 rounded-lg border border-black/15 bg-white">
@@ -136,7 +127,7 @@ export default function TextReplyForm({
       ) : replyingToReply ? (
         <div className="mb-3">
           <div className="text-xs font-semibold text-gray-900 mb-1">
-            💬 Replying to {replyingToReply.authorName}
+            Replying to {replyingToReply.authorName}
           </div>
           <div className="p-3 rounded-lg border border-black/15 bg-white">
             <p className="text-xs text-gray-900">{replyingToReply.content}</p>

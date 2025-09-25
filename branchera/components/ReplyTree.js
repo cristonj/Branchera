@@ -58,17 +58,7 @@ export default function ReplyTree({
     }
   };
 
-  const getReplyTypeStyle = () => 'border-l-black bg-white';
-
-  const getReplyTypeIcon = (type) => {
-    switch (type) {
-      case 'agree': return '👍';
-      case 'challenge': return '🤔';
-      case 'expand': return '💡';
-      case 'clarify': return '❓';
-      default: return '💬';
-    }
-  };
+  const getReplyTypeStyle = () => 'bg-white';
 
   // Build reply tree structure
   const buildReplyTree = (replies) => {
@@ -133,9 +123,8 @@ export default function ReplyTree({
 
   const renderReplyContent = (reply, level, hasChildren, isExpanded, canReply) => {
     return (
-      <div className={`rounded-lg border border-black/20 bg-white p-3 pl-3 border-l-2 ${getReplyTypeStyle(reply.type)}`}>
+      <div className={`rounded-lg border border-black/20 bg-white p-3 ${getReplyTypeStyle(reply.type)}`}>
         <div className="flex items-center gap-3 mb-2">
-          <span className="text-base">{getReplyTypeIcon(reply.type)}</span>
           {reply.authorPhoto ? (
             <Image
               src={reply.authorPhoto}
