@@ -57,7 +57,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Voice-First Discussions</h3>
               <p className="text-gray-600">
-                Share your thoughts through 30-second audio clips. Express nuance and emotion that text can't capture.
+                Share your thoughts through 30-second audio clips. Express nuance and emotion that text can&apos;t capture.
               </p>
             </div>
 
