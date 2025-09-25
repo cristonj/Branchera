@@ -100,7 +100,7 @@ export default function DiscussionFeed({ newDiscussion }) {
     }
   };
 
-  // Generate fact-check results for a discussion
+  // Generate fact-check results for a discussion based on its AI points
   const generateFactCheckForDiscussion = async (discussion) => {
     try {
       if (discussion.factCheckGenerated || discussion.factCheckResults) {
@@ -108,27 +108,50 @@ export default function DiscussionFeed({ newDiscussion }) {
       }
 
       console.log('Generating fact-check results for discussion:', discussion.id);
-      const factCheckResults = await AIService.factCheckContent(discussion.content, discussion.title);
       
-      // Update discussion in database
-      await updateFactCheckResults(discussion.id, factCheckResults);
-      
-      // Update local state
-      setDiscussions(prev =>
-        prev.map(d =>
-          d.id === discussion.id 
-            ? { ...d, factCheckResults, factCheckGenerated: true }
-            : d
-        )
-      );
-      
-      console.log('Fact-check results generated successfully for discussion:', discussion.id);
+      // If discussion has AI points, use them for fact checking
+      if (discussion.aiPoints && discussion.aiPoints.length > 0) {
+        console.log('Using AI points for fact checking discussion:', discussion.id);
+        const factCheckResults = await AIService.factCheckPoints(discussion.aiPoints, discussion.title);
+        
+        // Update discussion in database
+        await updateFactCheckResults(discussion.id, factCheckResults);
+        
+        // Update local state
+        setDiscussions(prev =>
+          prev.map(d =>
+            d.id === discussion.id 
+              ? { ...d, factCheckResults, factCheckGenerated: true }
+              : d
+          )
+        );
+        
+        console.log('Fact-check results generated successfully for discussion using points:', discussion.id);
+      } else {
+        // Fallback to content-based fact checking if no points available
+        console.log('No AI points available, falling back to content-based fact checking for discussion:', discussion.id);
+        const factCheckResults = await AIService.factCheckContent(discussion.content, discussion.title);
+        
+        // Update discussion in database
+        await updateFactCheckResults(discussion.id, factCheckResults);
+        
+        // Update local state
+        setDiscussions(prev =>
+          prev.map(d =>
+            d.id === discussion.id 
+              ? { ...d, factCheckResults, factCheckGenerated: true }
+              : d
+          )
+        );
+        
+        console.log('Fact-check results generated successfully for discussion using content fallback:', discussion.id);
+      }
     } catch (error) {
       console.error('Error generating fact-check results for discussion:', discussion.id, error);
     }
   };
 
-  // Generate fact-check results for replies that don't have them
+  // Generate fact-check results for replies that don't have them based on points
   const generateFactCheckForReplies = async (discussionId, replies) => {
     try {
       const repliesToUpdate = replies.filter(reply => 
@@ -142,12 +165,29 @@ export default function DiscussionFeed({ newDiscussion }) {
       // Process replies in parallel
       const factCheckPromises = repliesToUpdate.map(async (reply) => {
         try {
-          const factCheckResults = await AIService.factCheckContent(reply.content, 'Reply');
+          // First generate points for the reply content
+          console.log('Generating points for reply:', reply.id);
+          const replyPoints = await AIService.generateReplyPoints(reply.content, '');
+          
+          // Then fact check based on those points
+          console.log('Fact checking reply based on points:', reply.id);
+          const factCheckResults = await AIService.factCheckPoints(replyPoints, 'Reply');
+          
           await updateReplyFactCheckResults(discussionId, reply.id, factCheckResults);
           return { replyId: reply.id, factCheckResults };
         } catch (error) {
           console.error('Error generating fact-check for reply:', reply.id, error);
-          return { replyId: reply.id, error };
+          
+          // Fallback to content-based fact checking if points generation fails
+          try {
+            console.log('Falling back to content-based fact checking for reply:', reply.id);
+            const factCheckResults = await AIService.factCheckContent(reply.content, 'Reply');
+            await updateReplyFactCheckResults(discussionId, reply.id, factCheckResults);
+            return { replyId: reply.id, factCheckResults };
+          } catch (fallbackError) {
+            console.error('Error with fallback fact-check for reply:', reply.id, fallbackError);
+            return { replyId: reply.id, error: fallbackError };
+          }
         }
       });
 
@@ -555,7 +595,7 @@ export default function DiscussionFeed({ newDiscussion }) {
 
                 {/* AI points (collapsible and clickable) */}
                 {discussion.aiPoints && discussion.aiPoints.length > 0 && (
-                  <div className="mb-2 rounded border border-black/20">
+                  <div className="mt-2 mb-2 rounded border border-black/20">
                     <button
                       onClick={() => toggleAIPoints(discussion.id)}
                       className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-50"
@@ -564,7 +604,7 @@ export default function DiscussionFeed({ newDiscussion }) {
                         <svg className={`w-4 h-4 transition-transform ${expandedAIPoints.has(discussion.id) ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                        <span className="text-xs font-semibold text-gray-900">Key Discussion Points</span>
+                        <span className="text-sm font-semibold text-gray-900">Key Discussion Points</span>
                       </div>
                       <div className="text-xs text-gray-600">
                         {discussion.aiPoints.length} point{discussion.aiPoints.length !== 1 ? 's' : ''}
@@ -573,7 +613,7 @@ export default function DiscussionFeed({ newDiscussion }) {
 
                     {expandedAIPoints.has(discussion.id) && (
                       <div className="px-3 pb-3 border-t border-black/10">
-                        <div className="space-y-2">
+                        <div className="mt-2 space-y-2">
                           {discussion.aiPoints.map((point) => (
                             <button
                               key={point.id}

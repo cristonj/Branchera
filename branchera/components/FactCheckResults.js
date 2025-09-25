@@ -86,9 +86,6 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
           <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <svg className="w-4 h-4 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
           <span className="text-sm font-semibold text-gray-900">Fact Check Results</span>
         </div>
         <div className="text-xs text-gray-600">
@@ -99,7 +96,7 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
       {isExpanded && (
         <div className="px-3 pb-3 border-t border-black/10">
 
-      <div className="space-y-2">
+      <div className="mt-2 space-y-2">
         {factCheckResults.claims.map((claim) => {
           const isExpanded = expandedClaims.has(claim.id);
           return (
@@ -115,6 +112,12 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
                       {getStatusLabel(claim.status)}
                     </span>
                   </div>
+                  
+                  {claim.originalPoint && (
+                    <div className="mt-1 p-1.5 bg-gray-100 rounded text-[10px] text-gray-600">
+                      <span className="font-medium">From point:</span> {claim.originalPoint}
+                    </div>
+                  )}
                   
                   {claim.explanation && (
                     <p className="text-[11px] text-gray-700 mt-1">
