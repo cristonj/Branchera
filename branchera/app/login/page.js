@@ -64,7 +64,24 @@ export default function LoginPage() {
 
         <div className="mt-8 text-center">
           <p className="text-xs text-gray-500">
-            By signing in, you agree to our Terms of Service and Privacy Policy
+            By signing in, you agree to our{' '}
+            <a 
+              href="/terms" 
+              className="text-blue-600 hover:text-blue-800 underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Terms of Service
+            </a>
+            {' '}and{' '}
+            <a 
+              href="/privacy" 
+              className="text-blue-600 hover:text-blue-800 underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Privacy Policy
+            </a>
           </p>
         </div>
       </div>
