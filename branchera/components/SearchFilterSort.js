@@ -333,7 +333,7 @@ export default function SearchFilterSort({
     <div className="mb-6 border border-black/20 rounded-lg bg-white">
       {/* Search Bar */}
       <div className="p-4 border-b border-black/10">
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-2">
           <div className="flex-1 relative">
             <input
               key="search-input"
@@ -354,29 +354,31 @@ export default function SearchFilterSort({
               </button>
             )}
           </div>
-          <select
-            value={searchType}
-            onChange={(e) => setSearchType(e.target.value)}
-            className="px-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-          >
-            <option value="all">All</option>
-            <option value="title">Titles</option>
-            <option value="content">Content</option>
-            <option value="factcheck">Fact Checks</option>
-            <option value="replies">Replies</option>
-          </select>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className={`px-4 py-2 border border-black/20 rounded-lg hover:bg-gray-50 flex items-center gap-2 ${hasActiveFilters ? 'bg-black text-white' : ''}`}
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            Filters
-            <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+          <div className="flex gap-2">
+            <select
+              value={searchType}
+              onChange={(e) => setSearchType(e.target.value)}
+              className="flex-1 sm:flex-initial px-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+            >
+              <option value="all">All</option>
+              <option value="title">Titles</option>
+              <option value="content">Content</option>
+              <option value="factcheck">Fact Checks</option>
+              <option value="replies">Replies</option>
+            </select>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className={`flex-1 sm:flex-initial px-4 py-2 border border-black/20 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2 ${hasActiveFilters ? 'bg-black text-white' : ''}`}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              Filters
+              <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
