@@ -390,7 +390,7 @@ export default function DiscussionFeed({ newDiscussion }) {
         const isExpanded = expandedDiscussions.has(discussion.id);
         return (
           <div key={discussion.id} className="bg-white rounded-lg border border-black/20">
-            {/* Collapsed Header Row */}
+            {/* Header Row - shows title and controls */}
             <div className="px-4 py-3 flex items-center justify-between">
               <button
                 onClick={() => toggleDiscussion(discussion.id)}
@@ -402,7 +402,9 @@ export default function DiscussionFeed({ newDiscussion }) {
                 </svg>
                 <span className="font-semibold text-gray-900 truncate flex-1 min-w-0">{discussion.title}</span>
               </button>
-              <div className="flex items-center gap-4">
+              {/* Hide action buttons when expanded */}
+              {!isExpanded && (
+                <div className="flex items-center gap-4">
                 <button
                   onClick={() => handleReplyClick(discussion)}
                   className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
@@ -453,7 +455,8 @@ export default function DiscussionFeed({ newDiscussion }) {
                     </svg>
                   </button>
                 )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Expanded Content */}

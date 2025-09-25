@@ -20,6 +20,11 @@ export function AuthProvider({ children }) {
   const router = useRouter();
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser({
@@ -38,6 +43,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signInWithGoogle = async () => {
+    if (!auth) {
+      throw new Error('Firebase auth not initialized');
+    }
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
@@ -50,6 +58,9 @@ export function AuthProvider({ children }) {
   };
 
   const logout = async () => {
+    if (!auth) {
+      return;
+    }
     try {
       await signOut(auth);
       router.push('/login');

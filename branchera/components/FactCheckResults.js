@@ -99,7 +99,7 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-medium text-gray-900 truncate pr-2">
-                      "{claim.text}"
+                      &ldquo;{claim.text}&rdquo;
                     </p>
                     <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 bg-white rounded">
                       {getStatusLabel(claim.status)}
@@ -126,7 +126,7 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
               {isExpanded && claim.webSearchResults && (
                 <div className="mt-2 pt-2 border-t border-gray-300">
                   <div className="text-[11px] text-gray-600 mb-2">
-                    Search results for: "{claim.webSearchResults.searchTerm}"
+                    Search results for: &ldquo;{claim.webSearchResults.searchTerm}&rdquo;
                   </div>
                   <div className="space-y-1">
                     {claim.webSearchResults.results.map((result, idx) => (
