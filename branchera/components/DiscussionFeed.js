@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useFirestore } from '@/hooks/useFirestore';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,7 +20,7 @@ export default function DiscussionFeed({ newDiscussion }) {
 
   useEffect(() => {
     loadDiscussions();
-  }, []);
+  }, [loadDiscussions]);
 
   // Add new discussion to the top of the feed when created
   useEffect(() => {
@@ -28,7 +29,7 @@ export default function DiscussionFeed({ newDiscussion }) {
     }
   }, [newDiscussion]);
 
-  const loadDiscussions = async () => {
+  const loadDiscussions = useCallback(async () => {
     try {
       setLoading(true);
       console.log('Loading discussions...');
@@ -49,7 +50,7 @@ export default function DiscussionFeed({ newDiscussion }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [getDiscussions]);
 
   const handlePlay = async (discussionId) => {
     try {
@@ -255,9 +256,11 @@ export default function DiscussionFeed({ newDiscussion }) {
           {/* Author Info */}
           <div className="flex items-center gap-3 mb-4">
             {discussion.authorPhoto ? (
-              <img
+              <Image
                 src={discussion.authorPhoto}
                 alt={discussion.authorName}
+                width={40}
+                height={40}
                 className="w-10 h-10 rounded-full object-cover"
               />
             ) : (
@@ -381,9 +384,11 @@ export default function DiscussionFeed({ newDiscussion }) {
                     {/* Reply Author Info */}
                     <div className="flex items-center gap-3 mb-3">
                       {reply.authorPhoto ? (
-                        <img
+                        <Image
                           src={reply.authorPhoto}
                           alt={reply.authorName}
+                          width={24}
+                          height={24}
                           className="w-6 h-6 rounded-full object-cover"
                         />
                       ) : (

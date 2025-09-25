@@ -22,6 +22,26 @@ export default function AudioReplyRecorder({ discussionId, onReplyAdded, onCance
   const { user } = useAuth();
   const { addReply } = useDatabase();
 
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      stopTimer();
+      setHasRecording(true);
+      
+      // Create preview URL for playback
+      if (audioChunksRef.current.length > 0) {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(audioBlob);
+        setPreviewUrl(url);
+      }
+      
+      // Stop all tracks to release microphone
+      const stream = mediaRecorderRef.current.stream;
+      stream.getTracks().forEach(track => track.stop());
+    }
+  }, [isRecording, stopTimer]);
+
   const startTimer = useCallback(() => {
     timerRef.current = setInterval(() => {
       setRecordingTime(prev => {
@@ -32,7 +52,7 @@ export default function AudioReplyRecorder({ discussionId, onReplyAdded, onCance
         return newTime;
       });
     }, 1000);
-  }, []);
+  }, [stopRecording]);
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
@@ -70,25 +90,7 @@ export default function AudioReplyRecorder({ discussionId, onReplyAdded, onCance
     }
   };
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      stopTimer();
-      setHasRecording(true);
-      
-      // Create preview URL for playback
-      if (audioChunksRef.current.length > 0) {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const url = URL.createObjectURL(audioBlob);
-        setPreviewUrl(url);
-      }
-      
-      // Stop all tracks to release microphone
-      const stream = mediaRecorderRef.current.stream;
-      stream.getTracks().forEach(track => track.stop());
-    }
-  };
+  // stopRecording is now defined above with useCallback
 
   const uploadReply = async () => {
     if (audioChunksRef.current.length === 0) {

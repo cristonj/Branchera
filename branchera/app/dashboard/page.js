@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import AudioRecorder from '@/components/AudioRecorder';
 import DiscussionFeed from '@/components/DiscussionFeed';
 
@@ -44,9 +45,11 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
                 {user.photoURL && (
-                  <img
+                  <Image
                     src={user.photoURL}
                     alt={user.displayName || 'User'}
+                    width={32}
+                    height={32}
                     className="w-8 h-8 rounded-full"
                   />
                 )}

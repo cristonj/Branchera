@@ -26,6 +26,27 @@ export default function AudioRecorder({ onDiscussionCreated }) {
   const { user } = useAuth();
   const { createDiscussion } = useDatabase();
 
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      stopTimer();
+      stopVoiceActivityDetection();
+      setHasRecording(true);
+      
+      // Create preview URL for playback
+      if (audioChunksRef.current.length > 0) {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(audioBlob);
+        setPreviewUrl(url);
+      }
+      
+      // Stop all tracks to release microphone
+      const stream = mediaRecorderRef.current.stream;
+      stream.getTracks().forEach(track => track.stop());
+    }
+  }, [isRecording, stopTimer, stopVoiceActivityDetection]);
+
   const startTimer = useCallback(() => {
     timerRef.current = setInterval(() => {
       setRecordingTime(prev => {
@@ -36,7 +57,7 @@ export default function AudioRecorder({ onDiscussionCreated }) {
         return newTime;
       });
     }, 1000);
-  }, []);
+  }, [stopRecording]);
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
@@ -114,26 +135,7 @@ export default function AudioRecorder({ onDiscussionCreated }) {
     }
   };
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      stopTimer();
-      stopVoiceActivityDetection();
-      setHasRecording(true);
-      
-      // Create preview URL for playback
-      if (audioChunksRef.current.length > 0) {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const url = URL.createObjectURL(audioBlob);
-        setPreviewUrl(url);
-      }
-      
-      // Stop all tracks to release microphone
-      const stream = mediaRecorderRef.current.stream;
-      stream.getTracks().forEach(track => track.stop());
-    }
-  };
+  // stopRecording is now defined above with useCallback
 
   const uploadAudio = async () => {
     if (audioChunksRef.current.length === 0 || !title.trim()) {
@@ -342,7 +344,7 @@ export default function AudioRecorder({ onDiscussionCreated }) {
       
       {isRecording && (
         <div className="mt-4 text-sm text-gray-500">
-          Recording... Click "Stop" when you're done or wait for the 30-second limit.
+          Recording... Click &quot;Stop&quot; when you&apos;re done or wait for the 30-second limit.
         </div>
       )}
       
