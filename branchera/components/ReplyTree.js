@@ -133,7 +133,7 @@ export default function ReplyTree({
 
   const renderReplyContent = (reply, level, hasChildren, isExpanded, canReply) => {
     return (
-      <div className={`rounded border border-black/20 bg-white p-3 pl-3 border-l-2 ${getReplyTypeStyle(reply.type)}`}>
+      <div className={`rounded-lg border border-black/20 bg-white p-3 pl-3 border-l-2 ${getReplyTypeStyle(reply.type)}`}>
         <div className="flex items-center gap-3 mb-2">
           <span className="text-base">{getReplyTypeIcon(reply.type)}</span>
           {reply.authorPhoto ? (
@@ -213,14 +213,14 @@ export default function ReplyTree({
         )}
         
         {Array.isArray(reply.aiPoints) && reply.aiPoints.length > 0 && (
-          <div className="mt-2 border border-black/15 rounded p-3 bg-white">
+          <div className="mt-2 border border-black/15 rounded-lg p-3 bg-white">
             <div className="text-xs font-semibold text-gray-900 mb-1">Reply points</div>
             <ul className="space-y-1">
               {reply.aiPoints.map((p) => (
                 <li key={p.id}>
                   <button
                     onClick={() => onPointClick && onPointClick(reply, p)}
-                    className="w-full flex items-start gap-2 p-2 text-left rounded hover:bg-gray-50 border border-transparent hover:border-black/20"
+                    className="w-full flex items-start gap-2 p-2 text-left rounded-lg hover:bg-gray-50 border border-transparent hover:border-black/20"
                     disabled={!user || !onPointClick}
                   >
                     <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
@@ -257,7 +257,7 @@ export default function ReplyTree({
         return (
           <div key={pointId} className="space-y-2">
             {point && (
-              <div className="border border-black/20 rounded p-3 bg-white">
+              <div className="border border-black/20 rounded-lg p-3 bg-white">
                 <div className="flex items-start gap-2">
                   <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
                   <div>
