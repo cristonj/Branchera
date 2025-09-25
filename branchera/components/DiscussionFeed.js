@@ -436,7 +436,7 @@ export default function DiscussionFeed({ newDiscussion }) {
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-white rounded-lg border border-gray-200 p-6 animate-pulse">
+          <div key={i} className="rounded-lg border border-black/20 p-6 animate-pulse">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
               <div className="flex-1">
@@ -468,7 +468,7 @@ export default function DiscussionFeed({ newDiscussion }) {
       {discussions.map((discussion) => {
         const isExpanded = expandedDiscussions.has(discussion.id);
         return (
-          <div key={discussion.id} className="bg-white rounded-lg border border-black/20">
+          <div key={discussion.id} className="rounded-lg border border-black/20">
             {/* Header Row - shows title and controls */}
             <div className="px-4 py-3 flex items-center justify-between">
               <button
