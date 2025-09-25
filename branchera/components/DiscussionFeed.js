@@ -400,7 +400,10 @@ export default function DiscussionFeed({ newDiscussion }) {
                 <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-                <span className="font-semibold text-gray-900 truncate flex-1 min-w-0">{discussion.title}</span>
+                {/* Hide title when expanded to avoid duplication */}
+                {!isExpanded && (
+                  <span className="font-semibold text-gray-900 truncate flex-1 min-w-0">{discussion.title}</span>
+                )}
               </button>
               {/* Hide action buttons when expanded */}
               {!isExpanded && (
