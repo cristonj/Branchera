@@ -15,14 +15,16 @@ export default function DiscussionFeed({ newDiscussion }) {
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState(null); // Track which discussion is being replied to
   const [expandedReplies, setExpandedReplies] = useState(new Set()); // Track which discussions have expanded replies
+  const [expandedDiscussions, setExpandedDiscussions] = useState(new Set()); // Track expanded discussion cards
   const [showPointModal, setShowPointModal] = useState(false); // Track if AI point selection modal is open
   const [selectedDiscussion, setSelectedDiscussion] = useState(null); // Discussion for point selection
   const [selectedPoint, setSelectedPoint] = useState(null); // Selected AI point for reply
   const [selectedReplyType, setSelectedReplyType] = useState('agree'); // Selected reply type
   const [replyingToReply, setReplyingToReply] = useState(null); // Reply being replied to (for nested replies)
+  const [selectedReplyForPoints, setSelectedReplyForPoints] = useState(null); // Reply context for AI points
   
   const { updateDocument } = useFirestore();
-  const { getDiscussions, deleteDiscussion, deleteReply, updateAIPoints } = useDatabase();
+  const { getDiscussions, deleteDiscussion, deleteReply, updateAIPoints, updateReplyAIPoints } = useDatabase();
   const { user } = useAuth();
 
   const loadDiscussions = useCallback(async () => {
@@ -192,6 +194,7 @@ export default function DiscussionFeed({ newDiscussion }) {
     } else {
       // Open point selection modal immediately if points exist
       setSelectedDiscussion(discussion);
+      setSelectedReplyForPoints(null);
       setShowPointModal(true);
     }
   };
@@ -205,13 +208,48 @@ export default function DiscussionFeed({ newDiscussion }) {
     setReplyingTo(selectedDiscussion.id);
   };
 
-  const handleReplyToReply = (reply) => {
-    if (!user) return;
-    
+  const handleReplyToReply = async (reply) => {
+    if (!user || !selectedDiscussion) return;
+
     setReplyingToReply(reply);
-    setReplyingTo(selectedDiscussion?.id || reply.discussionId);
-    setSelectedPoint(null); // Clear point selection when replying to a reply
-    setSelectedReplyType('general');
+    setReplyingTo(selectedDiscussion.id);
+    setSelectedPoint(null);
+    setSelectedReplyType('agree');
+
+    // Ensure AI points exist for this reply
+    try {
+      let replyPoints = Array.isArray(reply.aiPoints) ? reply.aiPoints : [];
+      const hasPoints = reply.aiPointsGenerated && replyPoints.length > 0;
+
+      if (!hasPoints) {
+        replyPoints = await AIService.generateReplyPoints(
+          reply.content,
+          `${selectedDiscussion.title} — ${reply.authorName}`
+        );
+
+        await updateReplyAIPoints(selectedDiscussion.id, reply.id, replyPoints);
+
+        // Update local state to include points on the reply
+        setDiscussions(prev => prev.map(d =>
+          d.id === selectedDiscussion.id
+            ? {
+                ...d,
+                replies: (d.replies || []).map(r =>
+                  r.id === reply.id ? { ...r, aiPoints: replyPoints, aiPointsGenerated: true } : r
+                )
+              }
+            : d
+        ));
+      }
+
+      setSelectedReplyForPoints({ ...reply, aiPoints: replyPoints });
+      setShowPointModal(true);
+    } catch (error) {
+      console.error('Error generating AI points for reply:', error);
+      // Fallback: open plain reply form without points
+      setSelectedReplyForPoints(null);
+      setShowPointModal(false);
+    }
   };
 
   const handleReplyAdded = (discussionId, newReply) => {
@@ -280,6 +318,18 @@ export default function DiscussionFeed({ newDiscussion }) {
     });
   };
 
+  const toggleDiscussion = (discussionId) => {
+    setExpandedDiscussions(prev => {
+      const next = new Set(prev);
+      if (next.has(discussionId)) {
+        next.delete(discussionId);
+      } else {
+        next.add(discussionId);
+      }
+      return next;
+    });
+  };
+
 
   if (loading) {
     return (
@@ -312,196 +362,173 @@ export default function DiscussionFeed({ newDiscussion }) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">Popular Discussions</h2>
-      
-      {discussions.map((discussion) => (
-        <div key={discussion.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
-          {/* Author Info */}
-          <div className="flex items-center gap-3 mb-4">
-            {discussion.authorPhoto ? (
-              <Image
-                src={discussion.authorPhoto}
-                alt={discussion.authorName}
-                width={40}
-                height={40}
-                className="w-10 h-10 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                <span className="text-gray-600 font-medium">
-                  {discussion.authorName?.charAt(0)?.toUpperCase() || '?'}
-                </span>
-              </div>
-            )}
-            <div className="flex-1">
-              <h4 className="font-medium text-gray-900">{discussion.authorName}</h4>
-              <p className="text-sm text-gray-500">{formatDate(discussion.createdAt)}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              {user && discussion.authorId === user.uid && (
+      <h2 className="text-xl font-bold text-gray-900 mb-6">Discussions</h2>
+
+      {discussions.map((discussion) => {
+        const isExpanded = expandedDiscussions.has(discussion.id);
+        return (
+          <div key={discussion.id} className="bg-white rounded-lg border border-black/20">
+            {/* Collapsed Header Row */}
+            <div className="px-4 py-3 flex items-center justify-between">
+              <button
+                onClick={() => toggleDiscussion(discussion.id)}
+                className="flex items-center gap-3 text-left flex-1"
+                title={isExpanded ? 'Collapse' : 'Expand'}
+              >
+                <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+                <span className="font-semibold text-gray-900 truncate">{discussion.title}</span>
+              </button>
+              <div className="flex items-center gap-4">
                 <button
-                  onClick={() => handleDelete(discussion.id)}
-                  className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                  title="Delete discussion"
+                  onClick={() => handleReplyClick(discussion)}
+                  className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
+                  disabled={!user}
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                   </svg>
+                  Reply
                 </button>
-              )}
-            </div>
-          </div>
-
-          {/* Discussion Title */}
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            {discussion.title}
-          </h3>
-
-          {/* Discussion Content */}
-          <div className="mb-4">
-            <div className="prose max-w-none">
-              <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
-                {discussion.content}
-              </p>
-            </div>
-          </div>
-
-          {/* AI Generated Points */}
-          {discussion.aiPoints && discussion.aiPoints.length > 0 && (
-            <div className="mb-4 bg-blue-50 rounded-lg p-4 border border-blue-200">
-              <h4 className="text-sm font-medium text-blue-900 mb-3 flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-                Key Discussion Points
-              </h4>
-              <div className="space-y-2">
-                {discussion.aiPoints.map((point) => (
-                  <div key={point.id} className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
-                    <div className="flex-1">
-                      <p className="text-sm text-blue-800">{point.text}</p>
-                      {point.type && (
-                        <span className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${
-                          point.type === 'claim' ? 'bg-blue-100 text-blue-700' :
-                          point.type === 'evidence' ? 'bg-green-100 text-green-700' :
-                          point.type === 'recommendation' ? 'bg-purple-100 text-purple-700' :
-                          point.type === 'question' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-gray-100 text-gray-700'
-                        }`}>
-                          {point.type}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Engagement Stats */}
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => handleLike(discussion.id)}
-                className={`flex items-center gap-2 text-sm transition-colors ${
-                  user && (discussion.likedBy || []).includes(user.uid)
-                    ? 'text-red-500 hover:text-red-600'
-                    : 'text-gray-600 hover:text-red-500'
-                }`}
-                disabled={!user}
-              >
-                <svg 
-                  className="w-4 h-4" 
-                  fill={user && (discussion.likedBy || []).includes(user.uid) ? "currentColor" : "none"} 
-                  viewBox="0 0 24 24" 
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-                <span>{discussion.likes || 0}</span>
-              </button>
-              
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span>{discussion.likes || 0} views</span>
-              </div>
-              
-              <button
-                onClick={() => handleReplyClick(discussion)}
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-500 transition-colors"
-                disabled={!user}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                </svg>
-                <span>Reply</span>
-              </button>
-              
-              {(discussion.replyCount || 0) > 0 && (
                 <button
                   onClick={() => toggleReplies(discussion.id)}
-                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-500 transition-colors"
+                  className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
-                  <span>{discussion.replyCount} {discussion.replyCount === 1 ? 'reply' : 'replies'}</span>
+                  {discussion.replyCount || 0}
                   <svg className={`w-3 h-3 transition-transform ${expandedReplies.has(discussion.id) ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-              )}
+                <button
+                  onClick={() => handleLike(discussion.id)}
+                  className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
+                  disabled={!user}
+                >
+                  <svg className="w-4 h-4" fill={user && (discussion.likedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                  {discussion.likes || 0}
+                </button>
+                {user && discussion.authorId === user.uid && (
+                  <button
+                    onClick={() => handleDelete(discussion.id)}
+                    className="p-1 text-gray-800 hover:text-black"
+                    title="Delete discussion"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
+
+            {/* Expanded Content */}
+            {isExpanded && (
+              <div className="px-4 pb-4 border-t border-black/10">
+                {/* Author and meta */}
+                <div className="flex items-center gap-3 py-3">
+                  {discussion.authorPhoto ? (
+                    <Image
+                      src={discussion.authorPhoto}
+                      alt={discussion.authorName}
+                      width={28}
+                      height={28}
+                      className="w-7 h-7 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full border border-black/40 flex items-center justify-center">
+                      <span className="text-xs text-gray-900 font-medium">
+                        {discussion.authorName?.charAt(0)?.toUpperCase() || '?'}
+                      </span>
+                    </div>
+                  )}
+                  <div className="text-xs text-gray-600">
+                    {discussion.authorName} · {formatDate(discussion.createdAt)}
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="mb-3">
+                  <p className="text-gray-900 whitespace-pre-wrap leading-relaxed text-sm">
+                    {discussion.content}
+                  </p>
+                </div>
+
+                {/* AI points (monochrome) */}
+                {discussion.aiPoints && discussion.aiPoints.length > 0 && (
+                  <div className="mb-3 rounded border border-black/20 p-3">
+                    <div className="text-xs font-semibold text-gray-900 mb-2">Key points</div>
+                    <div className="space-y-2">
+                      {discussion.aiPoints.map((point) => (
+                        <div key={point.id} className="flex items-start gap-2">
+                          <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-900">{point.text}</p>
+                            {point.type && (
+                              <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
+                                {point.type}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Reply form */}
+                {replyingTo === discussion.id && (
+                  <div className="mt-3">
+                    <TextReplyForm
+                      discussionId={discussion.id}
+                      selectedPoint={selectedPoint}
+                      replyType={selectedReplyType}
+                      replyingToReply={replyingToReply}
+                      onReplyAdded={(reply) => handleReplyAdded(discussion.id, reply)}
+                      onCancel={() => {
+                        setReplyingTo(null);
+                        setSelectedPoint(null);
+                        setSelectedReplyType('agree');
+                        setReplyingToReply(null);
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Replies */}
+                {expandedReplies.has(discussion.id) && (discussion.replies || []).length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-black/10">
+                    <ReplyTree
+                      replies={discussion.replies}
+                      aiPoints={discussion.aiPoints || []}
+                      discussionId={discussion.id}
+                      onReplyToReply={(reply) => {
+                        setSelectedDiscussion(discussion);
+                        handleReplyToReply(reply);
+                      }}
+                      onDeleteReply={handleDeleteReply}
+                      maxLevel={3}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-          
-          {/* Reply Form */}
-          {replyingTo === discussion.id && (
-            <div className="mt-4">
-              <TextReplyForm
-                discussionId={discussion.id}
-                selectedPoint={selectedPoint}
-                replyType={selectedReplyType}
-                replyingToReply={replyingToReply}
-                onReplyAdded={(reply) => handleReplyAdded(discussion.id, reply)}
-                onCancel={() => {
-                  setReplyingTo(null);
-                  setSelectedPoint(null);
-                  setSelectedReplyType('agree');
-                  setReplyingToReply(null);
-                }}
-              />
-            </div>
-          )}
-          
-          {/* Replies Section */}
-          {expandedReplies.has(discussion.id) && (discussion.replies || []).length > 0 && (
-            <div className="mt-4 border-t border-gray-100 pt-4">
-              <ReplyTree
-                replies={discussion.replies}
-                aiPoints={discussion.aiPoints || []}
-                discussionId={discussion.id}
-                onReplyToReply={(reply) => {
-                  setSelectedDiscussion(discussion);
-                  handleReplyToReply(reply);
-                }}
-                onDeleteReply={handleDeleteReply}
-                maxLevel={3}
-              />
-            </div>
-          )}
-        </div>
-      ))}
-      
-      {/* AI Point Selection Modal */}
+        );
+      })}
+
+      {/* AI Point Selection Modal for discussion or reply context */}
       <AIPointSelectionModal
         isOpen={showPointModal}
         onClose={() => setShowPointModal(false)}
-        aiPoints={selectedDiscussion?.aiPoints || []}
+        aiPoints={selectedReplyForPoints?.aiPoints || selectedDiscussion?.aiPoints || []}
         discussionTitle={selectedDiscussion?.title || ''}
+        contextLabel={selectedReplyForPoints ? `Reply by ${selectedReplyForPoints.authorName}` : selectedDiscussion?.title || ''}
         onPointSelected={handlePointSelected}
       />
     </div>

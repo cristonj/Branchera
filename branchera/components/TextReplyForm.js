@@ -84,60 +84,57 @@ export default function TextReplyForm({
   };
 
   return (
-    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+    <div className="bg-white rounded border border-black/20 p-3">
       {selectedPoint ? (
-        <div className="mb-4">
-          <h4 className="text-sm font-medium text-gray-900 mb-2">
-            {getReplyTypeIcon(replyType)} {getReplyTypeLabel(replyType)}:
-          </h4>
-          <div className="bg-white p-3 rounded border-l-4 border-blue-400">
-            <p className="text-sm text-gray-700">{selectedPoint.text}</p>
+        <div className="mb-3">
+          <div className="text-xs font-semibold text-gray-900 mb-1">
+            {getReplyTypeIcon(replyType)} {getReplyTypeLabel(replyType)}
+          </div>
+          <div className="p-2 rounded border-l-2 border-black bg-white">
+            <p className="text-xs text-gray-900">{selectedPoint.text}</p>
           </div>
         </div>
       ) : replyingToReply ? (
-        <div className="mb-4">
-          <h4 className="text-sm font-medium text-gray-900 mb-2">
-            💬 Replying to {replyingToReply.authorName}:
-          </h4>
-          <div className="bg-white p-3 rounded border-l-4 border-gray-400">
-            <p className="text-sm text-gray-700">{replyingToReply.content}</p>
+        <div className="mb-3">
+          <div className="text-xs font-semibold text-gray-900 mb-1">
+            💬 Replying to {replyingToReply.authorName}
+          </div>
+          <div className="p-2 rounded border-l-2 border-black bg-white">
+            <p className="text-xs text-gray-900">{replyingToReply.content}</p>
           </div>
         </div>
       ) : (
-        <h4 className="text-sm font-medium text-gray-900 mb-3">Write a reply</h4>
+        <div className="text-xs font-semibold text-gray-900 mb-2">Write a reply</div>
       )}
-      
+
       <form onSubmit={handleSubmit}>
-        {/* Content Textarea */}
-        <div className="mb-4">
+        <div className="mb-3">
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Share your thoughts on this discussion..."
+            placeholder="Write your reply..."
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical text-sm"
+            className="w-full px-3 py-2 border border-black/20 rounded focus:outline-none focus:ring-1 focus:ring-black resize-vertical text-sm text-gray-900"
             disabled={isSubmitting}
             required
           />
-          <div className="text-xs text-gray-500 mt-1">
+          <div className="text-[11px] text-gray-600 mt-1">
             {content.length} characters
           </div>
         </div>
-
-        {/* Action Buttons */}
         <div className="flex justify-end gap-2">
           <button
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="px-3 py-1 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+            className="px-3 py-1 text-sm border border-black/30 rounded hover:bg-black/5 disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSubmitting || !content.trim()}
-            className="px-4 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-1 text-sm bg-black text-white rounded hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isSubmitting ? (
               <>
