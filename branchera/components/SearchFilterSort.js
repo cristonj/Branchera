@@ -27,8 +27,9 @@ export default function SearchFilterSort({
     if (!query.trim()) return discussions;
 
     const normalizedQuery = query.toLowerCase().trim();
+    console.log('Searching for:', normalizedQuery, 'in', discussions.length, 'discussions');
     
-    return discussions.filter(discussion => {
+    const filtered = discussions.filter(discussion => {
       // Search in discussion
       const discussionMatches = searchInDiscussion(discussion, normalizedQuery, type);
       
@@ -37,7 +38,11 @@ export default function SearchFilterSort({
         ? searchInReplies(discussion.replies || [], normalizedQuery)
         : false;
 
-      return discussionMatches || replyMatches;
+      const matches = discussionMatches || replyMatches;
+      if (matches) {
+        console.log('Found match in discussion:', discussion.title);
+      }
+      return matches;
     }).map(discussion => {
       // Add search metadata for highlighting
       return {
@@ -45,6 +50,9 @@ export default function SearchFilterSort({
         searchMatches: getSearchMatches(discussion, normalizedQuery, type)
       };
     });
+    
+    console.log('Filtered results:', filtered.length, 'discussions');
+    return filtered;
   }, []);
 
   const searchInDiscussion = (discussion, query, type) => {
@@ -280,11 +288,13 @@ export default function SearchFilterSort({
 
   // Process discussions whenever search, filter, or sort changes
   useEffect(() => {
+    console.log('Processing discussions with search query:', searchQuery);
     let processed = discussions;
 
     // Apply search
     if (searchQuery.trim()) {
       processed = searchContent(processed, searchQuery, searchType);
+      console.log('Search results:', processed.length, 'discussions');
     }
 
     // Apply filters
@@ -293,11 +303,13 @@ export default function SearchFilterSort({
     // Apply sort
     processed = sortDiscussions(processed, sortBy, searchQuery);
 
+    console.log('Final processed results:', processed.length, 'discussions');
     onResults?.(processed);
-    onSearchChange?.(searchQuery);
-    onFilterChange?.(filters);
-    onSortChange?.(sortBy);
-  }, [discussions, searchQuery, searchType, sortBy, filters, searchContent, filterDiscussions, sortDiscussions, onResults, onSearchChange, onFilterChange, onSortChange]);
+    // Temporarily disable these callbacks to see if they're causing the issue
+    // onSearchChange?.(searchQuery);
+    // onFilterChange?.(filters);
+    // onSortChange?.(sortBy);
+  }, [discussions, searchQuery, searchType, sortBy, filters]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({
@@ -336,10 +348,16 @@ export default function SearchFilterSort({
         <div className="flex gap-2">
           <div className="flex-1 relative">
             <input
+              key="search-input"
               type="text"
               placeholder="Search discussions, replies, fact-checks..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                console.log('Input changed from', searchQuery, 'to', e.target.value);
+                const newValue = e.target.value;
+                console.log('Setting search query to:', newValue);
+                setSearchQuery(newValue);
+              }}
               className="w-full px-4 py-2 pr-10 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
             />
             {searchQuery && (

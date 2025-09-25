@@ -598,7 +598,10 @@ export default function DiscussionFeed({ newDiscussion }) {
       <SearchFilterSort
         discussions={discussions}
         onResults={setFilteredDiscussions}
-        onSearchChange={setSearchQuery}
+        onSearchChange={(query) => {
+          console.log('Parent received search change:', query);
+          setSearchQuery(query);
+        }}
         onFilterChange={setCurrentFilters}
         onSortChange={setCurrentSort}
       />
