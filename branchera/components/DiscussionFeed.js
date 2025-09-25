@@ -18,18 +18,7 @@ export default function DiscussionFeed({ newDiscussion }) {
   const { getDiscussions, deleteDiscussion, deleteReply } = useDatabase();
   const { user } = useAuth();
 
-  useEffect(() => {
-    loadDiscussions();
-  }, [loadDiscussions]);
-
-  // Add new discussion to the top of the feed when created
-  useEffect(() => {
-    if (newDiscussion) {
-      setDiscussions(prev => [newDiscussion, ...prev]);
-    }
-  }, [newDiscussion]);
-
-  const loadDiscussions = useCallback(async () => {
+  const loadDiscussions = async () => {
     try {
       setLoading(true);
       console.log('Loading discussions...');
@@ -50,7 +39,18 @@ export default function DiscussionFeed({ newDiscussion }) {
     } finally {
       setLoading(false);
     }
-  }, [getDiscussions]);
+  };
+
+  useEffect(() => {
+    loadDiscussions();
+  }, []); // Empty dependency array to run only on mount
+
+  // Add new discussion to the top of the feed when created
+  useEffect(() => {
+    if (newDiscussion) {
+      setDiscussions(prev => [newDiscussion, ...prev]);
+    }
+  }, [newDiscussion]);
 
   const handlePlay = async (discussionId) => {
     try {
