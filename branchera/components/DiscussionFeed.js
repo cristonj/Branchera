@@ -8,12 +8,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import TextReplyForm from './TextReplyForm';
 import ReplyTree from './ReplyTree';
 import FactCheckResults from './FactCheckResults';
+import SearchFilterSort from './SearchFilterSort';
+import SearchHighlight from './SearchHighlight';
 import { AIService } from '@/lib/aiService';
 import { usePolling } from '@/hooks/usePolling';
 import { REALTIME_CONFIG } from '@/lib/realtimeConfig';
 
 export default function DiscussionFeed({ newDiscussion }) {
   const [discussions, setDiscussions] = useState([]);
+  const [filteredDiscussions, setFilteredDiscussions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState(null); // Track which discussion is being replied to
   const [expandedReplies, setExpandedReplies] = useState(new Set()); // Track which discussions have expanded replies
@@ -24,6 +27,9 @@ export default function DiscussionFeed({ newDiscussion }) {
   const [selectedReplyType, setSelectedReplyType] = useState('general'); // Selected reply type
   const [replyingToReply, setReplyingToReply] = useState(null); // Reply being replied to (for nested replies)
   const [selectedReplyForPoints, setSelectedReplyForPoints] = useState(null); // Reply context for AI points
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentFilters, setCurrentFilters] = useState({});
+  const [currentSort, setCurrentSort] = useState('newest');
   
   const { updateDocument } = useFirestore();
   const { getDiscussions, deleteDiscussion, deleteReply, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults } = useDatabase();
@@ -32,16 +38,12 @@ export default function DiscussionFeed({ newDiscussion }) {
   const loadDiscussions = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('Loading discussions...');
-      
       // Load discussions directly without setup
       const discussionsData = await getDiscussions({
         limit: 20,
         orderField: 'createdAt',
         orderDirection: 'desc'
       });
-      
-      console.log('Loaded discussions:', discussionsData);
       setDiscussions(discussionsData);
       
       // Generate AI points and fact-check results for older discussions that don't have them
@@ -94,6 +96,11 @@ export default function DiscussionFeed({ newDiscussion }) {
       // AI points are now generated during discussion creation
     }
   }, [newDiscussion]);
+
+  // Initialize filtered discussions when discussions change
+  useEffect(() => {
+    setFilteredDiscussions(discussions);
+  }, [discussions]);
 
   // Generate AI points for a discussion
   const generateAIPointsForDiscussion = async (discussion) => {
@@ -562,11 +569,37 @@ export default function DiscussionFeed({ newDiscussion }) {
     );
   }
 
+  if (filteredDiscussions.length === 0 && searchQuery.trim()) {
+    return (
+      <div>
+        <SearchFilterSort
+          discussions={discussions}
+          onResults={setFilteredDiscussions}
+          onSearchChange={setSearchQuery}
+          onFilterChange={setCurrentFilters}
+          onSortChange={setCurrentSort}
+        />
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No matching discussions found</h3>
+          <p className="text-gray-500">Try adjusting your search terms or filters.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold text-gray-900 mb-6">Discussions</h2>
 
-      {discussions.map((discussion) => {
+      <SearchFilterSort
+        discussions={discussions}
+        onResults={setFilteredDiscussions}
+        onSearchChange={setSearchQuery}
+        onFilterChange={setCurrentFilters}
+        onSortChange={setCurrentSort}
+      />
+
+      {filteredDiscussions.map((discussion) => {
         const isExpanded = expandedDiscussions.has(discussion.id);
         return (
           <div key={discussion.id} className="rounded-lg border border-black/20">
@@ -582,7 +615,9 @@ export default function DiscussionFeed({ newDiscussion }) {
                 </svg>
                 {/* Hide title when expanded to avoid duplication */}
                 {!isExpanded && (
-                  <span className="font-semibold text-gray-900 truncate flex-1 min-w-0">{discussion.title}</span>
+                  <span className="font-semibold text-gray-900 truncate flex-1 min-w-0">
+                    <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
+                  </span>
                 )}
               </button>
               {/* Hide action buttons when expanded - only show likes and replies count */}
@@ -616,7 +651,9 @@ export default function DiscussionFeed({ newDiscussion }) {
               <div className="px-4 pb-4 border-t border-black/10">
                 {/* Title and author info */}
                 <div className="pt-3 pb-2">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">{discussion.title}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                    <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
+                  </h3>
                   <div className="flex items-center gap-3">
                     {discussion.authorPhoto ? (
                       <Image
@@ -634,7 +671,7 @@ export default function DiscussionFeed({ newDiscussion }) {
                       </div>
                     )}
                     <div className="text-xs text-gray-600">
-                      {discussion.authorName} · {formatDate(discussion.createdAt)}
+                      <SearchHighlight text={discussion.authorName} searchQuery={searchQuery} /> · {formatDate(discussion.createdAt)}
                     </div>
                   </div>
                 </div>
@@ -642,7 +679,7 @@ export default function DiscussionFeed({ newDiscussion }) {
                 {/* Content */}
                 <div className="mb-2">
                   <p className="text-gray-900 whitespace-pre-wrap leading-relaxed text-sm">
-                    {discussion.content}
+                    <SearchHighlight text={discussion.content} searchQuery={searchQuery} />
                   </p>
                 </div>
 
@@ -650,7 +687,8 @@ export default function DiscussionFeed({ newDiscussion }) {
                 {discussion.factCheckResults && (
                   <FactCheckResults 
                     factCheckResults={discussion.factCheckResults} 
-                    isLoading={false} 
+                    isLoading={false}
+                    searchQuery={searchQuery}
                   />
                 )}
 
@@ -684,10 +722,12 @@ export default function DiscussionFeed({ newDiscussion }) {
                             >
                               <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm text-gray-900">{point.text}</p>
+                                <p className="text-sm text-gray-900">
+                                  <SearchHighlight text={point.text} searchQuery={searchQuery} />
+                                </p>
                                 {point.type && (
                                   <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
-                                    {point.type}
+                                    <SearchHighlight text={point.type} searchQuery={searchQuery} />
                                   </span>
                                 )}
                                 {user && (
@@ -776,6 +816,7 @@ export default function DiscussionFeed({ newDiscussion }) {
                       replies={discussion.replies}
                       aiPoints={discussion.aiPoints || []}
                       discussionId={discussion.id}
+                      searchQuery={searchQuery}
                       onReplyToReply={(reply) => {
                         setSelectedDiscussion(discussion);
                         handleReplyToReply(reply);

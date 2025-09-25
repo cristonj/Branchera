@@ -4,11 +4,13 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import FactCheckResults from './FactCheckResults';
+import SearchHighlight from './SearchHighlight';
 
 export default function ReplyTree({ 
   replies, 
   aiPoints, 
   discussionId, 
+  searchQuery,
   onReplyToReply, 
   onDeleteReply,
   onReplyView,
@@ -141,7 +143,9 @@ export default function ReplyTree({
             </div>
           )}
           <div className="flex-1">
-            <div className="text-xs text-gray-700">{reply.authorName} · {formatDate(reply.createdAt)}</div>
+            <div className="text-xs text-gray-700">
+              <SearchHighlight text={reply.authorName} searchQuery={searchQuery} /> · {formatDate(reply.createdAt)}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {hasChildren && (
@@ -188,7 +192,9 @@ export default function ReplyTree({
           </div>
         </div>
         <div>
-          <p className="text-gray-900 text-sm whitespace-pre-wrap leading-relaxed">{reply.content}</p>
+          <p className="text-gray-900 text-sm whitespace-pre-wrap leading-relaxed">
+            <SearchHighlight text={reply.content} searchQuery={searchQuery} />
+          </p>
         </div>
         
         {/* Fact Check Results for Reply */}
@@ -196,7 +202,8 @@ export default function ReplyTree({
           <div className="mt-2">
             <FactCheckResults 
               factCheckResults={reply.factCheckResults} 
-              isLoading={false} 
+              isLoading={false}
+              searchQuery={searchQuery}
             />
           </div>
         )}
@@ -214,10 +221,12 @@ export default function ReplyTree({
                   >
                     <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs text-gray-900">{p.text}</div>
+                      <div className="text-xs text-gray-900">
+                        <SearchHighlight text={p.text} searchQuery={searchQuery} />
+                      </div>
                       {p.type && (
                         <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
-                          {p.type}
+                          <SearchHighlight text={p.type} searchQuery={searchQuery} />
                         </span>
                       )}
                       {user && onPointClick && (
@@ -250,10 +259,12 @@ export default function ReplyTree({
                 <div className="flex items-start gap-2">
                   <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
                   <div>
-                    <div className="text-sm font-semibold text-gray-900">&ldquo;{point.text}&rdquo;</div>
+                    <div className="text-sm font-semibold text-gray-900">
+                      &ldquo;<SearchHighlight text={point.text} searchQuery={searchQuery} />&rdquo;
+                    </div>
                     {point.type && (
                       <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
-                        {point.type}
+                        <SearchHighlight text={point.type} searchQuery={searchQuery} />
                       </span>
                     )}
                   </div>
