@@ -28,7 +28,7 @@ export default function Home() {
           </p>
           <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
             The social platform where clarity and logic beat distraction and misinformation. 
-            Share your thoughts through voice, engage in meaningful discussions.
+            Share your thoughts through text, engage in meaningful discussions.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 max-w-md mx-auto">
@@ -48,16 +48,16 @@ export default function Home() {
 
           {/* Key Features */}
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Audio-First Discussions */}
+            {/* Text-Based Discussions */}
             <div className="text-center p-6">
               <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-gray-700" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                <svg className="w-8 h-8 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Voice-First Discussions</h3>
+              <h3 className="text-xl font-semibold mb-2">Thoughtful Text Discussions</h3>
               <p className="text-gray-600">
-                Share your thoughts through 30-second audio clips. Express nuance and emotion that text can&apos;t capture.
+                Share your ideas through clear, well-crafted text. Express complex thoughts with precision and clarity.
               </p>
             </div>
 
@@ -65,12 +65,12 @@ export default function Home() {
             <div className="text-center p-6">
               <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                 <svg className="w-8 h-8 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Audio Replies</h3>
+              <h3 className="text-xl font-semibold mb-2">Text Replies</h3>
               <p className="text-gray-600">
-                Respond to discussions with your own voice. Build conversations without the need for titles or lengthy setup.
+                Respond to discussions with thoughtful text replies. Build conversations with clear, structured communication.
               </p>
             </div>
 
@@ -109,7 +109,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Quality Over Quantity</h3>
               <p className="text-gray-600">
-                30-second limit encourages thoughtful, concise communication. Say more with less.
+                Focused text format encourages thoughtful, well-structured communication. Quality ideas, clearly expressed.
               </p>
             </div>
 
@@ -122,7 +122,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-semibold mb-2">Real-Time Discussions</h3>
               <p className="text-gray-600">
-                See engagement stats, play counts, and replies update instantly. Stay connected to the conversation.
+                See engagement stats, likes, and replies update instantly. Stay connected to the conversation.
               </p>
             </div>
           </div>
@@ -131,7 +131,7 @@ export default function Home() {
           <div className="mt-16 p-8 bg-gray-50 rounded-2xl max-w-2xl mx-auto">
             <h2 className="text-2xl font-bold mb-4">Ready to join the conversation?</h2>
             <p className="text-gray-600 mb-6">
-              Experience meaningful discussions where your voice matters. 
+              Experience meaningful discussions where your ideas matter. 
               Join a community focused on clarity, logic, and genuine engagement.
             </p>
             <Link

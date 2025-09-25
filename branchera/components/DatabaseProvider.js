@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -16,39 +16,39 @@ export function DatabaseProvider({ children }) {
   const { setupDatabase } = useDatabase();
   const { user, loading: authLoading } = useAuth();
 
+  const initializeDatabase = useCallback(async () => {
+    // Wait for auth to load
+    if (authLoading) {
+      return;
+    }
+
+    // Only initialize if user is authenticated
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      console.log('Initializing database for user:', user.uid);
+      
+      const result = await setupDatabase();
+      
+      setIsInitialized(true);
+      setInitializationError(null);
+      console.log('Database initialization completed:', result);
+    } catch (error) {
+      console.error('Database initialization error:', error);
+      setInitializationError(error.message);
+      setIsInitialized(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, authLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
-    const initializeDatabase = async () => {
-      // Wait for auth to load
-      if (authLoading) {
-        return;
-      }
-
-      // Only initialize if user is authenticated
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-        console.log('Initializing database for user:', user.uid);
-        
-        const result = await setupDatabase();
-        
-        setIsInitialized(true);
-        setInitializationError(null);
-        console.log('Database initialization completed:', result);
-      } catch (error) {
-        console.error('Database initialization error:', error);
-        setInitializationError(error.message);
-        setIsInitialized(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     initializeDatabase();
-  }, [user, authLoading]); // Removed setupDatabase from dependencies to prevent loops
+  }, [initializeDatabase]);
 
   const value = {
     isInitialized,

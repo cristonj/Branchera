@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import AudioRecorder from '@/components/AudioRecorder';
+import TextDiscussionForm from '@/components/TextDiscussionForm';
 import DiscussionFeed from '@/components/DiscussionFeed';
 
 export default function DashboardPage() {
@@ -68,7 +68,7 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <AudioRecorder onDiscussionCreated={handleNewDiscussion} />
+        <TextDiscussionForm onDiscussionCreated={handleNewDiscussion} />
         <DiscussionFeed newDiscussion={newDiscussion} />
       </main>
     </div>

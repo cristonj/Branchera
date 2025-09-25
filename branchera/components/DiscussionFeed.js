@@ -5,20 +5,27 @@ import Image from 'next/image';
 import { useFirestore } from '@/hooks/useFirestore';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useAuth } from '@/contexts/AuthContext';
-import AudioPlayer from './AudioPlayer';
-import AudioReplyRecorder from './AudioReplyRecorder';
+import TextReplyForm from './TextReplyForm';
+import AIPointSelectionModal from './AIPointSelectionModal';
+import ReplyTree from './ReplyTree';
+import { AIService } from '@/lib/aiService';
 
 export default function DiscussionFeed({ newDiscussion }) {
   const [discussions, setDiscussions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState(null); // Track which discussion is being replied to
   const [expandedReplies, setExpandedReplies] = useState(new Set()); // Track which discussions have expanded replies
+  const [showPointModal, setShowPointModal] = useState(false); // Track if AI point selection modal is open
+  const [selectedDiscussion, setSelectedDiscussion] = useState(null); // Discussion for point selection
+  const [selectedPoint, setSelectedPoint] = useState(null); // Selected AI point for reply
+  const [selectedReplyType, setSelectedReplyType] = useState('agree'); // Selected reply type
+  const [replyingToReply, setReplyingToReply] = useState(null); // Reply being replied to (for nested replies)
   
   const { updateDocument } = useFirestore();
-  const { getDiscussions, deleteDiscussion, deleteReply } = useDatabase();
+  const { getDiscussions, deleteDiscussion, deleteReply, updateAIPoints } = useDatabase();
   const { user } = useAuth();
 
-  const loadDiscussions = async () => {
+  const loadDiscussions = useCallback(async () => {
     try {
       setLoading(true);
       console.log('Loading discussions...');
@@ -32,6 +39,13 @@ export default function DiscussionFeed({ newDiscussion }) {
       
       console.log('Loaded discussions:', discussionsData);
       setDiscussions(discussionsData);
+      
+      // Generate AI points for older discussions that don't have them
+      discussionsData.forEach(discussion => {
+        if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
+          generateAIPointsForDiscussion(discussion);
+        }
+      });
     } catch (error) {
       console.error('Error loading discussions:', error);
       // Set empty array to prevent crashes
@@ -39,38 +53,49 @@ export default function DiscussionFeed({ newDiscussion }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     loadDiscussions();
-  }, []); // Empty dependency array to run only on mount
+  }, [loadDiscussions]); // Include loadDiscussions dependency
 
   // Add new discussion to the top of the feed when created
   useEffect(() => {
     if (newDiscussion) {
       setDiscussions(prev => [newDiscussion, ...prev]);
+      // AI points are now generated during discussion creation
     }
   }, [newDiscussion]);
 
-  const handlePlay = async (discussionId) => {
+  // Generate AI points for a discussion
+  const generateAIPointsForDiscussion = async (discussion) => {
     try {
-      // Increment play count
-      const discussion = discussions.find(d => d.id === discussionId);
-      if (discussion) {
-        const newPlays = (discussion.plays || 0) + 1;
-        await updateDocument('discussions', discussionId, { plays: newPlays });
-        
-        // Update local state
-        setDiscussions(prev =>
-          prev.map(d =>
-            d.id === discussionId ? { ...d, plays: newPlays } : d
-          )
-        );
+      if (discussion.aiPointsGenerated || (discussion.aiPoints && discussion.aiPoints.length > 0)) {
+        return; // Already has points
       }
+
+      console.log('Generating AI points for discussion:', discussion.id);
+      const aiPoints = await AIService.generatePoints(discussion.content, discussion.title);
+      
+      // Update discussion in database
+      await updateAIPoints(discussion.id, aiPoints);
+      
+      // Update local state
+      setDiscussions(prev =>
+        prev.map(d =>
+          d.id === discussion.id 
+            ? { ...d, aiPoints, aiPointsGenerated: true }
+            : d
+        )
+      );
+      
+      console.log('AI points generated successfully for discussion:', discussion.id);
     } catch (error) {
-      console.error('Error updating play count:', error);
+      console.error('Error generating AI points for discussion:', discussion.id, error);
     }
   };
+
+  // Remove handlePlay function as it's no longer needed for text-based discussions
 
   const handleLike = async (discussionId) => {
     try {
@@ -126,11 +151,7 @@ export default function DiscussionFeed({ newDiscussion }) {
     }
   };
 
-  const formatDuration = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+  // Remove formatDuration function as it's no longer needed for text-based discussions
 
   const handleDelete = async (discussionId) => {
     if (!user) return;
@@ -151,6 +172,48 @@ export default function DiscussionFeed({ newDiscussion }) {
     }
   };
 
+  const handleReplyClick = async (discussion) => {
+    if (!user) return;
+    
+    // Generate AI points if they don't exist (for older discussions)
+    if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
+      try {
+        await generateAIPointsForDiscussion(discussion);
+        // Wait a moment for the state to update
+        setTimeout(() => {
+          setSelectedDiscussion(discussion);
+          setShowPointModal(true);
+        }, 500);
+      } catch (error) {
+        console.error('Error generating AI points:', error);
+        alert('Unable to generate AI points for this discussion. Please try again.');
+        return;
+      }
+    } else {
+      // Open point selection modal immediately if points exist
+      setSelectedDiscussion(discussion);
+      setShowPointModal(true);
+    }
+  };
+
+  const handlePointSelected = (point, replyType) => {
+    setSelectedPoint(point);
+    setSelectedReplyType(replyType);
+    setShowPointModal(false);
+    
+    // Start reply form with selected point
+    setReplyingTo(selectedDiscussion.id);
+  };
+
+  const handleReplyToReply = (reply) => {
+    if (!user) return;
+    
+    setReplyingToReply(reply);
+    setReplyingTo(selectedDiscussion?.id || reply.discussionId);
+    setSelectedPoint(null); // Clear point selection when replying to a reply
+    setSelectedReplyType('general');
+  };
+
   const handleReplyAdded = (discussionId, newReply) => {
     // Update the discussion with the new reply
     setDiscussions(prev =>
@@ -165,8 +228,12 @@ export default function DiscussionFeed({ newDiscussion }) {
       )
     );
     
-    // Close the reply recorder
+    // Close the reply recorder and clear selections
     setReplyingTo(null);
+    setSelectedPoint(null);
+    setSelectedReplyType('agree');
+    setSelectedDiscussion(null);
+    setReplyingToReply(null);
     
     // Expand replies to show the new reply
     setExpandedReplies(prev => new Set([...prev, discussionId]));
@@ -213,6 +280,7 @@ export default function DiscussionFeed({ newDiscussion }) {
     });
   };
 
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -236,13 +304,8 @@ export default function DiscussionFeed({ newDiscussion }) {
   if (discussions.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-gray-500 mb-4">
-          <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-          </svg>
-        </div>
         <h3 className="text-lg font-medium text-gray-900 mb-2">No discussions yet</h3>
-        <p className="text-gray-500">Be the first to start a discussion by recording an audio clip!</p>
+        <p className="text-gray-500">Be the first to start a discussion by sharing your thoughts!</p>
       </div>
     );
   }
@@ -275,9 +338,6 @@ export default function DiscussionFeed({ newDiscussion }) {
               <p className="text-sm text-gray-500">{formatDate(discussion.createdAt)}</p>
             </div>
             <div className="flex items-center gap-2">
-              <div className="text-sm text-gray-500">
-                {formatDuration(discussion.duration || 0)}
-              </div>
               {user && discussion.authorId === user.uid && (
                 <button
                   onClick={() => handleDelete(discussion.id)}
@@ -297,14 +357,47 @@ export default function DiscussionFeed({ newDiscussion }) {
             {discussion.title}
           </h3>
 
-          {/* Audio Player */}
+          {/* Discussion Content */}
           <div className="mb-4">
-            <AudioPlayer
-              audioUrl={discussion.audioUrl}
-              onPlay={() => handlePlay(discussion.id)}
-              className="w-full"
-            />
+            <div className="prose max-w-none">
+              <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
+                {discussion.content}
+              </p>
+            </div>
           </div>
+
+          {/* AI Generated Points */}
+          {discussion.aiPoints && discussion.aiPoints.length > 0 && (
+            <div className="mb-4 bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <h4 className="text-sm font-medium text-blue-900 mb-3 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                Key Discussion Points
+              </h4>
+              <div className="space-y-2">
+                {discussion.aiPoints.map((point) => (
+                  <div key={point.id} className="flex items-start gap-3">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="flex-1">
+                      <p className="text-sm text-blue-800">{point.text}</p>
+                      {point.type && (
+                        <span className={`inline-block px-2 py-1 text-xs rounded-full mt-1 ${
+                          point.type === 'claim' ? 'bg-blue-100 text-blue-700' :
+                          point.type === 'evidence' ? 'bg-green-100 text-green-700' :
+                          point.type === 'recommendation' ? 'bg-purple-100 text-purple-700' :
+                          point.type === 'question' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {point.type}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Engagement Stats */}
           <div className="flex items-center justify-between pt-4 border-t border-gray-100">
@@ -331,13 +424,14 @@ export default function DiscussionFeed({ newDiscussion }) {
               
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h6m2-7.127V9a4 4 0 00-4-4H9a4 4 0 00-4 4v2.873M12 2l3 3m-3-3l-3 3" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
-                <span>{discussion.plays || 0} plays</span>
+                <span>{discussion.likes || 0} views</span>
               </div>
               
               <button
-                onClick={() => setReplyingTo(replyingTo === discussion.id ? null : discussion.id)}
+                onClick={() => handleReplyClick(discussion)}
                 className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-500 transition-colors"
                 disabled={!user}
               >
@@ -364,13 +458,21 @@ export default function DiscussionFeed({ newDiscussion }) {
             </div>
           </div>
           
-          {/* Reply Recorder */}
+          {/* Reply Form */}
           {replyingTo === discussion.id && (
             <div className="mt-4">
-              <AudioReplyRecorder
+              <TextReplyForm
                 discussionId={discussion.id}
+                selectedPoint={selectedPoint}
+                replyType={selectedReplyType}
+                replyingToReply={replyingToReply}
                 onReplyAdded={(reply) => handleReplyAdded(discussion.id, reply)}
-                onCancel={() => setReplyingTo(null)}
+                onCancel={() => {
+                  setReplyingTo(null);
+                  setSelectedPoint(null);
+                  setSelectedReplyType('agree');
+                  setReplyingToReply(null);
+                }}
               />
             </div>
           )}
@@ -378,61 +480,30 @@ export default function DiscussionFeed({ newDiscussion }) {
           {/* Replies Section */}
           {expandedReplies.has(discussion.id) && (discussion.replies || []).length > 0 && (
             <div className="mt-4 border-t border-gray-100 pt-4">
-              <div className="space-y-3">
-                {discussion.replies.map((reply) => (
-                  <div key={reply.id} className="bg-gray-50 rounded-lg p-4 ml-8">
-                    {/* Reply Author Info */}
-                    <div className="flex items-center gap-3 mb-3">
-                      {reply.authorPhoto ? (
-                        <Image
-                          src={reply.authorPhoto}
-                          alt={reply.authorName}
-                          width={24}
-                          height={24}
-                          className="w-6 h-6 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                          <span className="text-gray-600 text-xs font-medium">
-                            {reply.authorName?.charAt(0)?.toUpperCase() || '?'}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <h5 className="text-sm font-medium text-gray-900">{reply.authorName}</h5>
-                        <p className="text-xs text-gray-500">{formatDate(reply.createdAt)}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-xs text-gray-500">
-                          {formatDuration(reply.duration || 0)}
-                        </div>
-                        {user && reply.authorId === user.uid && (
-                          <button
-                            onClick={() => handleDeleteReply(discussion.id, reply.id)}
-                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                            title="Delete reply"
-                          >
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Reply Audio Player */}
-                    <AudioPlayer
-                      audioUrl={reply.audioUrl}
-                      onPlay={() => handlePlay(discussion.id)} // Still count as play on main discussion
-                      className="w-full"
-                    />
-                  </div>
-                ))}
-              </div>
+              <ReplyTree
+                replies={discussion.replies}
+                aiPoints={discussion.aiPoints || []}
+                discussionId={discussion.id}
+                onReplyToReply={(reply) => {
+                  setSelectedDiscussion(discussion);
+                  handleReplyToReply(reply);
+                }}
+                onDeleteReply={handleDeleteReply}
+                maxLevel={3}
+              />
             </div>
           )}
         </div>
       ))}
+      
+      {/* AI Point Selection Modal */}
+      <AIPointSelectionModal
+        isOpen={showPointModal}
+        onClose={() => setShowPointModal(false)}
+        aiPoints={selectedDiscussion?.aiPoints || []}
+        discussionTitle={selectedDiscussion?.title || ''}
+        onPointSelected={handlePointSelected}
+      />
     </div>
   );
 }

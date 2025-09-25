@@ -11,23 +11,23 @@ export function useDatabase() {
       console.log('Creating discussion with data:', discussionData);
       
       // Validate required fields
-      if (!discussionData.title || !discussionData.audioUrl || !discussionData.authorId) {
-        throw new Error('Missing required fields: title, audioUrl, or authorId');
+      if (!discussionData.title || !discussionData.content || !discussionData.authorId) {
+        throw new Error('Missing required fields: title, content, or authorId');
       }
 
       // Ensure all required fields are present
       const completeData = {
         title: discussionData.title.trim(),
-        audioUrl: discussionData.audioUrl,
-        duration: discussionData.duration || 0,
+        content: discussionData.content.trim(),
         authorId: discussionData.authorId,
         authorName: discussionData.authorName || 'Anonymous',
         authorPhoto: discussionData.authorPhoto || null,
         likes: 0,
         likedBy: [], // Track which users have liked this discussion
-        plays: 0,
         replies: [], // Array of reply objects
         replyCount: 0,
+        aiPoints: [], // AI-generated points for anchored replies
+        aiPointsGenerated: false, // Track if AI points have been generated
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         // Add metadata for better querying
@@ -137,8 +137,8 @@ export function useDatabase() {
       console.log('Adding reply to discussion:', discussionId, 'with data:', replyData);
       
       // Validate required fields
-      if (!replyData.audioUrl || !replyData.authorId) {
-        throw new Error('Missing required fields: audioUrl or authorId');
+      if (!replyData.content || !replyData.authorId) {
+        throw new Error('Missing required fields: content or authorId');
       }
 
       // Get the current discussion
@@ -150,11 +150,14 @@ export function useDatabase() {
       // Create the reply object
       const reply = {
         id: Date.now().toString(), // Simple ID for replies
-        audioUrl: replyData.audioUrl,
-        duration: replyData.duration || 0,
+        content: replyData.content.trim(),
         authorId: replyData.authorId,
         authorName: replyData.authorName || 'Anonymous',
         authorPhoto: replyData.authorPhoto || null,
+        replyToPointId: replyData.replyToPointId || null, // Which AI point this replies to
+        replyToReplyId: replyData.replyToReplyId || null, // Which reply this is responding to (for nested replies)
+        type: replyData.type || 'general', // "agree" | "challenge" | "expand" | "clarify" | "general"
+        level: replyData.level || 0, // Nesting level (0 = top level, 1 = reply to reply, etc.)
         createdAt: new Date().toISOString()
       };
 
@@ -211,12 +214,47 @@ export function useDatabase() {
     }
   };
 
+  // Update AI points for a discussion
+  const updateAIPoints = async (discussionId, aiPoints) => {
+    try {
+      console.log('Updating AI points for discussion:', discussionId, 'with points:', aiPoints);
+      
+      await updateDocument('discussions', discussionId, {
+        aiPoints: aiPoints,
+        aiPointsGenerated: true
+      });
+
+      console.log('AI points updated successfully');
+      return true;
+    } catch (error) {
+      console.error('Error updating AI points:', error);
+      throw error;
+    }
+  };
+
+  // Get AI points for a discussion
+  const getAIPoints = async (discussionId) => {
+    try {
+      const discussion = await getDocument('discussions', discussionId);
+      if (!discussion) {
+        throw new Error('Discussion not found');
+      }
+      
+      return discussion.aiPoints || [];
+    } catch (error) {
+      console.error('Error getting AI points:', error);
+      throw error;
+    }
+  };
+
   return {
     createDiscussion,
     getDiscussions,
     deleteDiscussion,
     addReply,
     deleteReply,
+    updateAIPoints,
+    getAIPoints,
     setupDatabase
   };
 }
