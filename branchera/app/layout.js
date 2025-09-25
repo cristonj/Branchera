@@ -1,5 +1,6 @@
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { DatabaseProvider } from "@/components/DatabaseProvider";
 
 export const metadata = {
   title: "Branchera - Where Progress Happens",
@@ -92,7 +93,9 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <AuthProvider>
-          {children}
+          <DatabaseProvider>
+            {children}
+          </DatabaseProvider>
         </AuthProvider>
       </body>
     </html>

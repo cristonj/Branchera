@@ -34,18 +34,10 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="space-y-4 mb-8">
-          <h2 className="text-xl font-semibold text-center">
-            Welcome Back
-          </h2>
-          <p className="text-center text-gray-600 text-sm">
-            Sign in to continue to your account
-          </p>
-        </div>
 
         <button
           onClick={handleGoogleSignIn}
-          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border border-black hover:bg-gray-50"
+          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white border border-black hover:bg-gray-50 rounded-full"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path

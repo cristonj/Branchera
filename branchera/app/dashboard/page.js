@@ -1,18 +1,27 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import AudioRecorder from '@/components/AudioRecorder';
+import DiscussionFeed from '@/components/DiscussionFeed';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [newDiscussion, setNewDiscussion] = useState(null);
 
   useEffect(() => {
     if (!user) {
       router.push('/login');
     }
   }, [user, router]);
+
+  const handleNewDiscussion = (discussion) => {
+    setNewDiscussion(discussion);
+    // Clear the new discussion after a brief moment to allow the feed to process it
+    setTimeout(() => setNewDiscussion(null), 100);
+  };
 
   if (!user) {
     return (
@@ -41,14 +50,11 @@ export default function DashboardPage() {
                     className="w-8 h-8 rounded-full"
                   />
                 )}
-                <span className="text-sm">
-                  {user.displayName || user.email}
-                </span>
               </div>
               
               <button
                 onClick={logout}
-                className="px-3 py-1 text-sm bg-black text-white hover:bg-gray-800"
+                className="px-3 py-1 text-sm bg-black text-white hover:bg-gray-800 rounded-full"
               >
                 Sign Out
               </button>
@@ -59,55 +65,8 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <h2 className="text-2xl font-bold mb-6">
-          Welcome to Branchera!
-        </h2>
-        
-        <div className="space-y-6">
-          <div className="p-4 border border-gray-200">
-            <h3 className="text-lg font-semibold mb-3">
-              Your Profile
-            </h3>
-            <div className="space-y-1 text-sm">
-              <p><span className="font-medium">Name:</span> {user.displayName || 'Not set'}</p>
-              <p><span className="font-medium">Email:</span> {user.email}</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 border border-gray-200">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium">Discussions</h4>
-              </div>
-              <p className="text-2xl font-bold">0</p>
-              <p className="text-sm text-gray-600">Start your first discussion</p>
-            </div>
-
-            <div className="p-4 border border-gray-200">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium">Branches</h4>
-              </div>
-              <p className="text-2xl font-bold">0</p>
-              <p className="text-sm text-gray-600">Create your first branch</p>
-            </div>
-
-            <div className="p-4 border border-gray-200">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="font-medium">Connections</h4>
-              </div>
-              <p className="text-2xl font-bold">0</p>
-              <p className="text-sm text-gray-600">Connect with others</p>
-            </div>
-          </div>
-
-          <div className="p-4 bg-black text-white">
-            <h3 className="text-lg font-bold mb-2">Get Started</h3>
-            <p className="mb-4 text-sm">Welcome to Branchera - the social platform where clarity and logic beat distraction and misinformation.</p>
-            <button className="px-4 py-2 bg-white text-black font-medium hover:bg-gray-100">
-              Start Your First Discussion
-            </button>
-          </div>
-        </div>
+        <AudioRecorder onDiscussionCreated={handleNewDiscussion} />
+        <DiscussionFeed newDiscussion={newDiscussion} />
       </main>
     </div>
   );
