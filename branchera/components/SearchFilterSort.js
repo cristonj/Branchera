@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSearchFilterSortState } from '@/hooks/useUrlState';
 
 export default function SearchFilterSort({ 
   discussions, 
@@ -10,18 +9,17 @@ export default function SearchFilterSort({
   onFilterChange, 
   onSortChange 
 }) {
-  const {
-    searchQuery,
-    setSearchQuery,
-    searchType,
-    setSearchType,
-    sortBy,
-    setSortBy,
-    filters,
-    setFilters,
-    clearAll
-  } = useSearchFilterSortState();
-  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
+  const [filters, setFilters] = useState({
+    hasReplies: false,
+    hasFactCheck: false,
+    dateRange: 'all',
+    author: '',
+    minLikes: 0,
+    minViews: 0
+  });
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Search function that searches through discussions and replies
@@ -298,14 +296,24 @@ export default function SearchFilterSort({
   }, [discussions, searchQuery, searchType, sortBy, filters, searchContent, filterDiscussions, sortDiscussions, onResults, onSearchChange, onFilterChange, onSortChange]);
 
   const handleFilterChange = (key, value) => {
-    setFilters({
-      ...filters,
+    setFilters(prev => ({
+      ...prev,
       [key]: value
-    });
+    }));
   };
 
   const clearFilters = () => {
-    clearAll();
+    setSearchQuery('');
+    setSearchType('all');
+    setSortBy('newest');
+    setFilters({
+      hasReplies: false,
+      hasFactCheck: false,
+      dateRange: 'all',
+      author: '',
+      minLikes: 0,
+      minViews: 0
+    });
   };
 
   const hasActiveFilters = searchQuery.trim() || 
@@ -327,7 +335,10 @@ export default function SearchFilterSort({
               type="text"
               placeholder="Search discussions, replies, fact-checks..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                console.log('Search input changed:', e.target.value);
+                setSearchQuery(e.target.value);
+              }}
               className="w-full px-4 py-2 pr-10 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
             />
             {searchQuery && (
@@ -343,7 +354,10 @@ export default function SearchFilterSort({
           </div>
           <select
             value={searchType}
-            onChange={(e) => setSearchType(e.target.value)}
+            onChange={(e) => {
+              console.log('Search type changed:', e.target.value);
+              setSearchType(e.target.value);
+            }}
             className="px-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
           >
             <option value="all">All</option>
@@ -376,7 +390,10 @@ export default function SearchFilterSort({
               <label className="block text-sm font-medium text-gray-700 mb-2">Sort by</label>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => {
+                  console.log('Sort changed:', e.target.value);
+                  setSortBy(e.target.value);
+                }}
                 className="w-full px-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
               >
                 <option value="newest">Newest First</option>
@@ -393,7 +410,10 @@ export default function SearchFilterSort({
               <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
               <select
                 value={filters.dateRange}
-                onChange={(e) => handleFilterChange('dateRange', e.target.value)}
+                onChange={(e) => {
+                  console.log('Date range changed:', e.target.value);
+                  handleFilterChange('dateRange', e.target.value);
+                }}
                 className="w-full px-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
               >
                 <option value="all">All Time</option>
@@ -410,7 +430,10 @@ export default function SearchFilterSort({
                 type="text"
                 placeholder="Filter by author name..."
                 value={filters.author}
-                onChange={(e) => handleFilterChange('author', e.target.value)}
+                onChange={(e) => {
+                  console.log('Author filter changed:', e.target.value);
+                  handleFilterChange('author', e.target.value);
+                }}
                 className="w-full px-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
               />
             </div>
@@ -422,7 +445,10 @@ export default function SearchFilterSort({
                 type="number"
                 min="0"
                 value={filters.minLikes}
-                onChange={(e) => handleFilterChange('minLikes', parseInt(e.target.value) || 0)}
+                onChange={(e) => {
+                  console.log('Min likes changed:', e.target.value);
+                  handleFilterChange('minLikes', parseInt(e.target.value) || 0);
+                }}
                 className="w-full px-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
               />
             </div>
@@ -434,7 +460,10 @@ export default function SearchFilterSort({
                 type="number"
                 min="0"
                 value={filters.minViews}
-                onChange={(e) => handleFilterChange('minViews', parseInt(e.target.value) || 0)}
+                onChange={(e) => {
+                  console.log('Min views changed:', e.target.value);
+                  handleFilterChange('minViews', parseInt(e.target.value) || 0);
+                }}
                 className="w-full px-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
               />
             </div>
@@ -447,7 +476,10 @@ export default function SearchFilterSort({
                   <input
                     type="checkbox"
                     checked={filters.hasReplies}
-                    onChange={(e) => handleFilterChange('hasReplies', e.target.checked)}
+                    onChange={(e) => {
+                      console.log('Has replies changed:', e.target.checked);
+                      handleFilterChange('hasReplies', e.target.checked);
+                    }}
                     className="mr-2 rounded focus:ring-black"
                   />
                   <span className="text-sm">Has Replies</span>
@@ -456,7 +488,10 @@ export default function SearchFilterSort({
                   <input
                     type="checkbox"
                     checked={filters.hasFactCheck}
-                    onChange={(e) => handleFilterChange('hasFactCheck', e.target.checked)}
+                    onChange={(e) => {
+                      console.log('Has fact check changed:', e.target.checked);
+                      handleFilterChange('hasFactCheck', e.target.checked);
+                    }}
                     className="mr-2 rounded focus:ring-black"
                   />
                   <span className="text-sm">Has Fact Check</span>
