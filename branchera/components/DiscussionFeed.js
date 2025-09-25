@@ -617,13 +617,13 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         return (
           <div key={discussion.id} className="rounded-lg border border-black/20">
             {/* Header Row - shows title and controls */}
-            <div className="px-4 py-3 flex items-center justify-between">
+            <div className={`px-4 py-3 flex items-center justify-between ${isExpanded ? 'h-0' : ''}`}>
               <button
                 onClick={() => toggleDiscussion(discussion.id)}
                 className="flex items-center gap-3 text-left flex-1 min-w-0"
                 title={isExpanded ? 'Collapse' : 'Expand'}
               >
-                <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-90 mt-4' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
                 {/* Hide title when expanded to avoid duplication */}
@@ -661,10 +661,10 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
 
             {/* Expanded Content */}
             {isExpanded && (
-              <div className="px-4 pb-4 border-t border-black/10">
+              <div className="px-4 pb-4">
                 {/* Title and author info */}
                 <div className="pt-3 pb-2">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 ml-10 -mt-7">
                     <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
                   </h3>
                   <div className="flex items-center gap-3">
@@ -674,7 +674,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                         alt={discussion.authorName}
                         width={28}
                         height={28}
-                        className="w-7 h-7 rounded-full object-cover"
+                        className="w-7 h-7 rounded-full object-cover -mt-14"
                       />
                     ) : (
                       <div className="w-7 h-7 rounded-full border border-black/40 flex items-center justify-center">
@@ -683,7 +683,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                         </span>
                       </div>
                     )}
-                    <div className="text-xs text-gray-600">
+                    <div className="text-xs text-gray-600 -ml-10">
                       <SearchHighlight text={discussion.authorName} searchQuery={searchQuery} /> · {formatDate(discussion.createdAt)}
                     </div>
                   </div>
