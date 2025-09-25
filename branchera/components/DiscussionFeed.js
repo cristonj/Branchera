@@ -9,6 +9,8 @@ import TextReplyForm from './TextReplyForm';
 import ReplyTree from './ReplyTree';
 import FactCheckResults from './FactCheckResults';
 import { AIService } from '@/lib/aiService';
+import { usePolling } from '@/hooks/usePolling';
+import { REALTIME_CONFIG } from '@/lib/realtimeConfig';
 
 export default function DiscussionFeed({ newDiscussion }) {
   const [discussions, setDiscussions] = useState([]);
@@ -63,6 +65,27 @@ export default function DiscussionFeed({ newDiscussion }) {
   useEffect(() => {
     loadDiscussions();
   }, [loadDiscussions]); // Include loadDiscussions dependency
+
+  // Silent refresh without showing loading skeleton to avoid flicker during polling
+  const refreshDiscussions = useCallback(async () => {
+    try {
+      const discussionsData = await getDiscussions({
+        limit: 20,
+        orderField: 'createdAt',
+        orderDirection: 'desc'
+      });
+      setDiscussions(discussionsData);
+    } catch (error) {
+      console.error('Background refresh failed:', error);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Poll for near-realtime updates
+  usePolling(
+    refreshDiscussions,
+    REALTIME_CONFIG.pollingIntervalMs,
+    { enabled: true, immediate: false, pauseOnHidden: REALTIME_CONFIG.pauseOnHidden }
+  );
 
   // Add new discussion to the top of the feed when created
   useEffect(() => {
