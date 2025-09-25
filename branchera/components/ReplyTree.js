@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDatabase } from '@/hooks/useDatabase';
 import FactCheckResults from './FactCheckResults';
 import SearchHighlight from './SearchHighlight';
+import EditReplyForm from './EditReplyForm';
 
 export default function ReplyTree({ 
   replies, 
@@ -13,12 +15,15 @@ export default function ReplyTree({
   searchQuery,
   onReplyToReply, 
   onDeleteReply,
+  onReplyEdited,
   onReplyView,
   onPointClick,
   maxLevel = 3 
 }) {
   const { user } = useAuth();
+  const { editReply } = useDatabase();
   const [expandedReplies, setExpandedReplies] = useState(new Set());
+  const [editingReply, setEditingReply] = useState(null);
 
   const toggleReply = async (replyId) => {
     const wasExpanded = expandedReplies.has(replyId);
@@ -61,6 +66,24 @@ export default function ReplyTree({
   };
 
   const getReplyTypeStyle = () => 'bg-white';
+
+  const handleEditReply = (reply) => {
+    if (!user || reply.authorId !== user.uid) return;
+    setEditingReply(reply);
+  };
+
+  const handleEditComplete = (updatedReply) => {
+    // Notify parent component that a reply was updated
+    // We'll need to pass this up through props
+    if (onReplyEdited) {
+      onReplyEdited(updatedReply);
+    }
+    setEditingReply(null);
+  };
+
+  const handleEditCancel = () => {
+    setEditingReply(null);
+  };
 
   // Build reply tree structure
   const buildReplyTree = (replies) => {
@@ -145,6 +168,9 @@ export default function ReplyTree({
           <div className="flex-1">
             <div className="text-xs text-gray-700">
               <SearchHighlight text={reply.authorName} searchQuery={searchQuery} /> · {formatDate(reply.createdAt)}
+              {reply.isEdited && reply.editedAt && (
+                <span className="text-gray-500 italic"> · edited {formatDate(reply.editedAt)}</span>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -179,15 +205,26 @@ export default function ReplyTree({
               </button>
             )}
             {user && reply.authorId === user.uid && (
-              <button
-                onClick={() => onDeleteReply(discussionId, reply.id)}
-                className="p-1 text-gray-800 hover:text-black"
-                title="Delete reply"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
+              <>
+                <button
+                  onClick={() => handleEditReply(reply)}
+                  className="p-1 text-gray-800 hover:text-black"
+                  title="Edit reply"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => onDeleteReply(discussionId, reply.id)}
+                  className="p-1 text-gray-800 hover:text-black"
+                  title="Delete reply"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -240,6 +277,16 @@ export default function ReplyTree({
               ))}
             </ul>
           </div>
+        )}
+        
+        {/* Edit form for this reply */}
+        {editingReply && editingReply.id === reply.id && (
+          <EditReplyForm
+            discussionId={discussionId}
+            reply={editingReply}
+            onEditComplete={handleEditComplete}
+            onCancel={handleEditCancel}
+          />
         )}
       </div>
     );

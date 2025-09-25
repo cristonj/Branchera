@@ -392,12 +392,100 @@ export function useDatabase() {
     }
   };
 
+  // Edit a discussion (only by author)
+  const editDiscussion = async (discussionId, userId, updatedData) => {
+    try {
+      console.log('Editing discussion:', discussionId, 'by user:', userId);
+      
+      // First check if the user is the author
+      const discussion = await getDocument('discussions', discussionId);
+      
+      if (!discussion) {
+        throw new Error('Discussion not found');
+      }
+      
+      if (discussion.authorId !== userId) {
+        throw new Error('Only the author can edit this discussion');
+      }
+      
+      // Validate required fields
+      if (!updatedData.title || !updatedData.content) {
+        throw new Error('Title and content are required');
+      }
+      
+      const updatePayload = {
+        title: updatedData.title.trim(),
+        content: updatedData.content.trim(),
+        editedAt: new Date().toISOString(),
+        isEdited: true
+      };
+      
+      await updateDocument('discussions', discussionId, updatePayload);
+      console.log('Discussion edited successfully');
+      
+      return { ...discussion, ...updatePayload };
+    } catch (error) {
+      console.error('Error editing discussion:', error);
+      throw error;
+    }
+  };
+
+  // Edit a reply (only by author)
+  const editReply = async (discussionId, replyId, userId, updatedContent) => {
+    try {
+      console.log('Editing reply:', replyId, 'in discussion:', discussionId, 'by user:', userId);
+      
+      // Get the current discussion
+      const discussion = await getDocument('discussions', discussionId);
+      if (!discussion) {
+        throw new Error('Discussion not found');
+      }
+
+      // Find the reply and check if user is the author
+      const replyIndex = discussion.replies?.findIndex(r => r.id === replyId);
+      if (replyIndex === -1) {
+        throw new Error('Reply not found');
+      }
+
+      const reply = discussion.replies[replyIndex];
+      if (reply.authorId !== userId) {
+        throw new Error('Only the author can edit this reply');
+      }
+
+      // Validate content
+      if (!updatedContent || !updatedContent.trim()) {
+        throw new Error('Reply content cannot be empty');
+      }
+
+      // Update reply in the array
+      const updatedReplies = [...discussion.replies];
+      updatedReplies[replyIndex] = {
+        ...reply,
+        content: updatedContent.trim(),
+        editedAt: new Date().toISOString(),
+        isEdited: true
+      };
+      
+      await updateDocument('discussions', discussionId, {
+        replies: updatedReplies
+      });
+
+      console.log('Reply edited successfully');
+      return updatedReplies[replyIndex];
+    } catch (error) {
+      console.error('Error editing reply:', error);
+      throw error;
+    }
+  };
+
   return {
     createDiscussion,
     getDiscussions,
     deleteDiscussion,
+    editDiscussion,
     addReply,
     deleteReply,
+    editReply,
     updateAIPoints,
     getAIPoints,
     setupDatabase,
