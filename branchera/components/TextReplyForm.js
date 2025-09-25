@@ -114,14 +114,14 @@ export default function TextReplyForm({
   };
 
   return (
-    <div className="bg-white rounded border border-black/20 p-3">
+    <div className="bg-white rounded-lg border border-black/20 p-3">
       {selectedPoint ? (
         <div className="mb-3">
           <div className="text-xs font-semibold text-gray-900 mb-1">
             {getReplyTypeIcon(replyType)} {getReplyTypeLabel(replyType)}
             {selectedReplyForPoints && ` ${selectedReplyForPoints.authorName}'s point`}
           </div>
-          <div className="p-3 rounded border border-black/15 bg-white">
+          <div className="p-3 rounded-lg border border-black/15 bg-white">
             <p className="text-xs text-gray-900">{selectedPoint.text}</p>
             {selectedReplyForPoints && (
               <div className="mt-2 pt-2 border-t border-black/10">
@@ -138,7 +138,7 @@ export default function TextReplyForm({
           <div className="text-xs font-semibold text-gray-900 mb-1">
             💬 Replying to {replyingToReply.authorName}
           </div>
-          <div className="p-3 rounded border border-black/15 bg-white">
+          <div className="p-3 rounded-lg border border-black/15 bg-white">
             <p className="text-xs text-gray-900">{replyingToReply.content}</p>
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function TextReplyForm({
             onChange={(e) => setContent(e.target.value)}
             placeholder="Write your reply..."
             rows={3}
-            className="w-full px-3 py-2 border border-black/20 rounded focus:outline-none focus:ring-1 focus:ring-black resize-vertical text-sm text-gray-900"
+            className="w-full px-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-black resize-vertical text-sm text-gray-900"
             disabled={isSubmitting}
             required
           />
@@ -166,14 +166,14 @@ export default function TextReplyForm({
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="px-3 py-1 text-sm border border-black/30 rounded hover:bg-black/5 disabled:opacity-50"
+            className="px-3 py-1 text-sm border border-black/30 rounded-lg hover:bg-black/5 disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={isSubmitting || !content.trim()}
-            className="px-4 py-1 text-sm bg-black text-white rounded hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-1 text-sm bg-black text-white rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isSubmitting ? (
               <>

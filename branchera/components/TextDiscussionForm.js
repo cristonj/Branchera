@@ -124,7 +124,7 @@ export default function TextDiscussionForm({ onDiscussionCreated }) {
   };
 
   return (
-    <div className="bg-white rounded border border-black/20 p-6 mb-6">
+    <div className="bg-white rounded-lg border border-black/20 p-6 mb-6">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Start a Discussion</h2>
       
       <form onSubmit={handleSubmit}>
@@ -143,7 +143,7 @@ export default function TextDiscussionForm({ onDiscussionCreated }) {
               }
             }}
             placeholder="What would you like to discuss?"
-            className={`w-full px-3 py-2 border rounded focus:outline-none focus:ring-1 focus:ring-black ${
+            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-1 focus:ring-black ${
               title.length > TITLE_CHAR_LIMIT * 0.9 ? 'border-red-400' : 'border-black/20'
             }`}
             disabled={isSubmitting}
@@ -172,7 +172,7 @@ export default function TextDiscussionForm({ onDiscussionCreated }) {
             onChange={(e) => setContent(e.target.value)}
             placeholder="Share your thoughts, ideas, or questions..."
             rows={4}
-            className="w-full px-3 py-2 border border-black/20 rounded focus:outline-none focus:ring-1 focus:ring-black resize-vertical"
+            className="w-full px-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-black resize-vertical"
             disabled={isSubmitting}
             required
           />
@@ -186,7 +186,7 @@ export default function TextDiscussionForm({ onDiscussionCreated }) {
           <button
             type="submit"
             disabled={isSubmitting || !title.trim() || !content.trim()}
-            className="px-6 py-2 bg-black text-white rounded hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-2 bg-black text-white rounded-lg hover:bg-black/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isSubmitting ? (
               <>

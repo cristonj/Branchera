@@ -656,7 +656,7 @@ export default function DiscussionFeed({ newDiscussion }) {
 
                 {/* AI points (collapsible and clickable) */}
                 {discussion.aiPoints && discussion.aiPoints.length > 0 && (
-                  <div className="mt-2 mb-2 rounded border border-black/20">
+                  <div className="mt-2 mb-2 rounded-lg border border-black/20">
                     <button
                       onClick={() => toggleAIPoints(discussion.id)}
                       className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-50"
@@ -679,7 +679,7 @@ export default function DiscussionFeed({ newDiscussion }) {
                             <button
                               key={point.id}
                               onClick={() => handlePointClick(discussion, point)}
-                              className="w-full flex items-start gap-2 p-3 text-left rounded hover:bg-gray-50 border border-transparent hover:border-black/20"
+                              className="w-full flex items-start gap-2 p-3 text-left rounded-lg hover:bg-gray-50 border border-transparent hover:border-black/20"
                               disabled={!user}
                             >
                               <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>

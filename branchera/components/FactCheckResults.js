@@ -8,7 +8,7 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded border border-black/20 p-3 mt-3">
+      <div className="bg-white rounded-lg border border-black/20 p-3 mt-3">
         <div className="flex items-center gap-2 mb-2">
           <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
           <span className="text-sm font-semibold text-gray-900">Fact-checking content...</span>
@@ -20,7 +20,7 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
 
   if (!factCheckResults || !factCheckResults.claims || factCheckResults.claims.length === 0) {
     return (
-      <div className="bg-white rounded border border-black/20 p-3 mt-3">
+      <div className="bg-white rounded-lg border border-black/20 p-3 mt-3">
         <div className="flex items-center gap-2 mb-1">
           <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -77,7 +77,7 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
   };
 
   return (
-    <div className="bg-white rounded border border-black/20 mt-3">
+    <div className="bg-white rounded-lg border border-black/20 mt-3">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-50"
@@ -100,7 +100,7 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
         {factCheckResults.claims.map((claim) => {
           const isExpanded = expandedClaims.has(claim.id);
           return (
-            <div key={claim.id} className={`border rounded p-2 ${getStatusColor(claim.status)}`}>
+            <div key={claim.id} className={`border rounded-lg p-2 ${getStatusColor(claim.status)}`}>
               <div className="flex items-start gap-2">
                 {getStatusIcon(claim.status)}
                 <div className="flex-1 min-w-0">
@@ -108,13 +108,13 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
                     <p className="text-xs font-medium text-gray-900 truncate pr-2">
                       &ldquo;{claim.text}&rdquo;
                     </p>
-                    <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 bg-white rounded">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 bg-white rounded-full">
                       {getStatusLabel(claim.status)}
                     </span>
                   </div>
                   
                   {claim.originalPoint && (
-                    <div className="mt-1 p-1.5 bg-gray-100 rounded text-[10px] text-gray-600">
+                    <div className="mt-1 p-1.5 bg-gray-100 rounded-lg text-[10px] text-gray-600">
                       <span className="font-medium">From point:</span> {claim.originalPoint}
                     </div>
                   )}
@@ -143,7 +143,7 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
                   </div>
                   <div className="space-y-1">
                     {claim.webSearchResults.results.map((result, idx) => (
-                      <div key={idx} className="bg-white rounded border border-gray-200 p-2">
+                      <div key={idx} className="bg-white rounded-lg border border-gray-200 p-2">
                         <div className="text-[11px] font-medium text-gray-900 mb-1">
                           {result.url !== '#' ? (
                             <a 
