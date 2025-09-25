@@ -22,7 +22,19 @@ export default function AudioReplyRecorder({ discussionId, onReplyAdded, onCance
   const { user } = useAuth();
   const { addReply } = useDatabase();
 
-  const stopRecording = useCallback(() => {
+  const startTimer = useCallback(() => {
+    timerRef.current = setInterval(() => {
+      setRecordingTime(prev => {
+        const newTime = prev + 1;
+        if (newTime >= MAX_RECORDING_TIME) {
+          stopRecording();
+        }
+        return newTime;
+      });
+    }, 1000);
+  }, []);
+
+  const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
@@ -40,19 +52,7 @@ export default function AudioReplyRecorder({ discussionId, onReplyAdded, onCance
       const stream = mediaRecorderRef.current.stream;
       stream.getTracks().forEach(track => track.stop());
     }
-  }, [isRecording, stopTimer]);
-
-  const startTimer = useCallback(() => {
-    timerRef.current = setInterval(() => {
-      setRecordingTime(prev => {
-        const newTime = prev + 1;
-        if (newTime >= MAX_RECORDING_TIME) {
-          stopRecording();
-        }
-        return newTime;
-      });
-    }, 1000);
-  }, [stopRecording]);
+  };
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) {

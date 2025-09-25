@@ -26,7 +26,19 @@ export default function AudioRecorder({ onDiscussionCreated }) {
   const { user } = useAuth();
   const { createDiscussion } = useDatabase();
 
-  const stopRecording = useCallback(() => {
+  const startTimer = useCallback(() => {
+    timerRef.current = setInterval(() => {
+      setRecordingTime(prev => {
+        const newTime = prev + 1;
+        if (newTime >= MAX_RECORDING_TIME) {
+          stopRecording();
+        }
+        return newTime;
+      });
+    }, 1000);
+  }, []);
+
+  const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
@@ -45,19 +57,7 @@ export default function AudioRecorder({ onDiscussionCreated }) {
       const stream = mediaRecorderRef.current.stream;
       stream.getTracks().forEach(track => track.stop());
     }
-  }, [isRecording, stopTimer, stopVoiceActivityDetection]);
-
-  const startTimer = useCallback(() => {
-    timerRef.current = setInterval(() => {
-      setRecordingTime(prev => {
-        const newTime = prev + 1;
-        if (newTime >= MAX_RECORDING_TIME) {
-          stopRecording();
-        }
-        return newTime;
-      });
-    }, 1000);
-  }, [stopRecording]);
+  };
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
