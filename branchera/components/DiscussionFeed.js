@@ -21,7 +21,7 @@ export default function DiscussionFeed({ newDiscussion }) {
   const [expandedAIPoints, setExpandedAIPoints] = useState(new Set()); // Track expanded AI points sections
   const [selectedDiscussion, setSelectedDiscussion] = useState(null); // Discussion for point selection
   const [selectedPoint, setSelectedPoint] = useState(null); // Selected AI point for reply
-  const [selectedReplyType, setSelectedReplyType] = useState('agree'); // Selected reply type
+  const [selectedReplyType, setSelectedReplyType] = useState('general'); // Selected reply type
   const [replyingToReply, setReplyingToReply] = useState(null); // Reply being replied to (for nested replies)
   const [selectedReplyForPoints, setSelectedReplyForPoints] = useState(null); // Reply context for AI points
   
@@ -324,7 +324,7 @@ export default function DiscussionFeed({ newDiscussion }) {
     setReplyingToReply(reply);
     setReplyingTo(selectedDiscussion.id);
     setSelectedPoint(null);
-    setSelectedReplyType('agree');
+    setSelectedReplyType('general');
 
     // For now, just start a basic reply to the reply without points
     // This can be enhanced later if needed
@@ -348,7 +348,7 @@ export default function DiscussionFeed({ newDiscussion }) {
     // Close the reply recorder and clear selections
     setReplyingTo(null);
     setSelectedPoint(null);
-    setSelectedReplyType('agree');
+    setSelectedReplyType('general');
     setSelectedDiscussion(null);
     setReplyingToReply(null);
     
@@ -429,9 +429,47 @@ export default function DiscussionFeed({ newDiscussion }) {
     // Set the discussion and point for reply
     setSelectedDiscussion(discussion);
     setSelectedPoint(point);
-    setSelectedReplyType('agree'); // Default reply type
+    setSelectedReplyType('general'); // Default reply type
     setReplyingToReply(null);
     setSelectedReplyForPoints(null);
+    
+    // Start reply form
+    setReplyingTo(discussion.id);
+  };
+
+  // Handle point clicks from replies
+  const handleReplyPointClick = (reply, point) => {
+    if (!user) return;
+    
+    // Find the discussion this reply belongs to by searching through all replies recursively
+    const findDiscussionForReply = (replyId) => {
+      for (const discussion of discussions) {
+        if (discussion.replies) {
+          const findReplyInTree = (replies) => {
+            for (const r of replies) {
+              if (r.id === replyId) return true;
+              if (r.children && findReplyInTree(r.children)) return true;
+            }
+            return false;
+          };
+          
+          if (findReplyInTree(discussion.replies)) {
+            return discussion;
+          }
+        }
+      }
+      return null;
+    };
+    
+    const discussion = findDiscussionForReply(reply.id);
+    if (!discussion) return;
+    
+    // Set the discussion, point, and reply context for reply
+    setSelectedDiscussion(discussion);
+    setSelectedPoint(point);
+    setSelectedReplyType('general'); // Default reply type
+    setReplyingToReply(reply); // Set the reply we're replying to
+    setSelectedReplyForPoints(reply); // Set context for points from reply
     
     // Start reply form
     setReplyingTo(discussion.id);
@@ -641,7 +679,7 @@ export default function DiscussionFeed({ newDiscussion }) {
                             <button
                               key={point.id}
                               onClick={() => handlePointClick(discussion, point)}
-                              className="w-full flex items-start gap-2 p-2 text-left rounded hover:bg-gray-50 border border-transparent hover:border-black/20"
+                              className="w-full flex items-start gap-2 p-3 text-left rounded hover:bg-gray-50 border border-transparent hover:border-black/20"
                               disabled={!user}
                             >
                               <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
@@ -718,12 +756,14 @@ export default function DiscussionFeed({ newDiscussion }) {
                       selectedPoint={selectedPoint}
                       replyType={selectedReplyType}
                       replyingToReply={replyingToReply}
+                      selectedReplyForPoints={selectedReplyForPoints}
                       onReplyAdded={(reply) => handleReplyAdded(discussion.id, reply)}
                       onCancel={() => {
                         setReplyingTo(null);
                         setSelectedPoint(null);
-                        setSelectedReplyType('agree');
+                        setSelectedReplyType('general');
                         setReplyingToReply(null);
+                        setSelectedReplyForPoints(null);
                       }}
                     />
                   </div>
@@ -764,6 +804,7 @@ export default function DiscussionFeed({ newDiscussion }) {
                           throw error;
                         }
                       }}
+                      onPointClick={handleReplyPointClick}
                       maxLevel={3}
                     />
                   </div>
