@@ -4,15 +4,24 @@ import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { useFirestore } from '@/hooks/useFirestore';
 import { useDatabase } from '@/hooks/useDatabase';
+import { useRealtimeDiscussions } from '@/hooks/useRealtimeDiscussions';
 import { useAuth } from '@/contexts/AuthContext';
 import TextReplyForm from './TextReplyForm';
-import ReplyTree from './ReplyTree';
+import RealtimeReplyTree from './RealtimeReplyTree';
 import FactCheckResults from './FactCheckResults';
 import { AIService } from '@/lib/aiService';
 
 export default function DiscussionFeed({ newDiscussion }) {
-  const [discussions, setDiscussions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Use real-time discussions hook
+  const { 
+    discussions, 
+    loading, 
+    error: discussionsError,
+    updateDiscussionLocally,
+    addDiscussionLocally,
+    removeDiscussionLocally 
+  } = useRealtimeDiscussions();
+  
   const [replyingTo, setReplyingTo] = useState(null); // Track which discussion is being replied to
   const [expandedReplies, setExpandedReplies] = useState(new Set()); // Track which discussions have expanded replies
   const [expandedDiscussions, setExpandedDiscussions] = useState(new Set()); // Track expanded discussion cards
@@ -22,28 +31,18 @@ export default function DiscussionFeed({ newDiscussion }) {
   const [selectedReplyType, setSelectedReplyType] = useState('agree'); // Selected reply type
   const [replyingToReply, setReplyingToReply] = useState(null); // Reply being replied to (for nested replies)
   const [selectedReplyForPoints, setSelectedReplyForPoints] = useState(null); // Reply context for AI points
+  const [discussionReplies, setDiscussionReplies] = useState({}); // Store replies for each discussion
+  const [replySubscriptions, setReplySubscriptions] = useState(new Set()); // Track active reply subscriptions
+  const [lastViewedTime, setLastViewedTime] = useState(Date.now()); // Track when user last viewed the feed
   
   const { updateDocument } = useFirestore();
-  const { getDiscussions, deleteDiscussion, deleteReply, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults } = useDatabase();
+  const { deleteDiscussion, deleteReply, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults } = useDatabase();
   const { user } = useAuth();
 
-  const loadDiscussions = useCallback(async () => {
-    try {
-      setLoading(true);
-      console.log('Loading discussions...');
-      
-      // Load discussions directly without setup
-      const discussionsData = await getDiscussions({
-        limit: 20,
-        orderField: 'createdAt',
-        orderDirection: 'desc'
-      });
-      
-      console.log('Loaded discussions:', discussionsData);
-      setDiscussions(discussionsData);
-      
-      // Generate AI points and fact-check results for older discussions that don't have them
-      discussionsData.forEach(discussion => {
+  // Generate AI points and fact-check results for discussions that don't have them
+  useEffect(() => {
+    if (!loading && discussions.length > 0) {
+      discussions.forEach(discussion => {
         if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
           generateAIPointsForDiscussion(discussion);
         }
@@ -51,26 +50,16 @@ export default function DiscussionFeed({ newDiscussion }) {
           generateFactCheckForDiscussion(discussion);
         }
       });
-    } catch (error) {
-      console.error('Error loading discussions:', error);
-      // Set empty array to prevent crashes
-      setDiscussions([]);
-    } finally {
-      setLoading(false);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [discussions, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    loadDiscussions();
-  }, [loadDiscussions]); // Include loadDiscussions dependency
-
-  // Add new discussion to the top of the feed when created
+  // Add new discussion to the feed when created (optimistic update)
   useEffect(() => {
     if (newDiscussion) {
-      setDiscussions(prev => [newDiscussion, ...prev]);
+      addDiscussionLocally(newDiscussion);
       // AI points are now generated during discussion creation
     }
-  }, [newDiscussion]);
+  }, [newDiscussion, addDiscussionLocally]);
 
   // Generate AI points for a discussion
   const generateAIPointsForDiscussion = async (discussion) => {
@@ -86,13 +75,7 @@ export default function DiscussionFeed({ newDiscussion }) {
       await updateAIPoints(discussion.id, aiPoints);
       
       // Update local state
-      setDiscussions(prev =>
-        prev.map(d =>
-          d.id === discussion.id 
-            ? { ...d, aiPoints, aiPointsGenerated: true }
-            : d
-        )
-      );
+      updateDiscussionLocally(discussion.id, { aiPoints, aiPointsGenerated: true });
       
       console.log('AI points generated successfully for discussion:', discussion.id);
     } catch (error) {
@@ -118,13 +101,7 @@ export default function DiscussionFeed({ newDiscussion }) {
         await updateFactCheckResults(discussion.id, factCheckResults);
         
         // Update local state
-        setDiscussions(prev =>
-          prev.map(d =>
-            d.id === discussion.id 
-              ? { ...d, factCheckResults, factCheckGenerated: true }
-              : d
-          )
-        );
+        updateDiscussionLocally(discussion.id, { factCheckResults, factCheckGenerated: true });
         
         console.log('Fact-check results generated successfully for discussion using points:', discussion.id);
       } else {
@@ -136,13 +113,7 @@ export default function DiscussionFeed({ newDiscussion }) {
         await updateFactCheckResults(discussion.id, factCheckResults);
         
         // Update local state
-        setDiscussions(prev =>
-          prev.map(d =>
-            d.id === discussion.id 
-              ? { ...d, factCheckResults, factCheckGenerated: true }
-              : d
-          )
-        );
+        updateDiscussionLocally(discussion.id, { factCheckResults, factCheckGenerated: true });
         
         console.log('Fact-check results generated successfully for discussion using content fallback:', discussion.id);
       }
@@ -151,71 +122,6 @@ export default function DiscussionFeed({ newDiscussion }) {
     }
   };
 
-  // Generate fact-check results for replies that don't have them based on points
-  const generateFactCheckForReplies = async (discussionId, replies) => {
-    try {
-      const repliesToUpdate = replies.filter(reply => 
-        !reply.factCheckGenerated && !reply.factCheckResults && reply.content && reply.content.trim()
-      );
-
-      if (repliesToUpdate.length === 0) return;
-
-      console.log(`Generating fact-check results for ${repliesToUpdate.length} replies in discussion:`, discussionId);
-
-      // Process replies in parallel
-      const factCheckPromises = repliesToUpdate.map(async (reply) => {
-        try {
-          // First generate points for the reply content
-          console.log('Generating points for reply:', reply.id);
-          const replyPoints = await AIService.generateReplyPoints(reply.content, '');
-          
-          // Then fact check based on those points
-          console.log('Fact checking reply based on points:', reply.id);
-          const factCheckResults = await AIService.factCheckPoints(replyPoints, 'Reply');
-          
-          await updateReplyFactCheckResults(discussionId, reply.id, factCheckResults);
-          return { replyId: reply.id, factCheckResults };
-        } catch (error) {
-          console.error('Error generating fact-check for reply:', reply.id, error);
-          
-          // Fallback to content-based fact checking if points generation fails
-          try {
-            console.log('Falling back to content-based fact checking for reply:', reply.id);
-            const factCheckResults = await AIService.factCheckContent(reply.content, 'Reply');
-            await updateReplyFactCheckResults(discussionId, reply.id, factCheckResults);
-            return { replyId: reply.id, factCheckResults };
-          } catch (fallbackError) {
-            console.error('Error with fallback fact-check for reply:', reply.id, fallbackError);
-            return { replyId: reply.id, error: fallbackError };
-          }
-        }
-      });
-
-      const results = await Promise.all(factCheckPromises);
-
-      // Update local state with the new fact-check results
-      setDiscussions(prev =>
-        prev.map(d =>
-          d.id === discussionId
-            ? {
-                ...d,
-                replies: (d.replies || []).map(reply => {
-                  const result = results.find(r => r.replyId === reply.id);
-                  if (result && result.factCheckResults) {
-                    return { ...reply, factCheckResults: result.factCheckResults, factCheckGenerated: true };
-                  }
-                  return reply;
-                })
-              }
-            : d
-        )
-      );
-
-      console.log('Fact-check results generated for replies in discussion:', discussionId);
-    } catch (error) {
-      console.error('Error generating fact-check results for replies:', error);
-    }
-  };
 
   // Remove handlePlay function as it's no longer needed for text-based discussions
 
@@ -246,11 +152,7 @@ export default function DiscussionFeed({ newDiscussion }) {
         });
         
         // Update local state
-        setDiscussions(prev =>
-          prev.map(d =>
-            d.id === discussionId ? { ...d, likes: newLikes, likedBy: newLikedBy } : d
-          )
-        );
+        updateDiscussionLocally(discussionId, { likes: newLikes, likedBy: newLikedBy });
       }
     } catch (error) {
       console.error('Error updating like count:', error);
@@ -285,7 +187,7 @@ export default function DiscussionFeed({ newDiscussion }) {
       await deleteDiscussion(discussionId, user.uid);
       
       // Remove from local state
-      setDiscussions(prev => prev.filter(d => d.id !== discussionId));
+      removeDiscussionLocally(discussionId);
       
       console.log('Discussion deleted successfully');
     } catch (error) {
@@ -309,18 +211,10 @@ export default function DiscussionFeed({ newDiscussion }) {
   };
 
   const handleReplyAdded = (discussionId, newReply) => {
-    // Update the discussion with the new reply
-    setDiscussions(prev =>
-      prev.map(d =>
-        d.id === discussionId
-          ? {
-              ...d,
-              replies: [...(d.replies || []), newReply],
-              replyCount: (d.replyCount || 0) + 1
-            }
-          : d
-      )
-    );
+    // Update the discussion's reply count locally
+    updateDiscussionLocally(discussionId, {
+      replyCount: discussions.find(d => d.id === discussionId)?.replyCount + 1 || 1
+    });
     
     // Close the reply recorder and clear selections
     setReplyingTo(null);
@@ -342,18 +236,11 @@ export default function DiscussionFeed({ newDiscussion }) {
     try {
       await deleteReply(discussionId, replyId, user.uid);
       
-      // Update local state
-      setDiscussions(prev =>
-        prev.map(d =>
-          d.id === discussionId
-            ? {
-                ...d,
-                replies: d.replies.filter(r => r.id !== replyId),
-                replyCount: Math.max(0, (d.replyCount || 0) - 1)
-              }
-            : d
-        )
-      );
+      // Update local state - just update reply count since replies are managed by RealtimeReplyTree
+      const discussion = discussions.find(d => d.id === discussionId);
+      updateDiscussionLocally(discussionId, {
+        replyCount: Math.max(0, (discussion?.replyCount || 0) - 1)
+      });
       
       console.log('Reply deleted successfully');
     } catch (error) {
@@ -362,9 +249,7 @@ export default function DiscussionFeed({ newDiscussion }) {
     }
   };
 
-  const toggleReplies = async (discussionId) => {
-    const wasExpanded = expandedReplies.has(discussionId);
-    
+  const toggleReplies = (discussionId) => {
     setExpandedReplies(prev => {
       const newSet = new Set(prev);
       if (newSet.has(discussionId)) {
@@ -374,18 +259,6 @@ export default function DiscussionFeed({ newDiscussion }) {
       }
       return newSet;
     });
-
-    // Generate fact-check results for replies when expanding
-    if (!wasExpanded) {
-      const discussion = discussions.find(d => d.id === discussionId);
-      if (discussion && discussion.replies && discussion.replies.length > 0) {
-        try {
-          await generateFactCheckForReplies(discussionId, discussion.replies);
-        } catch (error) {
-          console.error('Error generating fact-check results for replies:', error);
-        }
-      }
-    }
   };
 
   const toggleAIPoints = (discussionId) => {
@@ -457,13 +330,7 @@ export default function DiscussionFeed({ newDiscussion }) {
         const result = await incrementDiscussionView(discussionId, user.uid);
         
         // Update local state with new view count
-        setDiscussions(prev =>
-          prev.map(d =>
-            d.id === discussionId 
-              ? { ...d, views: result.views, viewedBy: result.viewedBy }
-              : d
-          )
-        );
+        updateDiscussionLocally(discussionId, { views: result.views, viewedBy: result.viewedBy });
       } catch (error) {
         console.error('Error incrementing discussion view:', error);
         // Don't show error to user, just log it
@@ -501,9 +368,33 @@ export default function DiscussionFeed({ newDiscussion }) {
     );
   }
 
+  // Calculate new discussions count
+  const newDiscussionsCount = discussions.filter(d => 
+    new Date(d.createdAt) > new Date(lastViewedTime)
+  ).length;
+
+  const markAllAsRead = () => {
+    setLastViewedTime(Date.now());
+  };
+
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">Discussions</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-gray-900">Discussions</h2>
+        {newDiscussionsCount > 0 && (
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-blue-600">
+              {newDiscussionsCount} new discussion{newDiscussionsCount !== 1 ? 's' : ''}
+            </span>
+            <button
+              onClick={markAllAsRead}
+              className="px-3 py-1 text-xs bg-blue-100 text-blue-800 hover:bg-blue-200 rounded-full"
+            >
+              Mark all as read
+            </button>
+          </div>
+        )}
+      </div>
 
       {discussions.map((discussion) => {
         const isExpanded = expandedDiscussions.has(discussion.id);
@@ -519,10 +410,17 @@ export default function DiscussionFeed({ newDiscussion }) {
                 <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-                {/* Hide title when expanded to avoid duplication */}
-                {!isExpanded && (
-                  <span className="font-semibold text-gray-900 truncate flex-1 min-w-0">{discussion.title}</span>
-                )}
+              {/* Hide title when expanded to avoid duplication */}
+              {!isExpanded && (
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <span className="font-semibold text-gray-900 truncate">{discussion.title}</span>
+                  {new Date(discussion.createdAt) > new Date(lastViewedTime) && (
+                    <span className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                      NEW
+                    </span>
+                  )}
+                </div>
+              )}
               </button>
               {/* Hide action buttons when expanded - only show likes and replies count */}
               {!isExpanded && (
@@ -707,12 +605,11 @@ export default function DiscussionFeed({ newDiscussion }) {
                 )}
 
                 {/* Replies */}
-                {expandedReplies.has(discussion.id) && (discussion.replies || []).length > 0 && (
+                {expandedReplies.has(discussion.id) && (
                   <div className="mt-3 pt-3 border-t border-black/10">
-                    <ReplyTree
-                      replies={discussion.replies}
-                      aiPoints={discussion.aiPoints || []}
+                    <RealtimeReplyTree
                       discussionId={discussion.id}
+                      aiPoints={discussion.aiPoints || []}
                       onReplyToReply={(reply) => {
                         setSelectedDiscussion(discussion);
                         handleReplyToReply(reply);
@@ -721,27 +618,13 @@ export default function DiscussionFeed({ newDiscussion }) {
                       onReplyView={async (replyId, userId) => {
                         try {
                           await incrementReplyView(discussion.id, replyId, userId);
-                          // Update local state to reflect the view count increment
-                          setDiscussions(prev =>
-                            prev.map(d =>
-                              d.id === discussion.id
-                                ? {
-                                    ...d,
-                                    replies: (d.replies || []).map(r =>
-                                      r.id === replyId
-                                        ? { ...r, views: (r.views || 0) + 1, viewedBy: [...(r.viewedBy || []), userId] }
-                                        : r
-                                    )
-                                  }
-                                : d
-                            )
-                          );
                         } catch (error) {
                           console.error('Error incrementing reply view:', error);
                           throw error;
                         }
                       }}
                       maxLevel={3}
+                      isVisible={expandedReplies.has(discussion.id)}
                     />
                   </div>
                 )}
