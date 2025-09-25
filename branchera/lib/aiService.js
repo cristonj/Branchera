@@ -115,6 +115,38 @@ Do not include any explanation or additional text, just the JSON array.`;
     }
   }
 
+  // Fact check points-based claims using web search
+  static async factCheckPoints(points, title = '') {
+    try {
+      console.log('Fact checking points:', { title, points });
+      
+      // Filter points that are likely to contain factual claims
+      const claimPoints = points.filter(point => 
+        point.type === 'claim' || 
+        point.type === 'evidence' ||
+        point.type === 'recommendation'
+      );
+      
+      if (claimPoints.length === 0) {
+        return {
+          claims: [],
+          summary: {
+            totalClaims: 0,
+            needsVerification: 0,
+            overallConfidence: 'high'
+          }
+        };
+      }
+      
+      const factCheckResults = await this.performPointsFactCheckWithFirebaseAI(claimPoints, title);
+      console.log('Generated points-based fact check results:', factCheckResults);
+      return factCheckResults;
+    } catch (error) {
+      console.error('Error fact checking points:', error);
+      throw error;
+    }
+  }
+
   // Firebase AI fact checking using Gemini with web search
   static async performFactCheckWithFirebaseAI(content, title = '') {
     // Initialize the Firebase AI backend service
@@ -216,6 +248,113 @@ Do not include any explanation or additional text, just the JSON object.`;
       console.error('Error parsing fact check response:', parseError);
       console.error('Raw response:', text);
       throw new Error('Failed to parse fact check response');
+    }
+  }
+
+  // Firebase AI fact checking for points using Gemini with web search
+  static async performPointsFactCheckWithFirebaseAI(claimPoints, title = '') {
+    // Initialize the Firebase AI backend service
+    const ai = getAI(app, { backend: new GoogleAIBackend() });
+    
+    // Create a GenerativeModel instance
+    const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+
+    const pointsText = claimPoints.map(point => `- ${point.text} (${point.type})`).join('\n');
+
+    const prompt = `
+You are a fact-checking AI. Analyze the following discussion points that have been identified as potential claims or evidence. Determine which ones contain verifiable factual claims.
+
+Title: ${title}
+Discussion Points:
+${pointsText}
+
+For each point that contains a verifiable factual claim, extract the specific claim and analyze it:
+
+Return ONLY a valid JSON object in this format:
+{
+  "claims": [
+    {
+      "id": "claim1",
+      "pointId": "p1",
+      "text": "The specific factual claim from the point",
+      "originalPoint": "The original point text",
+      "category": "statistic|date|location|person|event|other",
+      "confidence": "high|medium|low",
+      "status": "likely_accurate|needs_verification|likely_inaccurate|unverifiable",
+      "searchTerms": ["search term 1", "search term 2"],
+      "explanation": "Brief explanation of why this needs fact-checking"
+    }
+  ],
+  "summary": {
+    "totalClaims": 0,
+    "needsVerification": 0,
+    "overallConfidence": "high|medium|low"
+  }
+}
+
+Guidelines:
+- Only extract verifiable factual claims from the points (no opinions, predictions, or subjective statements)
+- Focus on specific numbers, dates, names, locations, events within the points
+- Exclude common knowledge or obviously true statements
+- Maximum 5 claims total
+- Keep claim text under 100 characters
+- Search terms should be specific and focused
+- Include the original point ID for reference
+
+Do not include any explanation or additional text, just the JSON object.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    try {
+      // Clean up the response to extract just the JSON
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON object found in response');
+      }
+      
+      const factCheckResult = JSON.parse(jsonMatch[0]);
+      
+      // Validate the structure
+      if (!factCheckResult.claims || !Array.isArray(factCheckResult.claims)) {
+        throw new Error('Invalid fact check result structure');
+      }
+      
+      // If there are claims that need verification, perform web searches
+      if (factCheckResult.claims.length > 0) {
+        const verifiedClaims = await Promise.all(
+          factCheckResult.claims.map(async (claim) => {
+            if (claim.status === 'needs_verification' && claim.searchTerms && claim.searchTerms.length > 0) {
+              try {
+                // Use the first search term for web search
+                const searchResults = await this.performWebSearch(claim.searchTerms[0]);
+                return {
+                  ...claim,
+                  webSearchResults: searchResults,
+                  verificationStatus: 'searched'
+                };
+              } catch (searchError) {
+                console.error('Error performing web search for claim:', claim.id, searchError);
+                return {
+                  ...claim,
+                  webSearchResults: null,
+                  verificationStatus: 'search_failed'
+                };
+              }
+            }
+            return claim;
+          })
+        );
+        
+        factCheckResult.claims = verifiedClaims;
+      }
+      
+      return factCheckResult;
+    } catch (parseError) {
+      console.error('Error parsing points fact check response:', parseError);
+      console.error('Raw response:', text);
+      throw new Error('Failed to parse points fact check response');
     }
   }
 

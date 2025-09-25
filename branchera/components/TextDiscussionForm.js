@@ -48,50 +48,50 @@ export default function TextDiscussionForm({ onDiscussionCreated }) {
       const createdDiscussion = await createDiscussion(discussionData);
       console.log('Discussion created successfully:', createdDiscussion);
       
-      // Generate AI points and fact check simultaneously
-      const aiTasks = [];
-      
-      // AI Points generation
-      aiTasks.push(
-        AIService.generatePoints(discussionData.content, discussionData.title)
-          .then(aiPoints => ({ type: 'aiPoints', data: aiPoints }))
-          .catch(error => ({ type: 'aiPoints', error }))
-      );
-      
-      // Fact checking
+      // Generate AI points first, then fact check based on those points
       setIsFactChecking(true);
-      aiTasks.push(
-        AIService.factCheckContent(discussionData.content, discussionData.title)
-          .then(factCheck => ({ type: 'factCheck', data: factCheck }))
-          .catch(error => ({ type: 'factCheck', error }))
-      );
       
       try {
-        console.log('Generating AI points and fact checking for new discussion...');
-        const results = await Promise.all(aiTasks);
+        console.log('Generating AI points for new discussion...');
         
-        for (const result of results) {
-          if (result.type === 'aiPoints' && result.data) {
-            await updateAIPoints(createdDiscussion.id, result.data);
-            console.log('AI points generated and saved:', result.data);
-            createdDiscussion.aiPoints = result.data;
-            createdDiscussion.aiPointsGenerated = true;
-          } else if (result.type === 'aiPoints' && result.error) {
-            console.error('Error generating AI points:', result.error);
-          }
-          
-          if (result.type === 'factCheck' && result.data) {
-            await updateFactCheckResults(createdDiscussion.id, result.data);
-            console.log('Fact check results generated and saved:', result.data);
-            createdDiscussion.factCheckResults = result.data;
-            createdDiscussion.factCheckGenerated = true;
-            setFactCheckResults(result.data);
-          } else if (result.type === 'factCheck' && result.error) {
-            console.error('Error fact checking content:', result.error);
-          }
-        }
+        // Step 1: Generate AI points
+        const aiPoints = await AIService.generatePoints(discussionData.content, discussionData.title);
+        console.log('AI points generated:', aiPoints);
+        
+        // Save AI points
+        await updateAIPoints(createdDiscussion.id, aiPoints);
+        createdDiscussion.aiPoints = aiPoints;
+        createdDiscussion.aiPointsGenerated = true;
+        
+        // Step 2: Fact check based on the generated points
+        console.log('Fact checking based on generated points...');
+        const factCheckResults = await AIService.factCheckPoints(aiPoints, discussionData.title);
+        console.log('Fact check results based on points:', factCheckResults);
+        
+        // Save fact check results
+        await updateFactCheckResults(createdDiscussion.id, factCheckResults);
+        createdDiscussion.factCheckResults = factCheckResults;
+        createdDiscussion.factCheckGenerated = true;
+        setFactCheckResults(factCheckResults);
+        
+        console.log('AI points and fact checking completed successfully');
       } catch (error) {
         console.error('Error with AI processing:', error);
+        
+        // Try to generate AI points at minimum, even if fact checking fails
+        try {
+          if (!createdDiscussion.aiPointsGenerated) {
+            console.log('Attempting to generate AI points as fallback...');
+            const aiPoints = await AIService.generatePoints(discussionData.content, discussionData.title);
+            await updateAIPoints(createdDiscussion.id, aiPoints);
+            createdDiscussion.aiPoints = aiPoints;
+            createdDiscussion.aiPointsGenerated = true;
+            console.log('AI points generated successfully as fallback');
+          }
+        } catch (fallbackError) {
+          console.error('Error with fallback AI points generation:', fallbackError);
+        }
+        
         alert('Discussion created successfully, but AI processing had some issues.');
       } finally {
         setIsFactChecking(false);

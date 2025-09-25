@@ -50,11 +50,19 @@ export default function TextReplyForm({
       const createdReply = await addReply(discussionId, replyData);
       console.log('Reply added successfully:', createdReply);
       
-      // Fact check the reply content
+      // Generate points and fact check the reply content based on those points
       setIsFactChecking(true);
       try {
-        console.log('Fact checking reply content...');
-        const factCheck = await AIService.factCheckContent(replyData.content, 'Reply');
+        console.log('Generating points for reply content...');
+        
+        // Generate points from the reply content
+        const replyPoints = await AIService.generateReplyPoints(replyData.content, selectedPoint?.text || '');
+        console.log('Reply points generated:', replyPoints);
+        
+        // Fact check based on the generated points
+        console.log('Fact checking reply based on generated points...');
+        const factCheck = await AIService.factCheckPoints(replyPoints, 'Reply');
+        console.log('Reply fact check results based on points:', factCheck);
         
         // Update the reply with fact check results
         await updateReplyFactCheckResults(discussionId, createdReply.id, factCheck);
