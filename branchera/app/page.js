@@ -66,7 +66,7 @@ export default function Home() {
                 </p>
               </div>
               
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
                 {/* AI-Powered Fact Checking */}
                 <div className="group relative bg-white rounded-2xl p-8 border border-black/20 hover:border-black transition-all duration-300">
                   <div className="w-16 h-16 mx-auto mb-6 bg-black rounded-2xl flex items-center justify-center">
@@ -106,70 +106,6 @@ export default function Home() {
                   </p>
                 </div>
 
-                {/* Thoughtful Text Discussions */}
-                <div className="group relative bg-white rounded-2xl p-8 border border-black/20 hover:border-black transition-all duration-300">
-                  <div className="w-16 h-16 mx-auto mb-6 bg-black rounded-2xl flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold mb-3 text-black">Thoughtful Text Discussions</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    Share your ideas through clear, well-crafted text. Express complex thoughts with precision and clarity in a distraction-free environment.
-                  </p>
-                </div>
-
-                {/* One Heart Per User */}
-                <div className="group relative bg-white rounded-2xl p-8 border border-black/20 hover:border-black transition-all duration-300">
-                  <div className="w-16 h-16 mx-auto mb-6 bg-black rounded-2xl flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold mb-3 text-black">One Heart Per User</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    Prevent manipulation with our one-like-per-user system. Authentic engagement over artificial inflation and bot activity.
-                  </p>
-                </div>
-
-                {/* Complete Content Control */}
-                <div className="group relative bg-white rounded-2xl p-8 border border-black/20 hover:border-black transition-all duration-300">
-                  <div className="w-16 h-16 mx-auto mb-6 bg-black rounded-2xl flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold mb-3 text-black">Complete Content Control</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    Delete your discussions and replies anytime. Your voice, your choice, your control. No permanent digital footprint worries.
-                  </p>
-                </div>
-
-                {/* Real-Time Updates */}
-                <div className="group relative bg-white rounded-2xl p-8 border border-black/20 hover:border-black transition-all duration-300">
-                  <div className="w-16 h-16 mx-auto mb-6 bg-black rounded-2xl flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold mb-3 text-black">Real-Time Updates</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    See engagement stats, fact-check results, and replies update instantly. Stay connected to live conversations as they evolve.
-                  </p>
-                </div>
-
-                {/* Firebase Integration */}
-                <div className="group relative bg-white rounded-2xl p-8 border border-black/20 hover:border-black transition-all duration-300">
-                  <div className="w-16 h-16 mx-auto mb-6 bg-black rounded-2xl flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-xl font-bold mb-3 text-black">Secure & Scalable</h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    Built on Firebase with Google authentication. Your data is secure, and the platform scales seamlessly with our growing community.
-                  </p>
-                </div>
 
                 {/* No Ads or Spam */}
                 <div className="group relative bg-white rounded-2xl p-8 border border-black/20 hover:border-black transition-all duration-300">
@@ -186,121 +122,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Testimonial Section */}
-            <div className="mt-32 mb-20">
-              <div className="text-center mb-16">
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                  Join the Movement
-                </h2>
-                <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                  Be part of a community that values substance over superficiality
-                </p>
-              </div>
-              
-              <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                <div className="bg-white rounded-2xl p-8 border border-black/20">
-                  <div className="flex items-center mb-4">
-                    <div className="flex text-yellow-400">
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 mb-4 italic">
-                    &ldquo;The AI fact-checking is a game changer. Finally, a platform that prioritizes truth and meaningful dialogue over viral misinformation.&rdquo;
-                  </p>
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                      AS
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">Alex Smith</div>
-                      <div className="text-sm text-gray-600">Early Adopter</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white rounded-2xl p-8 border border-black/20">
-                  <div className="flex items-center mb-4">
-                    <div className="flex text-yellow-400">
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 mb-4 italic">
-                    &ldquo;The AI point extraction makes complex discussions so much easier to follow. Plus the one-heart system keeps everything authentic.&rdquo;
-                  </p>
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                      MJ
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">Maria Johnson</div>
-                      <div className="text-sm text-gray-600">Community Member</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white rounded-2xl p-8 border border-black/20">
-                  <div className="flex items-center mb-4">
-                    <div className="flex text-yellow-400">
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                      <svg className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <p className="text-gray-700 mb-4 italic">
-                    &ldquo;The web search verification shows real sources for claims. I love having control over my content and seeing facts backed up with evidence.&rdquo;
-                  </p>
-                  <div className="flex items-center">
-                    <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
-                      DR
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">David Rodriguez</div>
-                      <div className="text-sm text-gray-600">Beta Tester</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Call to Action */}
             <div className="relative mt-20 mb-20">
