@@ -18,6 +18,24 @@ export class AIService {
     }
   }
 
+  // Generate AI points for a reply's content
+  static async generateReplyPoints(replyContent, context = '') {
+    try {
+      console.log('Generating AI points for reply:', { context, replyContent });
+
+      // Reuse the same underlying generator with a reply-focused prompt wrapper
+      const points = await this.generatePointsWithFirebaseAI(
+        `Reply Context: ${context}\n\n${replyContent}`,
+        `Reply: ${context}`
+      );
+      console.log('Generated AI points for reply with Firebase AI:', points);
+      return points;
+    } catch (error) {
+      console.error('Error generating AI points for reply:', error);
+      throw error;
+    }
+  }
+
   // Firebase AI point generation using Gemini
   static async generatePointsWithFirebaseAI(content, title = '') {
     // Initialize the Firebase AI backend service

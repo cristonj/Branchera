@@ -43,15 +43,7 @@ export default function ReplyTree({
     }
   };
 
-  const getReplyTypeStyle = (type) => {
-    switch (type) {
-      case 'agree': return 'border-l-green-400 bg-green-50';
-      case 'challenge': return 'border-l-red-400 bg-red-50';
-      case 'expand': return 'border-l-blue-400 bg-blue-50';
-      case 'clarify': return 'border-l-yellow-400 bg-yellow-50';
-      default: return 'border-l-gray-400 bg-gray-50';
-    }
-  };
+  const getReplyTypeStyle = () => 'border-l-black bg-white';
 
   const getReplyTypeIcon = (type) => {
     switch (type) {
@@ -118,26 +110,23 @@ export default function ReplyTree({
     const canReply = level < maxLevel && user;
 
     return (
-      <div key={reply.id} className={`${level > 0 ? 'ml-8 mt-3' : 'mt-4'}`}>
-        {/* Connection line for nested replies */}
+      <div key={reply.id} className={`${level > 0 ? 'ml-8 mt-2' : 'mt-3'}`}>
         {level > 0 && (
           <div className="flex items-start">
             <div className="flex-shrink-0 w-6 h-6 mr-2">
-              <div className="w-3 h-3 border-l-2 border-b-2 border-gray-300 rounded-bl-md"></div>
+              <div className="w-3 h-3 border-l border-b border-black rounded-bl-sm"></div>
             </div>
             <div className="flex-1">
               {renderReplyContent(reply, level, hasChildren, isExpanded, canReply)}
             </div>
           </div>
         )}
-        
+
         {level === 0 && renderReplyContent(reply, level, hasChildren, isExpanded, canReply)}
 
-        {/* Nested replies */}
         {hasChildren && isExpanded && (
           <div className="relative">
-            {/* Vertical line for tree structure */}
-            <div className="absolute left-3 top-0 bottom-0 w-px bg-gray-200"></div>
+            <div className="absolute left-3 top-0 bottom-0 w-px bg-black/60"></div>
             {reply.children.map(childReply => renderReply(childReply, level + 1))}
           </div>
         )}
@@ -147,36 +136,32 @@ export default function ReplyTree({
 
   const renderReplyContent = (reply, level, hasChildren, isExpanded, canReply) => {
     return (
-      <div className={`rounded-lg p-4 border-l-4 ${getReplyTypeStyle(reply.type)} ${level === 0 ? '' : 'border border-gray-200'}`}>
-        {/* Reply header */}
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-lg">{getReplyTypeIcon(reply.type)}</span>
+      <div className={`rounded p-3 border-l-2 ${getReplyTypeStyle(reply.type)} ${level === 0 ? '' : 'border border-black/20'}`}>
+        <div className="flex items-center gap-3 mb-2">
+          <span className="text-base">{getReplyTypeIcon(reply.type)}</span>
           {reply.authorPhoto ? (
             <Image
               src={reply.authorPhoto}
               alt={reply.authorName}
-              width={24}
-              height={24}
-              className="w-6 h-6 rounded-full object-cover"
+              width={20}
+              height={20}
+              className="w-5 h-5 rounded-full object-cover"
             />
           ) : (
-            <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-              <span className="text-gray-600 text-xs font-medium">
+            <div className="w-5 h-5 rounded-full border border-black/40 flex items-center justify-center">
+              <span className="text-[10px] text-gray-900 font-medium">
                 {reply.authorName?.charAt(0)?.toUpperCase() || '?'}
               </span>
             </div>
           )}
           <div className="flex-1">
-            <h5 className="text-sm font-medium text-gray-900">{reply.authorName}</h5>
-            <p className="text-xs text-gray-500">{formatDate(reply.createdAt)}</p>
+            <div className="text-xs text-gray-700">{reply.authorName} · {formatDate(reply.createdAt)}</div>
           </div>
-          
-          {/* Action buttons */}
           <div className="flex items-center gap-2">
             {hasChildren && (
               <button
                 onClick={() => toggleReply(reply.id)}
-                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                className="p-1 text-gray-800 hover:text-black"
                 title={`${isExpanded ? 'Hide' : 'Show'} ${reply.children.length} replies`}
               >
                 <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -185,11 +170,10 @@ export default function ReplyTree({
                 <span className="text-xs ml-1">{reply.children.length}</span>
               </button>
             )}
-            
             {canReply && (
               <button
                 onClick={() => onReplyToReply(reply)}
-                className="p-1 text-gray-400 hover:text-blue-500 transition-colors"
+                className="p-1 text-gray-800 hover:text-black"
                 title="Reply to this"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -197,11 +181,10 @@ export default function ReplyTree({
                 </svg>
               </button>
             )}
-            
             {user && reply.authorId === user.uid && (
               <button
                 onClick={() => onDeleteReply(discussionId, reply.id)}
-                className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                className="p-1 text-gray-800 hover:text-black"
                 title="Delete reply"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -211,13 +194,23 @@ export default function ReplyTree({
             )}
           </div>
         </div>
-        
-        {/* Reply content */}
-        <div className="prose max-w-none">
-          <p className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed">
-            {reply.content}
-          </p>
+        <div>
+          <p className="text-gray-900 text-sm whitespace-pre-wrap leading-relaxed">{reply.content}</p>
         </div>
+        {/* If reply has AI points, show a compact list to anchor sub-replies */}
+        {Array.isArray(reply.aiPoints) && reply.aiPoints.length > 0 && (
+          <div className="mt-2 border border-black/20 rounded p-2">
+            <div className="text-[11px] font-semibold text-gray-900 mb-1">Reply points</div>
+            <ul className="space-y-1">
+              {reply.aiPoints.map((p) => (
+                <li key={p.id} className="flex items-start gap-2">
+                  <div className="w-1 h-1 bg-black rounded-full mt-2"></div>
+                  <div className="text-xs text-gray-900">{p.text}</div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     );
   };
@@ -225,23 +218,19 @@ export default function ReplyTree({
   const groupedReplies = groupRepliesByPoint(replies);
 
   return (
-    <div className="space-y-6">
-      {/* Replies grouped by AI points */}
+    <div className="space-y-4">
       {Object.entries(groupedReplies.withPoints).map(([pointId, pointReplies]) => {
         const point = aiPoints?.find(p => p.id === pointId);
         return (
-          <div key={pointId} className="space-y-3">
-            {/* Point Header */}
+          <div key={pointId} className="space-y-2">
             {point && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="border border-black/20 rounded p-2 bg-white">
                 <div className="flex items-start gap-2">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+                  <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
                   <div>
-                <h5 className="text-sm font-medium text-blue-900 mb-1">
-                  &ldquo;{point.text}&rdquo;
-                </h5>
+                    <div className="text-sm font-semibold text-gray-900">“{point.text}”</div>
                     {point.type && (
-                      <span className="inline-block px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
+                      <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
                         {point.type}
                       </span>
                     )}
@@ -249,21 +238,15 @@ export default function ReplyTree({
                 </div>
               </div>
             )}
-            
-            {/* Reply tree for this point */}
             <div className="space-y-2">
               {pointReplies.map(reply => renderReply(reply, 0))}
             </div>
           </div>
         );
       })}
-      
-      {/* General replies (not anchored to points) */}
       {groupedReplies.general.length > 0 && (
-        <div className="space-y-3">
-          <h5 className="text-sm font-medium text-gray-700 border-b border-gray-200 pb-2">
-            General Discussion
-          </h5>
+        <div className="space-y-2">
+          <div className="text-xs font-semibold text-gray-900 border-b border-black/20 pb-2">General discussion</div>
           <div className="space-y-2">
             {groupedReplies.general.map(reply => renderReply(reply, 0))}
           </div>
