@@ -372,13 +372,13 @@ export default function DiscussionFeed({ newDiscussion }) {
             <div className="px-4 py-3 flex items-center justify-between">
               <button
                 onClick={() => toggleDiscussion(discussion.id)}
-                className="flex items-center gap-3 text-left flex-1"
+                className="flex items-center gap-3 text-left flex-1 min-w-0"
                 title={isExpanded ? 'Collapse' : 'Expand'}
               >
                 <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-                <span className="font-semibold text-gray-900 truncate">{discussion.title}</span>
+                <span className="font-semibold text-gray-900 truncate flex-1 min-w-0">{discussion.title}</span>
               </button>
               <div className="flex items-center gap-4">
                 <button

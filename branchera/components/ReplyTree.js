@@ -77,29 +77,24 @@ export default function ReplyTree({
     return rootReplies;
   };
 
-  // Group replies by AI point
-  const groupRepliesByPoint = (replies) => {
+  // Group ROOT replies by AI point, keeping full child chains regardless of their own point
+  const groupRootRepliesByPoint = (rootReplies) => {
     const grouped = {
       withPoints: {},
       general: []
     };
 
-    replies.forEach(reply => {
-      if (reply.replyToPointId) {
-        if (!grouped.withPoints[reply.replyToPointId]) {
-          grouped.withPoints[reply.replyToPointId] = [];
+    rootReplies.forEach((root) => {
+      const pointId = root.replyToPointId;
+      if (pointId) {
+        if (!grouped.withPoints[pointId]) {
+          grouped.withPoints[pointId] = [];
         }
-        grouped.withPoints[reply.replyToPointId].push(reply);
+        grouped.withPoints[pointId].push(root);
       } else {
-        grouped.general.push(reply);
+        grouped.general.push(root);
       }
     });
-
-    // Build tree structure for each group
-    Object.keys(grouped.withPoints).forEach(pointId => {
-      grouped.withPoints[pointId] = buildReplyTree(grouped.withPoints[pointId]);
-    });
-    grouped.general = buildReplyTree(grouped.general);
 
     return grouped;
   };
@@ -215,7 +210,8 @@ export default function ReplyTree({
     );
   };
 
-  const groupedReplies = groupRepliesByPoint(replies);
+  const rootReplies = buildReplyTree(replies);
+  const groupedReplies = groupRootRepliesByPoint(rootReplies);
 
   return (
     <div className="space-y-4">
