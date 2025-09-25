@@ -570,29 +570,6 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     );
   }
 
-  if (filteredDiscussions.length === 0 && searchQuery.trim()) {
-    return (
-      <div>
-        <SearchFilterSort
-          discussions={discussions}
-          onResults={setFilteredDiscussions}
-          onSearchChange={setSearchQuery}
-          onSearchTypeChange={setCurrentSearchType}
-          onFilterChange={setCurrentFilters}
-          onSortChange={setCurrentSort}
-          initialSearchQuery={searchQuery}
-          initialSearchType={currentSearchType}
-          initialSortBy={currentSort}
-          initialFilters={currentFilters}
-        />
-        <div className="text-center py-12">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No matching discussions found</h3>
-          <p className="text-gray-500">Try adjusting your search terms or filters.</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-6">
@@ -611,6 +588,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       </div>
 
       <SearchFilterSort
+        key="search-filter-sort"
         discussions={discussions}
         onResults={setFilteredDiscussions}
         onSearchChange={setSearchQuery}
@@ -623,7 +601,14 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         initialFilters={currentFilters}
       />
 
-      {filteredDiscussions.map((discussion) => {
+      {/* Conditional content based on results */}
+      {filteredDiscussions.length === 0 && searchQuery.trim() ? (
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No matching discussions found</h3>
+          <p className="text-gray-500">Try adjusting your search terms or filters.</p>
+        </div>
+      ) : (
+        filteredDiscussions.map((discussion) => {
         const isExpanded = expandedDiscussions.has(discussion.id);
         return (
           <div key={discussion.id} className="rounded-lg border border-black/20">
@@ -863,7 +848,8 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
             )}
           </div>
         );
-      })}
+      })
+      )}
 
     </div>
   );

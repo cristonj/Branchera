@@ -27,6 +27,23 @@ export default function SearchFilterSort({
   const [filters, setFilters] = useState(initialFilters);
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Sync internal state with props when they change
+  useEffect(() => {
+    setSearchQuery(initialSearchQuery);
+  }, [initialSearchQuery]);
+
+  useEffect(() => {
+    setSearchType(initialSearchType);
+  }, [initialSearchType]);
+
+  useEffect(() => {
+    setSortBy(initialSortBy);
+  }, [initialSortBy]);
+
+  useEffect(() => {
+    setFilters(initialFilters);
+  }, [initialFilters]);
+
   // Search function that searches through discussions and replies
   const searchContent = useCallback((discussions, query, type) => {
     if (!query.trim()) return discussions;
