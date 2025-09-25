@@ -127,7 +127,7 @@ export default function TextReplyForm({
               <div className="mt-2 pt-2 border-t border-black/10">
                 <div className="text-[10px] text-gray-600 mb-1">From reply:</div>
                 <p className="text-[10px] text-gray-700 italic truncate">
-                  "{selectedReplyForPoints.content.slice(0, 100)}..."
+                  &ldquo;{selectedReplyForPoints.content.slice(0, 100)}...&rdquo;
                 </p>
               </div>
             )}

@@ -261,7 +261,7 @@ export default function ReplyTree({
                 <div className="flex items-start gap-2">
                   <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
                   <div>
-                    <div className="text-sm font-semibold text-gray-900">“{point.text}”</div>
+                    <div className="text-sm font-semibold text-gray-900">&ldquo;{point.text}&rdquo;</div>
                     {point.type && (
                       <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
                         {point.type}
