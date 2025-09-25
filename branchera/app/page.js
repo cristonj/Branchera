@@ -31,13 +31,13 @@ export default function Home() {
         <div className="space-y-3">
           <Link
             href="/login"
-            className="block w-full py-3 px-4 text-center bg-black text-white border border-black hover:bg-gray-800"
+            className="block w-full py-3 px-4 text-center bg-black text-white border border-black hover:bg-gray-800 rounded-full"
           >
             Get Started
           </Link>
           <Link
             href="/login"
-            className="block w-full py-3 px-4 text-center bg-white text-black border border-black hover:bg-gray-50"
+            className="block w-full py-3 px-4 text-center bg-white text-black border border-black hover:bg-gray-50 rounded-full"
           >
             Sign In
           </Link>
