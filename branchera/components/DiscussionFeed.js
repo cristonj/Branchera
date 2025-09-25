@@ -24,7 +24,7 @@ export default function DiscussionFeed({ newDiscussion }) {
   const [selectedReplyForPoints, setSelectedReplyForPoints] = useState(null); // Reply context for AI points
   
   const { updateDocument } = useFirestore();
-  const { getDiscussions, deleteDiscussion, deleteReply, updateAIPoints, updateReplyAIPoints } = useDatabase();
+  const { getDiscussions, deleteDiscussion, deleteReply, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView } = useDatabase();
   const { user } = useAuth();
 
   const loadDiscussions = useCallback(async () => {
@@ -318,7 +318,9 @@ export default function DiscussionFeed({ newDiscussion }) {
     });
   };
 
-  const toggleDiscussion = (discussionId) => {
+  const toggleDiscussion = async (discussionId) => {
+    const wasExpanded = expandedDiscussions.has(discussionId);
+    
     setExpandedDiscussions(prev => {
       const next = new Set(prev);
       if (next.has(discussionId)) {
@@ -328,6 +330,25 @@ export default function DiscussionFeed({ newDiscussion }) {
       }
       return next;
     });
+
+    // Increment view count only when expanding (not collapsing) and user is authenticated
+    if (!wasExpanded && user) {
+      try {
+        const result = await incrementDiscussionView(discussionId, user.uid);
+        
+        // Update local state with new view count
+        setDiscussions(prev =>
+          prev.map(d =>
+            d.id === discussionId 
+              ? { ...d, views: result.views, viewedBy: result.viewedBy }
+              : d
+          )
+        );
+      } catch (error) {
+        console.error('Error incrementing discussion view:', error);
+        // Don't show error to user, just log it
+      }
+    }
   };
 
 
@@ -413,6 +434,13 @@ export default function DiscussionFeed({ newDiscussion }) {
                   </svg>
                   {discussion.likes || 0}
                 </button>
+                <div className="flex items-center gap-1 text-sm text-gray-600">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  {discussion.views || 0}
+                </div>
                 {user && discussion.authorId === user.uid && (
                   <button
                     onClick={() => handleDelete(discussion.id)}
@@ -512,6 +540,29 @@ export default function DiscussionFeed({ newDiscussion }) {
                         handleReplyToReply(reply);
                       }}
                       onDeleteReply={handleDeleteReply}
+                      onReplyView={async (replyId, userId) => {
+                        try {
+                          await incrementReplyView(discussion.id, replyId, userId);
+                          // Update local state to reflect the view count increment
+                          setDiscussions(prev =>
+                            prev.map(d =>
+                              d.id === discussion.id
+                                ? {
+                                    ...d,
+                                    replies: (d.replies || []).map(r =>
+                                      r.id === replyId
+                                        ? { ...r, views: (r.views || 0) + 1, viewedBy: [...(r.viewedBy || []), userId] }
+                                        : r
+                                    )
+                                  }
+                                : d
+                            )
+                          );
+                        } catch (error) {
+                          console.error('Error incrementing reply view:', error);
+                          throw error;
+                        }
+                      }}
                       maxLevel={3}
                     />
                   </div>

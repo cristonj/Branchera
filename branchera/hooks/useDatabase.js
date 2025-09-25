@@ -26,6 +26,8 @@ export function useDatabase() {
         likedBy: [], // Track which users have liked this discussion
         replies: [], // Array of reply objects
         replyCount: 0,
+        views: 0, // Track how many times this discussion has been viewed (expanded)
+        viewedBy: [], // Track which users have viewed this discussion
         aiPoints: [], // AI-generated points for anchored replies
         aiPointsGenerated: false, // Track if AI points have been generated
         createdAt: new Date().toISOString(),
@@ -158,6 +160,8 @@ export function useDatabase() {
         replyToReplyId: replyData.replyToReplyId || null, // Which reply this is responding to (for nested replies)
         type: replyData.type || 'general', // "agree" | "challenge" | "expand" | "clarify" | "general"
         level: replyData.level || 0, // Nesting level (0 = top level, 1 = reply to reply, etc.)
+        views: 0, // Track how many times this reply has been viewed (expanded)
+        viewedBy: [], // Track which users have viewed this reply
         createdAt: new Date().toISOString()
       };
 
@@ -275,6 +279,77 @@ export function useDatabase() {
     }
   };
 
+  // Increment view count for a discussion
+  const incrementDiscussionView = async (discussionId, userId) => {
+    try {
+      console.log('Incrementing view count for discussion:', discussionId, 'by user:', userId);
+      
+      const discussion = await getDocument('discussions', discussionId);
+      if (!discussion) {
+        throw new Error('Discussion not found');
+      }
+
+      const viewedBy = discussion.viewedBy || [];
+      
+      // Only increment if this user hasn't viewed it before
+      if (!viewedBy.includes(userId)) {
+        const newViewedBy = [...viewedBy, userId];
+        const newViews = (discussion.views || 0) + 1;
+        
+        await updateDocument('discussions', discussionId, {
+          views: newViews,
+          viewedBy: newViewedBy
+        });
+
+        console.log('Discussion view count incremented successfully');
+        return { views: newViews, viewedBy: newViewedBy };
+      }
+      
+      return { views: discussion.views || 0, viewedBy };
+    } catch (error) {
+      console.error('Error incrementing discussion view:', error);
+      throw error;
+    }
+  };
+
+  // Increment view count for a reply
+  const incrementReplyView = async (discussionId, replyId, userId) => {
+    try {
+      console.log('Incrementing view count for reply:', replyId, 'in discussion:', discussionId, 'by user:', userId);
+
+      const discussion = await getDocument('discussions', discussionId);
+      if (!discussion) {
+        throw new Error('Discussion not found');
+      }
+
+      const updatedReplies = (discussion.replies || []).map((reply) => {
+        if (reply.id === replyId) {
+          const viewedBy = reply.viewedBy || [];
+          
+          // Only increment if this user hasn't viewed this reply before
+          if (!viewedBy.includes(userId)) {
+            return {
+              ...reply,
+              views: (reply.views || 0) + 1,
+              viewedBy: [...viewedBy, userId]
+            };
+          }
+        }
+        return reply;
+      });
+
+      await updateDocument('discussions', discussionId, {
+        replies: updatedReplies
+      });
+
+      console.log('Reply view count incremented successfully');
+      return true;
+    } catch (error) {
+      console.error('Error incrementing reply view:', error);
+      throw error;
+    }
+  };
+
   return {
     createDiscussion,
     getDiscussions,
@@ -284,6 +359,8 @@ export function useDatabase() {
     updateAIPoints,
     getAIPoints,
     setupDatabase,
-    updateReplyAIPoints
+    updateReplyAIPoints,
+    incrementDiscussionView,
+    incrementReplyView
   };
 }
