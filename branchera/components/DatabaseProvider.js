@@ -30,13 +30,10 @@ export function DatabaseProvider({ children }) {
 
     try {
       setIsLoading(true);
-      console.log('Initializing database for user:', user.uid);
-      
       const result = await setupDatabase();
       
       setIsInitialized(true);
       setInitializationError(null);
-      console.log('Database initialization completed:', result);
     } catch (error) {
       console.error('Database initialization error:', error);
       setInitializationError(error.message);

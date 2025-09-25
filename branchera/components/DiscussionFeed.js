@@ -38,16 +38,12 @@ export default function DiscussionFeed({ newDiscussion }) {
   const loadDiscussions = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('Loading discussions...');
-      
       // Load discussions directly without setup
       const discussionsData = await getDiscussions({
         limit: 20,
         orderField: 'createdAt',
         orderDirection: 'desc'
       });
-      
-      console.log('Loaded discussions:', discussionsData);
       setDiscussions(discussionsData);
       
       // Generate AI points and fact-check results for older discussions that don't have them

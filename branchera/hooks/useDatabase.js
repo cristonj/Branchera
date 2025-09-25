@@ -54,15 +54,12 @@ export function useDatabase() {
     const { limit: maxResults = 20, orderField = 'createdAt', orderDirection = 'desc' } = options;
     
     try {
-      console.log('Fetching discussions...');
-      
       // Try with orderBy first
       try {
         const discussions = await getDocuments('discussions', [
           orderBy(orderField, orderDirection),
           limit(maxResults)
         ]);
-        console.log('Discussions fetched with orderBy:', discussions.length);
         return discussions;
       } catch (orderError) {
         console.warn('OrderBy query failed, trying without ordering:', orderError.message);
@@ -75,7 +72,6 @@ export function useDatabase() {
           return orderDirection === 'desc' ? dateB - dateA : dateA - dateB;
         });
         
-        console.log('Discussions fetched without orderBy and sorted client-side:', sorted.length);
         return sorted;
       }
     } catch (error) {
@@ -114,12 +110,8 @@ export function useDatabase() {
   // Simple setup that just validates we can connect
   const setupDatabase = async () => {
     try {
-      console.log('Setting up database connection...');
-      
       // Just try a simple read operation without calling getDiscussions to avoid loops
       const testDocs = await getDocuments('discussions', [limit(1)]);
-      
-      console.log('Database setup completed successfully');
       return {
         initialized: true,
         accessible: true,
