@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import SearchHighlight from './SearchHighlight';
 
-export default function FactCheckResults({ factCheckResults, isLoading = false }) {
+export default function FactCheckResults({ factCheckResults, isLoading = false, searchQuery = '' }) {
   const [expandedClaims, setExpandedClaims] = useState(new Set());
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -106,22 +107,22 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-medium text-gray-900 truncate pr-2">
-                      &ldquo;{claim.text}&rdquo;
+                      &ldquo;<SearchHighlight text={claim.text} searchQuery={searchQuery} />&rdquo;
                     </p>
                     <span className="text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 bg-white rounded-full">
-                      {getStatusLabel(claim.status)}
+                      <SearchHighlight text={getStatusLabel(claim.status)} searchQuery={searchQuery} />
                     </span>
                   </div>
                   
                   {claim.originalPoint && (
                     <div className="mt-1 p-1.5 bg-gray-100 rounded-lg text-[10px] text-gray-600">
-                      <span className="font-medium">From point:</span> {claim.originalPoint}
+                      <span className="font-medium">From point:</span> <SearchHighlight text={claim.originalPoint} searchQuery={searchQuery} />
                     </div>
                   )}
                   
                   {claim.explanation && (
                     <p className="text-[11px] text-gray-700 mt-1">
-                      {claim.explanation}
+                      <SearchHighlight text={claim.explanation} searchQuery={searchQuery} />
                     </p>
                   )}
                   
@@ -139,7 +140,7 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
               {isExpanded && claim.webSearchResults && (
                 <div className="mt-2 pt-2 border-t border-gray-300">
                   <div className="text-[11px] text-gray-600 mb-2">
-                    Search results for: &ldquo;{claim.webSearchResults.searchTerm}&rdquo;
+                    Search results for: &ldquo;<SearchHighlight text={claim.webSearchResults.searchTerm} searchQuery={searchQuery} />&rdquo;
                   </div>
                   <div className="space-y-1">
                     {claim.webSearchResults.results.map((result, idx) => (
@@ -152,17 +153,17 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
                               rel="noopener noreferrer"
                               className="hover:underline"
                             >
-                              {result.title}
+                              <SearchHighlight text={result.title} searchQuery={searchQuery} />
                             </a>
                           ) : (
-                            result.title
+                            <SearchHighlight text={result.title} searchQuery={searchQuery} />
                           )}
                         </div>
                         <p className="text-[10px] text-gray-700 mb-1">
-                          {result.snippet}
+                          <SearchHighlight text={result.snippet} searchQuery={searchQuery} />
                         </p>
                         <div className="text-[10px] text-gray-500">
-                          Source: {result.source}
+                          Source: <SearchHighlight text={result.source} searchQuery={searchQuery} />
                         </div>
                       </div>
                     ))}
