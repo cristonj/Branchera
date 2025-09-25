@@ -668,22 +668,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                     <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
                   </h3>
                   <div className="flex items-center gap-3">
-                    {discussion.authorPhoto ? (
-                      <Image
-                        src={discussion.authorPhoto}
-                        alt={discussion.authorName}
-                        width={28}
-                        height={28}
-                        className="w-7 h-7 rounded-full object-cover -mt-14"
-                      />
-                    ) : (
-                      <div className="w-7 h-7 rounded-full border border-black/40 flex items-center justify-center">
-                        <span className="text-xs text-gray-900 font-medium">
-                          {discussion.authorName?.charAt(0)?.toUpperCase() || '?'}
-                        </span>
-                      </div>
-                    )}
-                    <div className="text-xs text-gray-600 -ml-10">
+                    <div className="text-xs text-gray-600">
                       <SearchHighlight text={discussion.authorName} searchQuery={searchQuery} /> · {formatDate(discussion.createdAt)}
                     </div>
                   </div>
