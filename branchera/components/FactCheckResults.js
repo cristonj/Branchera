@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 export default function FactCheckResults({ factCheckResults, isLoading = false }) {
   const [expandedClaims, setExpandedClaims] = useState(new Set());
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (isLoading) {
     return (
@@ -76,9 +77,15 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
   };
 
   return (
-    <div className="bg-white rounded border border-black/20 p-3 mt-3">
-      <div className="flex items-center justify-between mb-2">
+    <div className="bg-white rounded border border-black/20 mt-3">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-50"
+      >
         <div className="flex items-center gap-2">
+          <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
           <svg className="w-4 h-4 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -87,7 +94,10 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
         <div className="text-xs text-gray-600">
           {factCheckResults.claims.length} claim{factCheckResults.claims.length !== 1 ? 's' : ''} analyzed
         </div>
-      </div>
+      </button>
+
+      {isExpanded && (
+        <div className="px-3 pb-3 border-t border-black/10">
 
       <div className="space-y-2">
         {factCheckResults.claims.map((claim) => {
@@ -161,16 +171,18 @@ export default function FactCheckResults({ factCheckResults, isLoading = false }
         })}
       </div>
 
-      {factCheckResults.summary && (
-        <div className="mt-2 pt-2 border-t border-black/10">
-          <div className="text-[11px] text-gray-600">
-            Overall confidence: <span className="font-medium capitalize">{factCheckResults.summary.overallConfidence}</span>
-            {factCheckResults.summary.needsVerification > 0 && (
-              <span className="ml-2">
-                • {factCheckResults.summary.needsVerification} claim{factCheckResults.summary.needsVerification !== 1 ? 's' : ''} need verification
-              </span>
-            )}
-          </div>
+          {factCheckResults.summary && (
+            <div className="mt-2 pt-2 border-t border-black/10">
+              <div className="text-[11px] text-gray-600">
+                Overall confidence: <span className="font-medium capitalize">{factCheckResults.summary.overallConfidence}</span>
+                {factCheckResults.summary.needsVerification > 0 && (
+                  <span className="ml-2">
+                    • {factCheckResults.summary.needsVerification} claim{factCheckResults.summary.needsVerification !== 1 ? 's' : ''} need verification
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

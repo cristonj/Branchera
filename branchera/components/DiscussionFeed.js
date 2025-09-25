@@ -6,7 +6,6 @@ import { useFirestore } from '@/hooks/useFirestore';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useAuth } from '@/contexts/AuthContext';
 import TextReplyForm from './TextReplyForm';
-import AIPointSelectionModal from './AIPointSelectionModal';
 import ReplyTree from './ReplyTree';
 import FactCheckResults from './FactCheckResults';
 import { AIService } from '@/lib/aiService';
@@ -17,7 +16,7 @@ export default function DiscussionFeed({ newDiscussion }) {
   const [replyingTo, setReplyingTo] = useState(null); // Track which discussion is being replied to
   const [expandedReplies, setExpandedReplies] = useState(new Set()); // Track which discussions have expanded replies
   const [expandedDiscussions, setExpandedDiscussions] = useState(new Set()); // Track expanded discussion cards
-  const [showPointModal, setShowPointModal] = useState(false); // Track if AI point selection modal is open
+  const [expandedAIPoints, setExpandedAIPoints] = useState(new Set()); // Track expanded AI points sections
   const [selectedDiscussion, setSelectedDiscussion] = useState(null); // Discussion for point selection
   const [selectedPoint, setSelectedPoint] = useState(null); // Selected AI point for reply
   const [selectedReplyType, setSelectedReplyType] = useState('agree'); // Selected reply type
@@ -175,39 +174,6 @@ export default function DiscussionFeed({ newDiscussion }) {
     }
   };
 
-  const handleReplyClick = async (discussion) => {
-    if (!user) return;
-    
-    // Generate AI points if they don't exist (for older discussions)
-    if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
-      try {
-        await generateAIPointsForDiscussion(discussion);
-        // Wait a moment for the state to update
-        setTimeout(() => {
-          setSelectedDiscussion(discussion);
-          setShowPointModal(true);
-        }, 500);
-      } catch (error) {
-        console.error('Error generating AI points:', error);
-        alert('Unable to generate AI points for this discussion. Please try again.');
-        return;
-      }
-    } else {
-      // Open point selection modal immediately if points exist
-      setSelectedDiscussion(discussion);
-      setSelectedReplyForPoints(null);
-      setShowPointModal(true);
-    }
-  };
-
-  const handlePointSelected = (point, replyType) => {
-    setSelectedPoint(point);
-    setSelectedReplyType(replyType);
-    setShowPointModal(false);
-    
-    // Start reply form with selected point
-    setReplyingTo(selectedDiscussion.id);
-  };
 
   const handleReplyToReply = async (reply) => {
     if (!user || !selectedDiscussion) return;
@@ -217,40 +183,9 @@ export default function DiscussionFeed({ newDiscussion }) {
     setSelectedPoint(null);
     setSelectedReplyType('agree');
 
-    // Ensure AI points exist for this reply
-    try {
-      let replyPoints = Array.isArray(reply.aiPoints) ? reply.aiPoints : [];
-      const hasPoints = reply.aiPointsGenerated && replyPoints.length > 0;
-
-      if (!hasPoints) {
-        replyPoints = await AIService.generateReplyPoints(
-          reply.content,
-          `${selectedDiscussion.title} — ${reply.authorName}`
-        );
-
-        await updateReplyAIPoints(selectedDiscussion.id, reply.id, replyPoints);
-
-        // Update local state to include points on the reply
-        setDiscussions(prev => prev.map(d =>
-          d.id === selectedDiscussion.id
-            ? {
-                ...d,
-                replies: (d.replies || []).map(r =>
-                  r.id === reply.id ? { ...r, aiPoints: replyPoints, aiPointsGenerated: true } : r
-                )
-              }
-            : d
-        ));
-      }
-
-      setSelectedReplyForPoints({ ...reply, aiPoints: replyPoints });
-      setShowPointModal(true);
-    } catch (error) {
-      console.error('Error generating AI points for reply:', error);
-      // Fallback: open plain reply form without points
-      setSelectedReplyForPoints(null);
-      setShowPointModal(false);
-    }
+    // For now, just start a basic reply to the reply without points
+    // This can be enhanced later if needed
+    setSelectedReplyForPoints(null);
   };
 
   const handleReplyAdded = (discussionId, newReply) => {
@@ -319,6 +254,32 @@ export default function DiscussionFeed({ newDiscussion }) {
     });
   };
 
+  const toggleAIPoints = (discussionId) => {
+    setExpandedAIPoints(prev => {
+      const next = new Set(prev);
+      if (next.has(discussionId)) {
+        next.delete(discussionId);
+      } else {
+        next.add(discussionId);
+      }
+      return next;
+    });
+  };
+
+  const handlePointClick = (discussion, point) => {
+    if (!user) return;
+    
+    // Set the discussion and point for reply
+    setSelectedDiscussion(discussion);
+    setSelectedPoint(point);
+    setSelectedReplyType('agree'); // Default reply type
+    setReplyingToReply(null);
+    setSelectedReplyForPoints(null);
+    
+    // Start reply form
+    setReplyingTo(discussion.id);
+  };
+
   const toggleDiscussion = async (discussionId) => {
     const wasExpanded = expandedDiscussions.has(discussionId);
     
@@ -331,6 +292,18 @@ export default function DiscussionFeed({ newDiscussion }) {
       }
       return next;
     });
+
+    // Generate AI points when expanding if they don't exist
+    if (!wasExpanded) {
+      const discussion = discussions.find(d => d.id === discussionId);
+      if (discussion && !discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
+        try {
+          await generateAIPointsForDiscussion(discussion);
+        } catch (error) {
+          console.error('Error generating AI points for discussion:', discussionId, error);
+        }
+      }
+    }
 
     // Increment view count only when expanding (not collapsing) and user is authenticated
     if (!wasExpanded && user) {
@@ -409,16 +382,6 @@ export default function DiscussionFeed({ newDiscussion }) {
               {!isExpanded && (
                 <div className="flex items-center gap-4">
                 <button
-                  onClick={() => handleReplyClick(discussion)}
-                  className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
-                  disabled={!user}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                  </svg>
-                  Reply
-                </button>
-                <button
                   onClick={() => toggleReplies(discussion.id)}
                   className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
                 >
@@ -466,7 +429,7 @@ export default function DiscussionFeed({ newDiscussion }) {
             {isExpanded && (
               <div className="px-4 pb-4 border-t border-black/10">
                 {/* Title and author info */}
-                <div className="py-3">
+                <div className="pt-3 pb-2">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">{discussion.title}</h3>
                   <div className="flex items-center gap-3">
                     {discussion.authorPhoto ? (
@@ -491,7 +454,7 @@ export default function DiscussionFeed({ newDiscussion }) {
                 </div>
 
                 {/* Content */}
-                <div className="mb-3">
+                <div className="mb-2">
                   <p className="text-gray-900 whitespace-pre-wrap leading-relaxed text-sm">
                     {discussion.content}
                   </p>
@@ -505,40 +468,58 @@ export default function DiscussionFeed({ newDiscussion }) {
                   />
                 )}
 
-                {/* AI points (monochrome) */}
+                {/* AI points (collapsible and clickable) */}
                 {discussion.aiPoints && discussion.aiPoints.length > 0 && (
-                  <div className="mb-3 rounded border border-black/20 p-3">
-                    <div className="text-xs font-semibold text-gray-900 mb-2">Key points</div>
-                    <div className="space-y-2">
-                      {discussion.aiPoints.map((point) => (
-                        <div key={point.id} className="flex items-start gap-2">
-                          <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
-                          <div className="flex-1">
-                            <p className="text-sm text-gray-900">{point.text}</p>
-                            {point.type && (
-                              <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
-                                {point.type}
-                              </span>
-                            )}
-                          </div>
+                  <div className="mb-2 rounded border border-black/20">
+                    <button
+                      onClick={() => toggleAIPoints(discussion.id)}
+                      className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-50"
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className={`w-4 h-4 transition-transform ${expandedAIPoints.has(discussion.id) ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        <span className="text-xs font-semibold text-gray-900">Key Discussion Points</span>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        {discussion.aiPoints.length} point{discussion.aiPoints.length !== 1 ? 's' : ''}
+                      </div>
+                    </button>
+
+                    {expandedAIPoints.has(discussion.id) && (
+                      <div className="px-3 pb-3 border-t border-black/10">
+                        <div className="space-y-2">
+                          {discussion.aiPoints.map((point) => (
+                            <button
+                              key={point.id}
+                              onClick={() => handlePointClick(discussion, point)}
+                              className="w-full flex items-start gap-2 p-2 text-left rounded hover:bg-gray-50 border border-transparent hover:border-black/20"
+                              disabled={!user}
+                            >
+                              <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-gray-900">{point.text}</p>
+                                {point.type && (
+                                  <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
+                                    {point.type}
+                                  </span>
+                                )}
+                                {user && (
+                                  <div className="text-xs text-gray-600 mt-1">
+                                    Click to reply to this point
+                                  </div>
+                                )}
+                              </div>
+                            </button>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {/* Action buttons */}
-                <div className="flex items-center gap-4 mb-3 pb-3 border-b border-black/10">
-                  <button
-                    onClick={() => handleReplyClick(discussion)}
-                    className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
-                    disabled={!user}
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                    </svg>
-                    Reply
-                  </button>
+                <div className="flex items-center gap-4 pb-3 border-b border-black/10">
                   <button
                     onClick={() => toggleReplies(discussion.id)}
                     className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
@@ -645,15 +626,6 @@ export default function DiscussionFeed({ newDiscussion }) {
         );
       })}
 
-      {/* AI Point Selection Modal for discussion or reply context */}
-      <AIPointSelectionModal
-        isOpen={showPointModal}
-        onClose={() => setShowPointModal(false)}
-        aiPoints={selectedReplyForPoints?.aiPoints || selectedDiscussion?.aiPoints || []}
-        discussionTitle={selectedDiscussion?.title || ''}
-        contextLabel={selectedReplyForPoints ? `Reply by ${selectedReplyForPoints.authorName}` : selectedDiscussion?.title || ''}
-        onPointSelected={handlePointSelected}
-      />
     </div>
   );
 }
