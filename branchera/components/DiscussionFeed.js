@@ -628,7 +628,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                 </svg>
                 {/* Hide title when expanded to avoid duplication */}
                 {!isExpanded && (
-                  <span className="font-semibold text-gray-900 truncate flex-1 min-w-0">
+                  <span className="font-semibold text-gray-900 truncate flex-1 min-w-0 mr-2">
                     <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
                   </span>
                 )}
