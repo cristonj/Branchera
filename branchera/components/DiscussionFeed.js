@@ -29,7 +29,14 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const [selectedReplyForPoints, setSelectedReplyForPoints] = useState(null); // Reply context for AI points
   const [searchQuery, setSearchQuery] = useState('');
   const [currentSearchType, setCurrentSearchType] = useState('all');
-  const [currentFilters, setCurrentFilters] = useState({});
+  const [currentFilters, setCurrentFilters] = useState({
+    hasReplies: false,
+    hasFactCheck: false,
+    dateRange: 'all',
+    author: '',
+    minLikes: 0,
+    minViews: 0
+  });
   const [currentSort, setCurrentSort] = useState('newest');
   
   const { updateDocument } = useFirestore();
