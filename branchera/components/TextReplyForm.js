@@ -84,13 +84,13 @@ export default function TextReplyForm({
   };
 
   return (
-    <div className="bg-white rounded border border-black/20 p-3">
+    <div className="bg-white rounded border border-black/15 p-3">
       {selectedPoint ? (
         <div className="mb-3">
           <div className="text-xs font-semibold text-gray-900 mb-1">
             {getReplyTypeIcon(replyType)} {getReplyTypeLabel(replyType)}
           </div>
-          <div className="p-2 rounded border-l-2 border-black bg-white">
+          <div className="p-2 rounded border border-black/15 bg-white">
             <p className="text-xs text-gray-900">{selectedPoint.text}</p>
           </div>
         </div>
@@ -99,7 +99,7 @@ export default function TextReplyForm({
           <div className="text-xs font-semibold text-gray-900 mb-1">
             💬 Replying to {replyingToReply.authorName}
           </div>
-          <div className="p-2 rounded border-l-2 border-black bg-white">
+          <div className="p-2 rounded border border-black/15 bg-white">
             <p className="text-xs text-gray-900">{replyingToReply.content}</p>
           </div>
         </div>
