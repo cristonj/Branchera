@@ -24,7 +24,7 @@ export default function DiscussionFeed({ newDiscussion }) {
   const [selectedReplyForPoints, setSelectedReplyForPoints] = useState(null); // Reply context for AI points
   
   const { updateDocument } = useFirestore();
-  const { getDiscussions, deleteDiscussion, deleteReply, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView } = useDatabase();
+  const { getDiscussions, deleteDiscussion, deleteReply, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults } = useDatabase();
   const { user } = useAuth();
 
   const loadDiscussions = useCallback(async () => {
@@ -42,10 +42,13 @@ export default function DiscussionFeed({ newDiscussion }) {
       console.log('Loaded discussions:', discussionsData);
       setDiscussions(discussionsData);
       
-      // Generate AI points for older discussions that don't have them
+      // Generate AI points and fact-check results for older discussions that don't have them
       discussionsData.forEach(discussion => {
         if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
           generateAIPointsForDiscussion(discussion);
+        }
+        if (!discussion.factCheckGenerated && !discussion.factCheckResults) {
+          generateFactCheckForDiscussion(discussion);
         }
       });
     } catch (error) {
@@ -94,6 +97,83 @@ export default function DiscussionFeed({ newDiscussion }) {
       console.log('AI points generated successfully for discussion:', discussion.id);
     } catch (error) {
       console.error('Error generating AI points for discussion:', discussion.id, error);
+    }
+  };
+
+  // Generate fact-check results for a discussion
+  const generateFactCheckForDiscussion = async (discussion) => {
+    try {
+      if (discussion.factCheckGenerated || discussion.factCheckResults) {
+        return; // Already has fact-check results
+      }
+
+      console.log('Generating fact-check results for discussion:', discussion.id);
+      const factCheckResults = await AIService.factCheckContent(discussion.content, discussion.title);
+      
+      // Update discussion in database
+      await updateFactCheckResults(discussion.id, factCheckResults);
+      
+      // Update local state
+      setDiscussions(prev =>
+        prev.map(d =>
+          d.id === discussion.id 
+            ? { ...d, factCheckResults, factCheckGenerated: true }
+            : d
+        )
+      );
+      
+      console.log('Fact-check results generated successfully for discussion:', discussion.id);
+    } catch (error) {
+      console.error('Error generating fact-check results for discussion:', discussion.id, error);
+    }
+  };
+
+  // Generate fact-check results for replies that don't have them
+  const generateFactCheckForReplies = async (discussionId, replies) => {
+    try {
+      const repliesToUpdate = replies.filter(reply => 
+        !reply.factCheckGenerated && !reply.factCheckResults && reply.content && reply.content.trim()
+      );
+
+      if (repliesToUpdate.length === 0) return;
+
+      console.log(`Generating fact-check results for ${repliesToUpdate.length} replies in discussion:`, discussionId);
+
+      // Process replies in parallel
+      const factCheckPromises = repliesToUpdate.map(async (reply) => {
+        try {
+          const factCheckResults = await AIService.factCheckContent(reply.content, 'Reply');
+          await updateReplyFactCheckResults(discussionId, reply.id, factCheckResults);
+          return { replyId: reply.id, factCheckResults };
+        } catch (error) {
+          console.error('Error generating fact-check for reply:', reply.id, error);
+          return { replyId: reply.id, error };
+        }
+      });
+
+      const results = await Promise.all(factCheckPromises);
+
+      // Update local state with the new fact-check results
+      setDiscussions(prev =>
+        prev.map(d =>
+          d.id === discussionId
+            ? {
+                ...d,
+                replies: (d.replies || []).map(reply => {
+                  const result = results.find(r => r.replyId === reply.id);
+                  if (result && result.factCheckResults) {
+                    return { ...reply, factCheckResults: result.factCheckResults, factCheckGenerated: true };
+                  }
+                  return reply;
+                })
+              }
+            : d
+        )
+      );
+
+      console.log('Fact-check results generated for replies in discussion:', discussionId);
+    } catch (error) {
+      console.error('Error generating fact-check results for replies:', error);
     }
   };
 
@@ -242,7 +322,9 @@ export default function DiscussionFeed({ newDiscussion }) {
     }
   };
 
-  const toggleReplies = (discussionId) => {
+  const toggleReplies = async (discussionId) => {
+    const wasExpanded = expandedReplies.has(discussionId);
+    
     setExpandedReplies(prev => {
       const newSet = new Set(prev);
       if (newSet.has(discussionId)) {
@@ -252,6 +334,18 @@ export default function DiscussionFeed({ newDiscussion }) {
       }
       return newSet;
     });
+
+    // Generate fact-check results for replies when expanding
+    if (!wasExpanded) {
+      const discussion = discussions.find(d => d.id === discussionId);
+      if (discussion && discussion.replies && discussion.replies.length > 0) {
+        try {
+          await generateFactCheckForReplies(discussionId, discussion.replies);
+        } catch (error) {
+          console.error('Error generating fact-check results for replies:', error);
+        }
+      }
+    }
   };
 
   const toggleAIPoints = (discussionId) => {
@@ -293,14 +387,26 @@ export default function DiscussionFeed({ newDiscussion }) {
       return next;
     });
 
-    // Generate AI points when expanding if they don't exist
+    // Generate AI points and fact-check results when expanding if they don't exist
     if (!wasExpanded) {
       const discussion = discussions.find(d => d.id === discussionId);
-      if (discussion && !discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
-        try {
-          await generateAIPointsForDiscussion(discussion);
-        } catch (error) {
-          console.error('Error generating AI points for discussion:', discussionId, error);
+      if (discussion) {
+        // Generate AI points if missing
+        if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
+          try {
+            await generateAIPointsForDiscussion(discussion);
+          } catch (error) {
+            console.error('Error generating AI points for discussion:', discussionId, error);
+          }
+        }
+        
+        // Generate fact-check results if missing
+        if (!discussion.factCheckGenerated && !discussion.factCheckResults) {
+          try {
+            await generateFactCheckForDiscussion(discussion);
+          } catch (error) {
+            console.error('Error generating fact-check results for discussion:', discussionId, error);
+          }
         }
       }
     }
