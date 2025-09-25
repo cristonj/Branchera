@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import TextReplyForm from './TextReplyForm';
 import AIPointSelectionModal from './AIPointSelectionModal';
 import ReplyTree from './ReplyTree';
+import FactCheckResults from './FactCheckResults';
 import { AIService } from '@/lib/aiService';
 
 export default function DiscussionFeed({ newDiscussion }) {
@@ -389,7 +390,7 @@ export default function DiscussionFeed({ newDiscussion }) {
         const isExpanded = expandedDiscussions.has(discussion.id);
         return (
           <div key={discussion.id} className="bg-white rounded-lg border border-black/20">
-            {/* Collapsed Header Row */}
+            {/* Header Row - shows title and controls */}
             <div className="px-4 py-3 flex items-center justify-between">
               <button
                 onClick={() => toggleDiscussion(discussion.id)}
@@ -399,9 +400,14 @@ export default function DiscussionFeed({ newDiscussion }) {
                 <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-                <span className="font-semibold text-gray-900 truncate flex-1 min-w-0">{discussion.title}</span>
+                {/* Hide title when expanded to avoid duplication */}
+                {!isExpanded && (
+                  <span className="font-semibold text-gray-900 truncate flex-1 min-w-0">{discussion.title}</span>
+                )}
               </button>
-              <div className="flex items-center gap-4">
+              {/* Hide action buttons when expanded */}
+              {!isExpanded && (
+                <div className="flex items-center gap-4">
                 <button
                   onClick={() => handleReplyClick(discussion)}
                   className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
@@ -452,7 +458,8 @@ export default function DiscussionFeed({ newDiscussion }) {
                     </svg>
                   </button>
                 )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Expanded Content */}
@@ -489,6 +496,14 @@ export default function DiscussionFeed({ newDiscussion }) {
                     {discussion.content}
                   </p>
                 </div>
+
+                {/* Fact Check Results */}
+                {discussion.factCheckResults && (
+                  <FactCheckResults 
+                    factCheckResults={discussion.factCheckResults} 
+                    isLoading={false} 
+                  />
+                )}
 
                 {/* AI points (monochrome) */}
                 {discussion.aiPoints && discussion.aiPoints.length > 0 && (

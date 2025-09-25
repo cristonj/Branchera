@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+
+// Force dynamic rendering to prevent pre-rendering issues with Firebase
+export const dynamic = 'force-dynamic';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -35,10 +38,10 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen">
       {/* Navigation Bar */}
-      <nav className="border-b border-gray-200">
+      <nav className="border-b border-black/20">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex justify-between items-center h-16">
-            <h1 className="text-xl font-bold">
+            <h1 className="text-xl font-bold text-gray-900">
               Branchera
             </h1>
             
@@ -57,7 +60,7 @@ export default function DashboardPage() {
               
               <button
                 onClick={logout}
-                className="px-3 py-1 text-sm bg-black text-white hover:bg-gray-800 rounded-full"
+                className="px-3 py-1 text-sm bg-black text-white hover:bg-black/80 rounded-full"
               >
                 Sign Out
               </button>

@@ -17,22 +17,35 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
+// Check if we have the required Firebase configuration
+const hasRequiredConfig = firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.authDomain;
+
 // Initialize Firebase (ensure we don't initialize twice)
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+// Only initialize if we have valid configuration
+let app = null;
+if (hasRequiredConfig) {
+  app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+}
 
-// Initialize Firebase services
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-// Initialize Analytics (only in browser and if supported)
+// Initialize Firebase services (only if app is initialized)
+let auth = null;
+let db = null;
+let storage = null;
 let analytics = null;
-if (typeof window !== 'undefined') {
-  isSupported().then((supported) => {
-    if (supported) {
-      analytics = getAnalytics(app);
-    }
-  });
+
+if (app) {
+  auth = getAuth(app);
+  db = getFirestore(app);
+  storage = getStorage(app);
+
+  // Initialize Analytics (only in browser and if supported)
+  if (typeof window !== 'undefined') {
+    isSupported().then((supported) => {
+      if (supported) {
+        analytics = getAnalytics(app);
+      }
+    });
+  }
 }
 
 export { app, auth, db, storage, analytics };
