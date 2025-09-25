@@ -24,7 +24,7 @@ export default function DiscussionFeed({ newDiscussion }) {
   const [selectedReplyForPoints, setSelectedReplyForPoints] = useState(null); // Reply context for AI points
   
   const { updateDocument } = useFirestore();
-  const { getDiscussions, deleteDiscussion, deleteReply, updateAIPoints, updateReplyAIPoints } = useDatabase();
+  const { getDiscussions, deleteDiscussion, deleteReply, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView } = useDatabase();
   const { user } = useAuth();
 
   const loadDiscussions = useCallback(async () => {
@@ -318,7 +318,9 @@ export default function DiscussionFeed({ newDiscussion }) {
     });
   };
 
-  const toggleDiscussion = (discussionId) => {
+  const toggleDiscussion = async (discussionId) => {
+    const wasExpanded = expandedDiscussions.has(discussionId);
+    
     setExpandedDiscussions(prev => {
       const next = new Set(prev);
       if (next.has(discussionId)) {
@@ -328,6 +330,25 @@ export default function DiscussionFeed({ newDiscussion }) {
       }
       return next;
     });
+
+    // Increment view count only when expanding (not collapsing) and user is authenticated
+    if (!wasExpanded && user) {
+      try {
+        const result = await incrementDiscussionView(discussionId, user.uid);
+        
+        // Update local state with new view count
+        setDiscussions(prev =>
+          prev.map(d =>
+            d.id === discussionId 
+              ? { ...d, views: result.views, viewedBy: result.viewedBy }
+              : d
+          )
+        );
+      } catch (error) {
+        console.error('Error incrementing discussion view:', error);
+        // Don't show error to user, just log it
+      }
+    }
   };
 
 
@@ -368,7 +389,7 @@ export default function DiscussionFeed({ newDiscussion }) {
         const isExpanded = expandedDiscussions.has(discussion.id);
         return (
           <div key={discussion.id} className="bg-white rounded-lg border border-black/20">
-            {/* Header Row */}
+            {/* Collapsed Header Row */}
             <div className="px-4 py-3 flex items-center justify-between">
               <button
                 onClick={() => toggleDiscussion(discussion.id)}
@@ -378,57 +399,60 @@ export default function DiscussionFeed({ newDiscussion }) {
                 <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
-                <span className={`font-semibold text-gray-900 flex-1 min-w-0 ${isExpanded ? '' : 'truncate'}`}>
-                  {discussion.title}
-                </span>
+                <span className="font-semibold text-gray-900 truncate flex-1 min-w-0">{discussion.title}</span>
               </button>
-              {!isExpanded && (
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => handleReplyClick(discussion)}
-                    className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
-                    disabled={!user}
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                    </svg>
-                    Reply
-                  </button>
-                  <button
-                    onClick={() => toggleReplies(discussion.id)}
-                    className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                    {discussion.replyCount || 0}
-                    <svg className={`w-3 h-3 transition-transform ${expandedReplies.has(discussion.id) ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={() => handleLike(discussion.id)}
-                    className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
-                    disabled={!user}
-                  >
-                    <svg className="w-4 h-4" fill={user && (discussion.likedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                    {discussion.likes || 0}
-                  </button>
-                  {user && discussion.authorId === user.uid && (
-                    <button
-                      onClick={() => handleDelete(discussion.id)}
-                      className="p-1 text-gray-800 hover:text-black"
-                      title="Delete discussion"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  )}
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => handleReplyClick(discussion)}
+                  className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
+                  disabled={!user}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                  </svg>
+                  Reply
+                </button>
+                <button
+                  onClick={() => toggleReplies(discussion.id)}
+                  className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  {discussion.replyCount || 0}
+                  <svg className={`w-3 h-3 transition-transform ${expandedReplies.has(discussion.id) ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => handleLike(discussion.id)}
+                  className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
+                  disabled={!user}
+                >
+                  <svg className="w-4 h-4" fill={user && (discussion.likedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                  {discussion.likes || 0}
+                </button>
+                <div className="flex items-center gap-1 text-sm text-gray-600">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  {discussion.views || 0}
                 </div>
-              )}
+                {user && discussion.authorId === user.uid && (
+                  <button
+                    onClick={() => handleDelete(discussion.id)}
+                    className="p-1 text-gray-800 hover:text-black"
+                    title="Delete discussion"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Expanded Content */}
@@ -491,6 +515,13 @@ export default function DiscussionFeed({ newDiscussion }) {
                       </svg>
                       {discussion.likes || 0}
                     </button>
+                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      {discussion.views || 0}
+                    </div>
                     {user && discussion.authorId === user.uid && (
                       <button
                         onClick={() => handleDelete(discussion.id)}
@@ -565,6 +596,29 @@ export default function DiscussionFeed({ newDiscussion }) {
                         handleReplyToReply(reply);
                       }}
                       onDeleteReply={handleDeleteReply}
+                      onReplyView={async (replyId, userId) => {
+                        try {
+                          await incrementReplyView(discussion.id, replyId, userId);
+                          // Update local state to reflect the view count increment
+                          setDiscussions(prev =>
+                            prev.map(d =>
+                              d.id === discussion.id
+                                ? {
+                                    ...d,
+                                    replies: (d.replies || []).map(r =>
+                                      r.id === replyId
+                                        ? { ...r, views: (r.views || 0) + 1, viewedBy: [...(r.viewedBy || []), userId] }
+                                        : r
+                                    )
+                                  }
+                                : d
+                            )
+                          );
+                        } catch (error) {
+                          console.error('Error incrementing reply view:', error);
+                          throw error;
+                        }
+                      }}
                       maxLevel={3}
                     />
                   </div>
