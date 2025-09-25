@@ -10,6 +10,7 @@ import ReplyTree from './ReplyTree';
 import FactCheckResults from './FactCheckResults';
 import SearchFilterSort from './SearchFilterSort';
 import SearchHighlight from './SearchHighlight';
+import EditDiscussionForm from './EditDiscussionForm';
 import { AIService } from '@/lib/aiService';
 import { usePolling } from '@/hooks/usePolling';
 import { REALTIME_CONFIG } from '@/lib/realtimeConfig';
@@ -27,6 +28,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const [selectedReplyType, setSelectedReplyType] = useState('general'); // Selected reply type
   const [replyingToReply, setReplyingToReply] = useState(null); // Reply being replied to (for nested replies)
   const [selectedReplyForPoints, setSelectedReplyForPoints] = useState(null); // Reply context for AI points
+  const [editingDiscussion, setEditingDiscussion] = useState(null); // Discussion being edited
   const [searchQuery, setSearchQuery] = useState('');
   const [currentSearchType, setCurrentSearchType] = useState('all');
   const [currentFilters, setCurrentFilters] = useState({
@@ -40,7 +42,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const [currentSort, setCurrentSort] = useState('newest');
   
   const { updateDocument } = useFirestore();
-  const { getDiscussions, deleteDiscussion, deleteReply, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults } = useDatabase();
+  const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults } = useDatabase();
   const { user } = useAuth();
 
   const loadDiscussions = useCallback(async () => {
@@ -330,6 +332,51 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       console.error('Error deleting discussion:', error);
       alert(error.message || 'Failed to delete discussion');
     }
+  };
+
+  const handleEditDiscussion = (discussion) => {
+    if (!user || discussion.authorId !== user.uid) return;
+    
+    setEditingDiscussion(discussion);
+    // Close any open reply forms
+    setReplyingTo(null);
+    setSelectedPoint(null);
+    setSelectedReplyType('general');
+    setReplyingToReply(null);
+    setSelectedReplyForPoints(null);
+  };
+
+  const handleEditComplete = (updatedDiscussion) => {
+    // Update local state
+    setDiscussions(prev =>
+      prev.map(d =>
+        d.id === updatedDiscussion.id ? updatedDiscussion : d
+      )
+    );
+    
+    // Close edit form
+    setEditingDiscussion(null);
+  };
+
+  const handleEditCancel = () => {
+    setEditingDiscussion(null);
+  };
+
+  const handleReplyEdited = (updatedReply) => {
+    // Update the specific reply in the discussions state
+    setDiscussions(prev =>
+      prev.map(d => {
+        if (d.replies && d.replies.some(r => r.id === updatedReply.id)) {
+          return {
+            ...d,
+            replies: d.replies.map(r =>
+              r.id === updatedReply.id ? updatedReply : r
+            )
+          };
+        }
+        return d;
+      })
+    );
   };
 
 
@@ -682,6 +729,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                   <div className="flex items-center gap-3">
                     <div className="text-xs text-gray-600">
                       <SearchHighlight text={discussion.authorName} searchQuery={searchQuery} /> · {formatDate(discussion.createdAt)}
+                      {discussion.isEdited && discussion.editedAt && (
+                        <span className="text-gray-500 italic"> · edited {formatDate(discussion.editedAt)}</span>
+                      )}
                     </div>
                   </div>
                   
@@ -787,20 +837,42 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                     {discussion.views || 0}
                   </div>
                   {user && discussion.authorId === user.uid && (
-                    <button
-                      onClick={() => handleDelete(discussion.id)}
-                      className="p-1 text-gray-800 hover:text-black"
-                      title="Delete discussion"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+                    <>
+                      <button
+                        onClick={() => handleEditDiscussion(discussion)}
+                        className="p-1 text-gray-800 hover:text-black"
+                        title="Edit discussion"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(discussion.id)}
+                        className="p-1 text-gray-800 hover:text-black"
+                        title="Delete discussion"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </>
                   )}
                 </div>
 
+                {/* Edit form */}
+                {editingDiscussion && editingDiscussion.id === discussion.id && (
+                  <div className="mt-3">
+                    <EditDiscussionForm
+                      discussion={editingDiscussion}
+                      onEditComplete={handleEditComplete}
+                      onCancel={handleEditCancel}
+                    />
+                  </div>
+                )}
+
                 {/* Reply form */}
-                {replyingTo === discussion.id && (
+                {replyingTo === discussion.id && !editingDiscussion && (
                   <div className="mt-3">
                     <TextReplyForm
                       discussionId={discussion.id}
@@ -833,6 +905,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                         handleReplyToReply(reply);
                       }}
                       onDeleteReply={handleDeleteReply}
+                      onReplyEdited={handleReplyEdited}
                       onReplyView={async (replyId, userId) => {
                         try {
                           await incrementReplyView(discussion.id, replyId, userId);
