@@ -24,7 +24,7 @@ export default function DiscussionFeed({ newDiscussion }) {
   const [selectedReplyForPoints, setSelectedReplyForPoints] = useState(null); // Reply context for AI points
   
   const { updateDocument } = useFirestore();
-  const { getDiscussions, deleteDiscussion, deleteReply, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView } = useDatabase();
+  const { getDiscussions, deleteDiscussion, deleteReply, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults } = useDatabase();
   const { user } = useAuth();
 
   const loadDiscussions = useCallback(async () => {
@@ -42,10 +42,13 @@ export default function DiscussionFeed({ newDiscussion }) {
       console.log('Loaded discussions:', discussionsData);
       setDiscussions(discussionsData);
       
-      // Generate AI points for older discussions that don't have them
+      // Generate AI points and fact-check results for older discussions that don't have them
       discussionsData.forEach(discussion => {
         if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
           generateAIPointsForDiscussion(discussion);
+        }
+        if (!discussion.factCheckGenerated && !discussion.factCheckResults) {
+          generateFactCheckForDiscussion(discussion);
         }
       });
     } catch (error) {
@@ -94,6 +97,83 @@ export default function DiscussionFeed({ newDiscussion }) {
       console.log('AI points generated successfully for discussion:', discussion.id);
     } catch (error) {
       console.error('Error generating AI points for discussion:', discussion.id, error);
+    }
+  };
+
+  // Generate fact-check results for a discussion
+  const generateFactCheckForDiscussion = async (discussion) => {
+    try {
+      if (discussion.factCheckGenerated || discussion.factCheckResults) {
+        return; // Already has fact-check results
+      }
+
+      console.log('Generating fact-check results for discussion:', discussion.id);
+      const factCheckResults = await AIService.factCheckContent(discussion.content, discussion.title);
+      
+      // Update discussion in database
+      await updateFactCheckResults(discussion.id, factCheckResults);
+      
+      // Update local state
+      setDiscussions(prev =>
+        prev.map(d =>
+          d.id === discussion.id 
+            ? { ...d, factCheckResults, factCheckGenerated: true }
+            : d
+        )
+      );
+      
+      console.log('Fact-check results generated successfully for discussion:', discussion.id);
+    } catch (error) {
+      console.error('Error generating fact-check results for discussion:', discussion.id, error);
+    }
+  };
+
+  // Generate fact-check results for replies that don't have them
+  const generateFactCheckForReplies = async (discussionId, replies) => {
+    try {
+      const repliesToUpdate = replies.filter(reply => 
+        !reply.factCheckGenerated && !reply.factCheckResults && reply.content && reply.content.trim()
+      );
+
+      if (repliesToUpdate.length === 0) return;
+
+      console.log(`Generating fact-check results for ${repliesToUpdate.length} replies in discussion:`, discussionId);
+
+      // Process replies in parallel
+      const factCheckPromises = repliesToUpdate.map(async (reply) => {
+        try {
+          const factCheckResults = await AIService.factCheckContent(reply.content, 'Reply');
+          await updateReplyFactCheckResults(discussionId, reply.id, factCheckResults);
+          return { replyId: reply.id, factCheckResults };
+        } catch (error) {
+          console.error('Error generating fact-check for reply:', reply.id, error);
+          return { replyId: reply.id, error };
+        }
+      });
+
+      const results = await Promise.all(factCheckPromises);
+
+      // Update local state with the new fact-check results
+      setDiscussions(prev =>
+        prev.map(d =>
+          d.id === discussionId
+            ? {
+                ...d,
+                replies: (d.replies || []).map(reply => {
+                  const result = results.find(r => r.replyId === reply.id);
+                  if (result && result.factCheckResults) {
+                    return { ...reply, factCheckResults: result.factCheckResults, factCheckGenerated: true };
+                  }
+                  return reply;
+                })
+              }
+            : d
+        )
+      );
+
+      console.log('Fact-check results generated for replies in discussion:', discussionId);
+    } catch (error) {
+      console.error('Error generating fact-check results for replies:', error);
     }
   };
 
@@ -242,7 +322,9 @@ export default function DiscussionFeed({ newDiscussion }) {
     }
   };
 
-  const toggleReplies = (discussionId) => {
+  const toggleReplies = async (discussionId) => {
+    const wasExpanded = expandedReplies.has(discussionId);
+    
     setExpandedReplies(prev => {
       const newSet = new Set(prev);
       if (newSet.has(discussionId)) {
@@ -252,6 +334,18 @@ export default function DiscussionFeed({ newDiscussion }) {
       }
       return newSet;
     });
+
+    // Generate fact-check results for replies when expanding
+    if (!wasExpanded) {
+      const discussion = discussions.find(d => d.id === discussionId);
+      if (discussion && discussion.replies && discussion.replies.length > 0) {
+        try {
+          await generateFactCheckForReplies(discussionId, discussion.replies);
+        } catch (error) {
+          console.error('Error generating fact-check results for replies:', error);
+        }
+      }
+    }
   };
 
   const toggleAIPoints = (discussionId) => {
@@ -293,14 +387,26 @@ export default function DiscussionFeed({ newDiscussion }) {
       return next;
     });
 
-    // Generate AI points when expanding if they don't exist
+    // Generate AI points and fact-check results when expanding if they don't exist
     if (!wasExpanded) {
       const discussion = discussions.find(d => d.id === discussionId);
-      if (discussion && !discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
-        try {
-          await generateAIPointsForDiscussion(discussion);
-        } catch (error) {
-          console.error('Error generating AI points for discussion:', discussionId, error);
+      if (discussion) {
+        // Generate AI points if missing
+        if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
+          try {
+            await generateAIPointsForDiscussion(discussion);
+          } catch (error) {
+            console.error('Error generating AI points for discussion:', discussionId, error);
+          }
+        }
+        
+        // Generate fact-check results if missing
+        if (!discussion.factCheckGenerated && !discussion.factCheckResults) {
+          try {
+            await generateFactCheckForDiscussion(discussion);
+          } catch (error) {
+            console.error('Error generating fact-check results for discussion:', discussionId, error);
+          }
         }
       }
     }
@@ -378,7 +484,7 @@ export default function DiscussionFeed({ newDiscussion }) {
                   <span className="font-semibold text-gray-900 truncate flex-1 min-w-0">{discussion.title}</span>
                 )}
               </button>
-              {/* Hide action buttons when expanded */}
+              {/* Hide action buttons when expanded - only show likes and replies count */}
               {!isExpanded && (
                 <div className="flex items-center gap-4">
                 <button
@@ -389,9 +495,6 @@ export default function DiscussionFeed({ newDiscussion }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                   {discussion.replyCount || 0}
-                  <svg className={`w-3 h-3 transition-transform ${expandedReplies.has(discussion.id) ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
                 </button>
                 <button
                   onClick={() => handleLike(discussion.id)}
@@ -403,24 +506,6 @@ export default function DiscussionFeed({ newDiscussion }) {
                   </svg>
                   {discussion.likes || 0}
                 </button>
-                <div className="flex items-center gap-1 text-sm text-gray-600">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  {discussion.views || 0}
-                </div>
-                {user && discussion.authorId === user.uid && (
-                  <button
-                    onClick={() => handleDelete(discussion.id)}
-                    className="p-1 text-gray-800 hover:text-black"
-                    title="Delete discussion"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                )}
                 </div>
               )}
             </div>
@@ -519,7 +604,7 @@ export default function DiscussionFeed({ newDiscussion }) {
                 )}
 
                 {/* Action buttons */}
-                <div className="flex items-center gap-4 pb-3 border-b border-black/10">
+                <div className="flex items-center gap-4 mt-4 pb-3 border-b border-black/10">
                   <button
                     onClick={() => toggleReplies(discussion.id)}
                     className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"

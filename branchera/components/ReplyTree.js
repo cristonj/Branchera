@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
+import FactCheckResults from './FactCheckResults';
 
 export default function ReplyTree({ 
   replies, 
@@ -199,6 +200,17 @@ export default function ReplyTree({
         <div>
           <p className="text-gray-900 text-sm whitespace-pre-wrap leading-relaxed">{reply.content}</p>
         </div>
+        
+        {/* Fact Check Results for Reply */}
+        {reply.factCheckResults && (
+          <div className="mt-2">
+            <FactCheckResults 
+              factCheckResults={reply.factCheckResults} 
+              isLoading={false} 
+            />
+          </div>
+        )}
+        
         {Array.isArray(reply.aiPoints) && reply.aiPoints.length > 0 && (
           <div className="mt-2 border border-black/15 rounded p-2 bg-white">
             <div className="text-[11px] font-semibold text-gray-900 mb-1">Reply points</div>
