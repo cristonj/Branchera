@@ -6,7 +6,7 @@ import { useDatabase } from '@/hooks/useDatabase';
 import { AIService } from '@/lib/aiService';
 import FactCheckResults from './FactCheckResults';
 
-export default function TextDiscussionForm({ onDiscussionCreated }) {
+export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = false }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -124,8 +124,8 @@ export default function TextDiscussionForm({ onDiscussionCreated }) {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-black/20 p-6 mb-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Start a Discussion</h2>
+    <div className={isInDialog ? "" : "bg-white rounded-lg border border-black/20 p-6 mb-6"}>
+      {!isInDialog && <h2 className="text-lg font-semibold text-gray-900 mb-4">Start a Discussion</h2>}
       
       <form onSubmit={handleSubmit}>
         {/* Title Input */}

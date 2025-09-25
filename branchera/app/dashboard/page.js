@@ -7,13 +7,14 @@ export const dynamic = 'force-dynamic';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import TextDiscussionForm from '@/components/TextDiscussionForm';
 import DiscussionFeed from '@/components/DiscussionFeed';
+import DiscussionDialog from '@/components/DiscussionDialog';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [newDiscussion, setNewDiscussion] = useState(null);
+  const [isDiscussionDialogOpen, setIsDiscussionDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -71,9 +72,18 @@ export default function DashboardPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8">
-        <TextDiscussionForm onDiscussionCreated={handleNewDiscussion} />
-        <DiscussionFeed newDiscussion={newDiscussion} />
+        <DiscussionFeed 
+          newDiscussion={newDiscussion} 
+          onStartDiscussion={() => setIsDiscussionDialogOpen(true)}
+        />
       </main>
+
+      {/* Discussion Dialog */}
+      <DiscussionDialog
+        isOpen={isDiscussionDialogOpen}
+        onClose={() => setIsDiscussionDialogOpen(false)}
+        onDiscussionCreated={handleNewDiscussion}
+      />
     </div>
   );
 }
