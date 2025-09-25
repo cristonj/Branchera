@@ -18,6 +18,7 @@ export function usePolling(task, intervalMs, options = {}) {
   const [isActive, setIsActive] = useState(false);
   const [lastRunAt, setLastRunAt] = useState(null);
 
+  // Update task ref when task changes
   useEffect(() => {
     taskRef.current = task;
   }, [task]);
@@ -33,19 +34,9 @@ export function usePolling(task, intervalMs, options = {}) {
     }
   }, []);
 
-  const shouldPause = () => pauseOnHidden && typeof document !== 'undefined' && document.hidden;
-
-  const start = useCallback(() => {
-    if (!enabled || isActive) return;
-    setIsActive(true);
-    if (immediate && !shouldPause()) {
-      void runOnce();
-    }
-    timerRef.current = setInterval(() => {
-      if (shouldPause()) return;
-      void runOnce();
-    }, Math.max(250, Number(intervalMs) || 0));
-  }, [enabled, immediate, intervalMs, runOnce, isActive]);
+  const shouldPause = useCallback(() => {
+    return pauseOnHidden && typeof document !== 'undefined' && document.hidden;
+  }, [pauseOnHidden]);
 
   const stop = useCallback(() => {
     if (timerRef.current) {
@@ -55,14 +46,58 @@ export function usePolling(task, intervalMs, options = {}) {
     setIsActive(false);
   }, []);
 
-  useEffect(() => {
-    if (!enabled) {
-      stop();
-      return;
+  const start = useCallback(() => {
+    // Clear any existing timer first
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
     }
-    start();
-    return stop;
-  }, [enabled, start, stop]);
+    
+    setIsActive(true);
+    if (immediate && !shouldPause()) {
+      void runOnce();
+    }
+    timerRef.current = setInterval(() => {
+      if (shouldPause()) return;
+      void runOnce();
+    }, Math.max(250, Number(intervalMs) || 0));
+  }, [immediate, intervalMs, runOnce, shouldPause]);
+
+  // Main effect to control polling based on enabled state
+  useEffect(() => {
+    if (enabled) {
+      // Clear any existing timer first
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      
+      setIsActive(true);
+      if (immediate && !(pauseOnHidden && typeof document !== 'undefined' && document.hidden)) {
+        void runOnce();
+      }
+      timerRef.current = setInterval(() => {
+        if (pauseOnHidden && typeof document !== 'undefined' && document.hidden) return;
+        void runOnce();
+      }, Math.max(250, Number(intervalMs) || 0));
+      
+      // Cleanup function
+      return () => {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        setIsActive(false);
+      };
+    } else {
+      // Stop polling when disabled
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setIsActive(false);
+    }
+  }, [enabled, immediate, intervalMs, pauseOnHidden]);
 
   // Visibility handling to resume immediately when tab becomes visible
   useEffect(() => {
@@ -75,7 +110,7 @@ export function usePolling(task, intervalMs, options = {}) {
     };
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
-  }, [pauseOnHidden, runOnce]);
+  }, [pauseOnHidden]); // Remove runOnce from deps - it's stable
 
   return { start, stop, isRunning: isRunningRef.current, isActive, lastRunAt };
 }

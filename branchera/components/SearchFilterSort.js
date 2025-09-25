@@ -6,21 +6,43 @@ export default function SearchFilterSort({
   discussions, 
   onResults, 
   onSearchChange, 
+  onSearchTypeChange,
   onFilterChange, 
-  onSortChange 
-}) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchType, setSearchType] = useState('all');
-  const [sortBy, setSortBy] = useState('newest');
-  const [filters, setFilters] = useState({
+  onSortChange,
+  initialSearchQuery = '',
+  initialSearchType = 'all',
+  initialSortBy = 'newest',
+  initialFilters = {
     hasReplies: false,
     hasFactCheck: false,
     dateRange: 'all',
     author: '',
     minLikes: 0,
     minViews: 0
-  });
+  }
+}) {
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
+  const [searchType, setSearchType] = useState(initialSearchType);
+  const [sortBy, setSortBy] = useState(initialSortBy);
+  const [filters, setFilters] = useState(initialFilters);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Sync internal state with props when they change
+  useEffect(() => {
+    setSearchQuery(initialSearchQuery);
+  }, [initialSearchQuery]);
+
+  useEffect(() => {
+    setSearchType(initialSearchType);
+  }, [initialSearchType]);
+
+  useEffect(() => {
+    setSortBy(initialSortBy);
+  }, [initialSortBy]);
+
+  useEffect(() => {
+    setFilters(initialFilters);
+  }, [initialFilters]);
 
   // Search function that searches through discussions and replies
   const searchContent = useCallback((discussions, query, type) => {
@@ -295,9 +317,10 @@ export default function SearchFilterSort({
 
     onResults?.(processed);
     onSearchChange?.(searchQuery);
+    onSearchTypeChange?.(searchType);
     onFilterChange?.(filters);
     onSortChange?.(sortBy);
-  }, [discussions, searchQuery, searchType, sortBy, filters, searchContent, filterDiscussions, sortDiscussions, onResults, onSearchChange, onFilterChange, onSortChange]);
+  }, [discussions, searchQuery, searchType, sortBy, filters, searchContent, filterDiscussions, sortDiscussions, onResults, onSearchChange, onSearchTypeChange, onFilterChange, onSortChange]);
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({
@@ -321,6 +344,7 @@ export default function SearchFilterSort({
   };
 
   const hasActiveFilters = searchQuery.trim() || 
+    searchType !== 'all' ||
     filters.hasReplies || 
     filters.hasFactCheck || 
     filters.dateRange !== 'all' || 
@@ -354,20 +378,9 @@ export default function SearchFilterSort({
               </button>
             )}
           </div>
-          <select
-            value={searchType}
-            onChange={(e) => setSearchType(e.target.value)}
-            className="px-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-          >
-            <option value="all">All</option>
-            <option value="title">Titles</option>
-            <option value="content">Content</option>
-            <option value="factcheck">Fact Checks</option>
-            <option value="replies">Replies</option>
-          </select>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`px-4 py-2 border border-black/20 rounded-lg hover:bg-gray-50 flex items-center gap-2 ${hasActiveFilters ? 'bg-black text-white' : ''}`}
+            className={`px-4 py-2 border border-black/20 rounded-lg hover:bg-black-50 flex items-center gap-2`}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -384,6 +397,22 @@ export default function SearchFilterSort({
       {isExpanded && (
         <div className="p-4 border-b border-black/10 bg-gray-50">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Search Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Search in</label>
+              <select
+                value={searchType}
+                onChange={(e) => setSearchType(e.target.value)}
+                className="w-full pl-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+              >
+                <option value="all">All Content</option>
+                <option value="title">Titles Only</option>
+                <option value="content">Content Only</option>
+                <option value="factcheck">Fact Checks</option>
+                <option value="replies">Replies Only</option>
+              </select>
+            </div>
+
             {/* Sort Options */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Sort by</label>
