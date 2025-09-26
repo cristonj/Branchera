@@ -604,26 +604,32 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const handleReplyAdded = (discussionId, newReply) => {
     // Update the discussion with the new reply, but check for duplicates
     setDiscussions(prev =>
-      prev.map(d =>
-        d.id === discussionId
-          ? {
-              ...d,
-              replies: [
-                ...(d.replies || []).filter(r => r.id !== newReply.id), // Remove any existing reply with same ID
-                newReply // Add the new reply
-              ],
-              replyCount: Math.max((d.replyCount || 0), (d.replies || []).length + 1) // Ensure count is accurate
-            }
-          : d
-      )
+      prev.map(d => {
+        if (d.id === discussionId) {
+          const updatedReplies = [
+            ...(d.replies || []).filter(r => r.id !== newReply.id), // Remove any existing reply with same ID
+            newReply // Add the new reply
+          ];
+          return {
+            ...d,
+            replies: updatedReplies,
+            replyCount: updatedReplies.length // Fix: Use actual length of new replies array
+          };
+        }
+        return d;
+      })
     );
     
-    // Close the reply recorder and clear selections
-    setReplyingTo(null);
-    setSelectedPoint(null);
-    setSelectedReplyType('general');
-    setSelectedDiscussion(null);
-    setReplyingToReply(null);
+    // Delay closing the reply form to allow any pending async operations to complete
+    // This prevents crashes when refreshPointsData is still running
+    setTimeout(() => {
+      // Close the reply recorder and clear selections
+      setReplyingTo(null);
+      setSelectedPoint(null);
+      setSelectedReplyType('general');
+      setSelectedDiscussion(null);
+      setReplyingToReply(null);
+    }, 200); // Small delay to ensure async operations complete
     
     // Expand replies to show the new reply
     setExpandedReplies(prev => new Set([...prev, discussionId]));
