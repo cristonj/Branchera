@@ -991,7 +991,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
 
                 {/* Content */}
                 <div className="mb-2">
-                  <p className="text-gray-900 whitespace-pre-wrap leading-relaxed text-sm">
+                  <p className="text-gray-900 whitespace-pre-wrap leading-relaxed text-sm break-words">
                     <SearchHighlight text={discussion.content} searchQuery={searchQuery} />
                   </p>
                 </div>
@@ -1031,11 +1031,11 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                     
                     {/* Source Information */}
                     {discussion.metadata.newsStory?.source && (
-                      <div className="flex items-center gap-2 text-xs">
-                        <svg className="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <div className="flex items-start gap-2 text-xs">
+                        <svg className="w-3 h-3 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                         </svg>
-                        <span className="text-blue-700">
+                        <div className="text-blue-700 min-w-0 flex-1 break-words">
                           Based on: <strong>{discussion.metadata.newsStory.source.name}</strong>
                           {discussion.metadata.newsStory.source.url && (
                             <>
@@ -1044,7 +1044,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                                 href={discussion.metadata.newsStory.source.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 underline"
+                                className="text-blue-600 hover:text-blue-800 underline break-all"
                                 title={discussion.metadata.newsStory.source.urlValidated === false 
                                   ? `Original article link unavailable. This links to ${discussion.metadata.newsStory.source.name}'s website.`
                                   : discussion.metadata.newsStory.source.groundingTitle 
@@ -1070,11 +1070,11 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                             </span>
                           )}
                           {discussion.metadata.newsStory.source.searchQuery && (
-                            <span className="text-gray-500 ml-2 text-xs">
+                            <span className="text-gray-500 ml-2 text-xs break-words">
                               • Search: &ldquo;{discussion.metadata.newsStory.source.searchQuery}&rdquo;
                             </span>
                           )}
-                        </span>
+                        </div>
                       </div>
                     )}
                   </div>

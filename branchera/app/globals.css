@@ -20,3 +20,32 @@ button {
 input, textarea {
   font-family: inherit;
 }
+
+/* Prevent long URLs and text from causing horizontal overflow */
+a {
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Ensure long text in general doesn't overflow containers */
+.break-long-words {
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Aggressive word breaking for AI-generated content that may contain long URLs */
+.break-ai-content {
+  /* Break long words aggressively */
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  /* Allow breaking at any character for extremely long strings */
+  word-wrap: break-word;
+  /* Enable hyphenation where supported */
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  -moz-hyphens: auto;
+  -ms-hyphens: auto;
+}

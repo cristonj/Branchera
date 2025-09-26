@@ -258,7 +258,7 @@ export default function TextReplyForm({
             {selectedReplyForPoints && ` ${selectedReplyForPoints.authorName}'s point`}
           </div>
           <div className="p-3 rounded-lg border border-black/15 bg-white">
-            <p className="text-xs text-gray-900">{selectedPoint.text}</p>
+            <p className="text-xs text-gray-900 break-words">{selectedPoint.text}</p>
             {selectedReplyForPoints && (
               <div className="mt-2 pt-2 border-t border-black/10">
                 <div className="text-[10px] text-gray-600 mb-1">From reply:</div>

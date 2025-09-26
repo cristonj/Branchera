@@ -359,34 +359,31 @@ Your task:
 2. Take a clear position in 2-3 sentences
 3. Give ONE strong reason supporting your position
 4. End with a direct question that invites challenge
-5. ALWAYS include a source attribution at the end
 
 STRICT REQUIREMENTS:
-- MAXIMUM 150 words total (excluding source attribution)
+- MAXIMUM 150 words total
 - Be DIRECT and SPECIFIC (no fluff or filler)
 - Focus on ONE precise claim, not multiple issues
 - Use active voice and short sentences
 - Write in first person ("I think", "I believe")
 - Make ONE clear argument, not several weak ones
-- MUST end with source attribution: "Source: [Publication] - [URL]"
+- Do NOT include URLs or source links in the content text
 
 BAD example (too long, vague):
 "This complex issue has many facets and various stakeholders have different perspectives on the matter, which creates an interesting dynamic that we should all consider carefully..."
 
-GOOD example (concise, specific with source):
-"I think this policy will backfire. Small businesses can't absorb these costs without laying off workers - we saw this exact pattern in Seattle in 2019. Are supporters ignoring the employment data, or do they think this time will be different?
-
-Source: Reuters - https://reuters.com/business/policy-analysis-2024"
+GOOD example (concise, specific):
+"I think this policy will backfire. Small businesses can't absorb these costs without laying off workers - we saw this exact pattern in Seattle in 2019. Are supporters ignoring the employment data, or do they think this time will be different?"
 
 Return ONLY a valid JSON object in this format:
 {
   "title": "Direct title stating your position (under 60 characters)",
-  "content": "Your concise post (under 150 words, 2-4 short paragraphs max) ending with 'Source: [Publication] - [URL]'",
+  "content": "Your concise post (under 150 words, 2-4 short paragraphs max) with NO URLs or source links",
   "stance": "One sentence describing your position",
   "category": "${story.category}"
 }
 
-Make it punchy, specific, and debate-worthy. ALWAYS include the source attribution.`;
+Make it punchy, specific, and debate-worthy. The source information will be displayed separately.`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
