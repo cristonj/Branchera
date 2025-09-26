@@ -124,11 +124,13 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     try {
       console.log('Checking if we should create an AI news post...');
       
-      // Only check if we have user context (don't create posts for anonymous users)
+      // Database operations require authentication - only run when user is logged in
       if (!user) {
-        console.log('No user logged in, skipping news post check');
+        console.log('No user logged in, skipping news post check (DB requires auth)');
         return;
       }
+      
+      console.log('User authenticated, proceeding with news post check...');
       
       // Add a timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => 
@@ -164,7 +166,12 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         console.log('No need to create AI news post at this time');
       }
     } catch (error) {
-      console.error('Error in news post creation (non-blocking):', error);
+      console.error('❌ Error in news post creation (non-blocking):', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
       // This is intentionally non-blocking - errors here should never affect the main UI
     }
   }, [user, createDiscussion, updateAIPoints, updateFactCheckResults]);
@@ -172,6 +179,18 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   useEffect(() => {
     loadDiscussions();
   }, [loadDiscussions]); // Include loadDiscussions dependency
+
+  // Trigger news bot check when user logs in
+  useEffect(() => {
+    if (user && discussions.length > 0) {
+      console.log('User logged in, checking for news post creation...');
+      // Small delay to ensure discussions are loaded
+      setTimeout(() => {
+        checkAndCreateNewsPost(discussions);
+      }, 1000);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid, discussions.length]); // Run when user logs in or discussions change
 
   // Load collected points and point counts separately to avoid refresh loops
   useEffect(() => {
@@ -395,17 +414,34 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold text-gray-900">Discussions</h2>
-        {onStartDiscussion && (
-          <button
-            onClick={onStartDiscussion}
-            className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full hover:bg-black/80 transition-colors font-medium text-sm"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Start a Discussion
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {user && process.env.NODE_ENV === 'development' && (
+            <button
+              onClick={() => {
+                console.log('🤖 Manual news bot trigger...');
+                checkAndCreateNewsPost(discussions);
+              }}
+              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors font-medium text-xs"
+              title="Debug: Trigger news bot manually"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Test News Bot
+            </button>
+          )}
+          {onStartDiscussion && (
+            <button
+              onClick={onStartDiscussion}
+              className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full hover:bg-black/80 transition-colors font-medium text-sm"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Start a Discussion
+            </button>
+          )}
+        </div>
       </div>
 
       <SearchFilterSort

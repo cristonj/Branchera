@@ -274,7 +274,12 @@ CRITICAL REQUIREMENTS:
         throw new Error('Failed to parse news stories response');
       }
     } catch (error) {
-      console.error('Error fetching news stories:', error);
+      console.error('❌ Error fetching news stories:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
       throw error;
     }
   }
@@ -563,7 +568,12 @@ Make it punchy, specific, and debate-worthy. The source information will be disp
       
       return discussion;
     } catch (error) {
-      console.error('Error creating news discussion:', error);
+      console.error('❌ Error creating news discussion:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        stack: error.stack
+      });
       throw error;
     }
   }
