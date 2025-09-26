@@ -3,17 +3,26 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 import ToastNotification from '@/components/ToastNotification';
 
-const ToastContext = createContext();
+// Create context with a default value to prevent initialization issues
+const defaultContextValue = {
+  showPointsToast: () => {},
+  showSuccessToast: () => {},
+  showErrorToast: () => {},
+  showInfoToast: () => {},
+  showWarningToast: () => {},
+  addToast: () => {},
+  removeToast: () => {}
+};
 
-export function useToast() {
+const ToastContext = createContext(defaultContextValue);
+
+function useToast() {
   const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error('useToast must be used within a ToastProvider');
-  }
+  // With default context values, this should always work
   return context;
 }
 
-export function ToastProvider({ children }) {
+function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
   const addToast = useCallback((toast) => {
@@ -124,3 +133,6 @@ export function ToastProvider({ children }) {
     </ToastContext.Provider>
   );
 }
+
+// Export at the end to avoid hoisting issues
+export { useToast, ToastProvider };

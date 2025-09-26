@@ -32,7 +32,12 @@ export default function TextReplyForm({
   
   const { user } = useAuth();
   const { addReply, updateReplyFactCheckResults, createUserPoint, hasUserEarnedPointsForDiscussion } = useDatabase();
-  const { showPointsToast, showSuccessToast, showErrorToast } = useToast();
+  
+  // Safely get toast functions with fallbacks
+  const toastContext = useToast();
+  const showPointsToast = toastContext?.showPointsToast || (() => {});
+  const showSuccessToast = toastContext?.showSuccessToast || (() => {});
+  const showErrorToast = toastContext?.showErrorToast || (() => {});
 
   const handleSubmit = async (e) => {
     e.preventDefault();

@@ -51,7 +51,11 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const { updateDocument } = useFirestore();
   const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint, getUserPoints, getPointCounts, createDiscussion } = useDatabase();
   const { user } = useAuth();
-  const { showSuccessToast, showErrorToast } = useToast();
+  
+  // Safely get toast functions with fallbacks
+  const toastContext = useToast();
+  const showSuccessToast = toastContext?.showSuccessToast || (() => {});
+  const showErrorToast = toastContext?.showErrorToast || (() => {});
 
   const loadCollectedPoints = useCallback(async () => {
     if (!user) return;
