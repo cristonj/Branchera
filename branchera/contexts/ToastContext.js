@@ -10,6 +10,7 @@ const defaultContextValue = {
   showErrorToast: () => {},
   showInfoToast: () => {},
   showWarningToast: () => {},
+  showNoPointsToast: () => {},
   addToast: () => {},
   removeToast: () => {}
 };
@@ -45,25 +46,26 @@ function ToastProvider({ children }) {
     const getQualityMessage = (score, points) => {
       switch (score) {
         case 'excellent':
-          return `🏆 Excellent rebuttal! You earned ${points} point${points !== 1 ? 's' : ''}!`;
+          return `🏆 You earned ${points} point${points !== 1 ? 's' : ''}!`;
         case 'good':
-          return `👍 Good rebuttal! You earned ${points} point${points !== 1 ? 's' : ''}!`;
+          return `👍 You earned ${points} point${points !== 1 ? 's' : ''}!`;
         case 'fair':
-          return `👌 Fair rebuttal! You earned ${points} point${points !== 1 ? 's' : ''}!`;
+          return `👌 You earned ${points} point${points !== 1 ? 's' : ''}!`;
         case 'basic':
-          return `✓ Nice try! You earned ${points} point${points !== 1 ? 's' : ''}!`;
+          return `✓ You earned ${points} point${points !== 1 ? 's' : ''}!`;
         default:
-          return `🎯 Great work! You earned ${points} point${points !== 1 ? 's' : ''}!`;
+          return `🎯 You earned ${points} point${points !== 1 ? 's' : ''}!`;
       }
     };
 
-    const message = explanation || getQualityMessage(qualityScore, points);
+    // Always use simple message, ignore explanation
+    const message = getQualityMessage(qualityScore, points);
     return addToast({
       type: 'points',
       message,
       points,
       qualityScore,
-      duration: 6000 // Longer duration for points
+      duration: 4000 // Shorter duration since message is simpler
     });
   }, [addToast]);
 
@@ -99,12 +101,21 @@ function ToastProvider({ children }) {
     });
   }, [addToast]);
 
+  const showNoPointsToast = useCallback(() => {
+    return addToast({
+      type: 'info',
+      message: '💭 No points this time - try providing more evidence or sources!',
+      duration: 4000
+    });
+  }, [addToast]);
+
   const value = {
     showPointsToast,
     showSuccessToast,
     showErrorToast,
     showInfoToast,
     showWarningToast,
+    showNoPointsToast,
     addToast,
     removeToast
   };
@@ -114,7 +125,7 @@ function ToastProvider({ children }) {
       {children}
       
       {/* Render all toasts */}
-      <div className="fixed top-4 right-4 z-50 space-y-2 pointer-events-none">
+      <div className="fixed top-4 left-1/2 transform -translate-x-1/2 sm:left-auto sm:right-4 sm:transform-none z-50 space-y-2 pointer-events-none">
         {toasts.map((toast, index) => (
           <div
             key={toast.id}

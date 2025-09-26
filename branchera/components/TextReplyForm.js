@@ -38,6 +38,7 @@ export default function TextReplyForm({
   const showPointsToast = toastContext?.showPointsToast || (() => {});
   const showSuccessToast = toastContext?.showSuccessToast || (() => {});
   const showErrorToast = toastContext?.showErrorToast || (() => {});
+  const showNoPointsToast = toastContext?.showNoPointsToast || (() => {});
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -176,8 +177,7 @@ export default function TextReplyForm({
                   if (showPointsToast && typeof showPointsToast === 'function') {
                     showPointsToast(
                       safeJudgement.pointsEarned, 
-                      safeJudgement.qualityScore, 
-                      safeJudgement.explanation
+                      safeJudgement.qualityScore
                     );
                   }
                 } catch (toastError) {
@@ -186,13 +186,13 @@ export default function TextReplyForm({
                   console.log(`Points earned: ${safeJudgement.pointsEarned} (${safeJudgement.qualityScore})`);
                 }
               } else {
-                // Show feedback even when no points are earned
+                // Show feedback when no points are earned
                 try {
-                  if (showSuccessToast && typeof showSuccessToast === 'function') {
-                    showSuccessToast('Reply submitted! Keep trying for better rebuttals to earn points.', 3000);
+                  if (showNoPointsToast && typeof showNoPointsToast === 'function') {
+                    showNoPointsToast();
                   }
                 } catch (toastError) {
-                  console.error('Error showing success toast:', toastError);
+                  console.error('Error showing no-points toast:', toastError);
                 }
               }
             } catch (judgementError) {
@@ -342,7 +342,7 @@ export default function TextReplyForm({
       {selectedPoint && (
         <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded-lg">
           <div className="text-xs text-purple-800">
-            💡 <strong>Earn Points:</strong> Provide a factual and coherent rebuttal to this point to earn 1-5 points! 
+            💡 <strong>Earn Points:</strong> Provide a factual and coherent rebuttal to this point to earn 1-3 points! 
             (One collection per discussion)
           </div>
         </div>
