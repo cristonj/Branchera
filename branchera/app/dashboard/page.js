@@ -10,37 +10,6 @@ import { useDatabase } from '@/hooks/useDatabase';
 import Link from 'next/link';
 import TopNav from '@/components/TopNav';
 
-// Inspirational messages from our landing page
-const INSPIRATIONAL_MESSAGES = [
-  {
-    text: "What if social media was about maximizing constructive dialogue instead of engagement?",
-    attribution: "Our founding mission"
-  },
-  {
-    text: "Attack arguments, not people.",
-    attribution: "The golden rule of constructive discourse"
-  },
-  {
-    text: "Experience AI-powered fact-checking, transparent discussions with smart point extraction, and a community where substance matters more than likes.",
-    attribution: "Why we're different"
-  },
-  {
-    text: "No dark patterns, no engagement algorithms, no hidden agendas. Just transparent, open-source tools for meaningful dialogue.",
-    attribution: "A social platform built differently"
-  },
-  {
-    text: "Clean, distraction-free interface. No infinite scroll, no notification spam, no attention hijacking. Focus on what matters: the conversation.",
-    attribution: "Gets out of your way"
-  },
-  {
-    text: "Thoughtful text-based discussions reward depth over viral content. No likes, no vanity metrics — just meaningful engagement.",
-    attribution: "Quality over quantity"
-  },
-  {
-    text: "Ready for social media that respects your intelligence?",
-    attribution: "Join the movement"
-  }
-];
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
