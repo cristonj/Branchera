@@ -492,19 +492,18 @@ Your job is to evaluate if this rebuttal deserves points based on these criteria
 4. EVIDENCE: Does it provide supporting evidence or reasoning?
 5. CONSTRUCTIVENESS: Does it contribute meaningfully to the discussion?
 
-SCORING SYSTEM:
-- Excellent (5 points): Exceptional rebuttal with strong evidence, perfect factual accuracy, and excellent coherence
-- Good (3 points): Solid rebuttal with good evidence, mostly accurate facts, and good coherence  
-- Fair (2 points): Decent rebuttal with some evidence, minor factual issues, adequate coherence
-- Basic (1 point): Simple rebuttal that addresses the point but lacks depth or has factual concerns
-- No Points (0 points): Inaccurate, incoherent, irrelevant, or unconstructive
+SCORING SYSTEM (BE VERY STINGY WITH POINTS):
+- 3 points: EXCEPTIONAL rebuttal with comprehensive research, perfect factual accuracy from authoritative sources, sophisticated analysis, and expert-level insight that significantly advances the discussion
+- 2 points: GOOD rebuttal with solid research-backed evidence, strong factual accuracy, clear logical reasoning, and meaningful contribution to the discussion
+- 1 point: BASIC rebuttal that adequately addresses the point with some supporting evidence or reasoning, but lacks depth or comprehensive research
+- 0 points: Does NOT address the original point, OR contains factual inaccuracies, OR is incoherent, irrelevant, unsupported by evidence, or unconstructive
 
 Use Google Search to verify any factual claims in the rebuttal before making your judgement.
 
 Return ONLY a valid JSON object in this format:
 {
-  "pointsEarned": 0-5,
-  "qualityScore": "excellent|good|fair|basic|none",
+  "pointsEarned": 0-3,
+  "qualityScore": "exceptional|good|basic|none",
   "isFactual": true/false,
   "isCoherent": true/false,
   "isRelevant": true/false,
@@ -516,7 +515,7 @@ Return ONLY a valid JSON object in this format:
   "improvements": ["Suggestions for improvement if score is low"]
 }
 
-Be fair but rigorous. Only award high scores for truly exceptional rebuttals that are both factually accurate and well-reasoned.
+Be EXTREMELY STINGY with points. Award 3 points only for rebuttals that demonstrate exceptional research, expert-level knowledge, and comprehensive sourced evidence. Award 2 points only for rebuttals with solid research and strong factual backing. Award 1 point only for basic but adequate responses. Award 0 points if the rebuttal fails to properly address the original point or lacks sufficient evidence/research.
 
 Do not include any explanation or additional text, just the JSON object.`;
 
@@ -542,7 +541,7 @@ Do not include any explanation or additional text, just the JSON object.`;
       }
       
       // Ensure points are within valid range
-      judgement.pointsEarned = Math.max(0, Math.min(5, judgement.pointsEarned));
+      judgement.pointsEarned = Math.max(0, Math.min(3, judgement.pointsEarned));
       
       // If we have grounding metadata, this judgement was made with Google Search
       if (groundingMetadata) {
