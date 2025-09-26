@@ -197,7 +197,44 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         orderField: 'createdAt',
         orderDirection: 'desc'
       });
-      setDiscussions(discussionsData);
+      
+      // Merge fresh data with existing state to prevent duplicates
+      setDiscussions(prev => {
+        const updatedDiscussions = discussionsData.map(freshDiscussion => {
+          const existingDiscussion = prev.find(d => d.id === freshDiscussion.id);
+          
+          if (existingDiscussion) {
+            // Merge replies, removing duplicates by ID
+            const existingReplies = existingDiscussion.replies || [];
+            const freshReplies = freshDiscussion.replies || [];
+            
+            // Create a map of existing replies for quick lookup
+            const existingRepliesMap = new Map(existingReplies.map(r => [r.id, r]));
+            
+            // Merge replies, preferring existing ones to maintain local updates
+            const mergedReplies = [...existingReplies];
+            freshReplies.forEach(freshReply => {
+              if (!existingRepliesMap.has(freshReply.id)) {
+                mergedReplies.push(freshReply);
+              }
+            });
+            
+            return {
+              ...freshDiscussion,
+              replies: mergedReplies,
+              replyCount: mergedReplies.length
+            };
+          }
+          
+          return freshDiscussion;
+        });
+        
+        // Add any discussions that exist locally but not in fresh data
+        const freshIds = new Set(discussionsData.map(d => d.id));
+        const localOnlyDiscussions = prev.filter(d => !freshIds.has(d.id));
+        
+        return [...updatedDiscussions, ...localOnlyDiscussions];
+      });
     } catch (error) {
       console.error('Background refresh failed:', error);
     }
@@ -562,14 +599,17 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   };
 
   const handleReplyAdded = (discussionId, newReply) => {
-    // Update the discussion with the new reply
+    // Update the discussion with the new reply, but check for duplicates
     setDiscussions(prev =>
       prev.map(d =>
         d.id === discussionId
           ? {
               ...d,
-              replies: [...(d.replies || []), newReply],
-              replyCount: (d.replyCount || 0) + 1
+              replies: [
+                ...(d.replies || []).filter(r => r.id !== newReply.id), // Remove any existing reply with same ID
+                newReply // Add the new reply
+              ],
+              replyCount: Math.max((d.replyCount || 0), (d.replies || []).length + 1) // Ensure count is accurate
             }
           : d
       )
