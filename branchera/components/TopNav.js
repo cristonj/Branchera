@@ -67,7 +67,7 @@ export default function TopNav() {
             >
               {/* Hamburger Icon */}
               <svg 
-                className="w-6 h-6 text-gray-700" 
+                className="w-7 h-7 sm:w-6 sm:h-6 text-gray-700" 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
