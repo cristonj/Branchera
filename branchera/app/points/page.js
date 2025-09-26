@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useDatabase } from '@/hooks/useDatabase';
 import Link from 'next/link';
+import TopNav from '@/components/TopNav';
 
 export default function PointsPage() {
   const { user, logout } = useAuth();
@@ -96,24 +97,7 @@ export default function PointsPage() {
   return (
     <div className="min-h-screen">
       {/* Navigation Bar */}
-      <nav className="border-b border-black/20">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/dashboard" className="text-xl font-bold text-gray-900 hover:text-gray-600 transition-colors">
-              Branchera
-            </Link>
-            
-            <div className="flex items-center gap-4">
-              <button
-                onClick={logout}
-                className="px-3 py-1 text-sm bg-black text-white hover:bg-black/80 rounded-full"
-              >
-                Sign Out
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <TopNav />
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8">
