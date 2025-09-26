@@ -129,11 +129,11 @@ export default function PointsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold text-gray-900">{userStats.totalPoints}</div>
-                <div className="text-sm text-gray-600">Points Collected</div>
+                <div className="text-sm text-gray-600">Total Points</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-gray-900">{userStats.pointCount}</div>
-                <div className="text-sm text-gray-600">Total Points</div>
+                <div className="text-sm text-gray-600">Claims Addressed</div>
               </div>
               <div>
                 <div className="text-2xl font-bold text-gray-900">
@@ -160,35 +160,21 @@ export default function PointsPage() {
             ))}
           </div>
         ) : (
-          <div className="space-y-0 border border-black">
-            {/* Header */}
-            <div className="bg-black text-white p-4 font-bold">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-8 text-center">Rank</div>
-                  <div>User</div>
-                </div>
-                <div className="flex items-center gap-8">
-                  <div>Points</div>
-                  <div>Last Active</div>
-                </div>
-              </div>
-            </div>
-
+          <div className="space-y-4">
             {/* Leaderboard Entries */}
             {leaderboard.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
+              <div className="p-8 text-center border border-black/20 rounded-lg bg-white">
                 <div className="text-4xl mb-4">🎯</div>
-                <h3 className="text-lg font-medium text-black mb-2">No points collected yet</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No points collected yet</h3>
                 <p className="text-gray-600 mb-4">
                   Be the first to start collecting discussion points!
                 </p>
                 <Link
                   href="/dashboard"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full hover:bg-black/80 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                   Start Collecting Points
                 </Link>
@@ -197,31 +183,31 @@ export default function PointsPage() {
               leaderboard.map((entry, index) => (
                 <div
                   key={entry.userId}
-                  className={`p-4 border-b border-black/20 last:border-b-0 ${
-                    entry.userId === user?.uid ? 'bg-yellow-50' : 'hover:bg-gray-50'
+                  className={`p-4 border border-black/20 rounded-lg bg-white transition-colors ${
+                    entry.userId === user?.uid ? 'ring-2 ring-purple-200 bg-purple-50' : 'hover:bg-gray-50'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-8 text-center font-bold text-black">
+                      <div className="w-8 text-center font-bold text-gray-900 text-lg">
                         {getRankIcon(index + 1) || `#${index + 1}`}
                       </div>
                       <div>
-                        <div className="font-medium text-black">
+                        <div className="font-medium text-gray-900">
                           {entry.userName}
                           {entry.userId === user?.uid && (
-                            <span className="ml-2 text-xs bg-black text-white px-2 py-0.5 rounded">YOU</span>
+                            <span className="ml-2 text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full">YOU</span>
                           )}
                         </div>
                         <div className="text-sm text-gray-600">
-                          {entry.pointCount} point{entry.pointCount !== 1 ? 's' : ''} collected
+                          {entry.pointCount} claim{entry.pointCount !== 1 ? 's' : ''} addressed
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-8 text-right">
+                    <div className="flex items-center gap-6 text-right">
                       <div>
-                        <div className="font-bold text-black text-lg">{entry.totalPoints}</div>
-                        <div className="text-xs text-gray-600">points</div>
+                        <div className="font-bold text-gray-900 text-xl">{entry.totalPoints}</div>
+                        <div className="text-xs text-gray-600">total points</div>
                       </div>
                       <div className="text-sm text-gray-600 min-w-[80px]">
                         {formatDate(entry.lastEarned)}
