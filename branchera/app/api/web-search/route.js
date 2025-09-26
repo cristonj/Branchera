@@ -11,33 +11,36 @@ export async function POST(request) {
       );
     }
 
-    // In production, you would integrate with a real web search API
-    // For now, we'll simulate web search results
-    console.log('API: Performing web search for:', searchTerm);
+    console.log('API: Legacy web search endpoint called for:', searchTerm);
+    
+    // Note: This endpoint is now primarily a fallback since Firebase AI Logic
+    // with Google Search grounding handles web search automatically.
+    // This API is kept for backward compatibility or custom search needs.
     
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Mock search results - in production, replace with actual web search API
-    const mockResults = [
+    // Provide fallback results when Firebase AI Logic grounding is not available
+    const fallbackResults = [
       {
-        title: `Search Results for "${searchTerm}"`,
-        snippet: `This is a simulated search result for the query "${searchTerm}". In a production environment, this would contain actual web search results from sources like Google Custom Search API, Bing Search API, or similar services.`,
-        url: `https://example.com/search?q=${encodeURIComponent(searchTerm)}`,
-        source: "Example Search Engine"
+        title: `Fallback Search for "${searchTerm}"`,
+        snippet: `This is a fallback search result. Firebase AI Logic with Google Search grounding is now the primary method for fact verification, providing real-time web search results automatically.`,
+        url: `https://firebase.google.com/docs/ai-logic/grounding-google-search`,
+        source: "Firebase AI Logic Documentation"
       },
       {
-        title: "Fact Verification Source",
-        snippet: `Additional context and verification information for "${searchTerm}" would appear here from reliable sources.`,
-        url: "https://factcheck.example.com",
-        source: "Fact Check Organization"
+        title: "Google Search Grounding",
+        snippet: `Firebase AI Logic now supports grounding with Google Search, providing real-time verification of factual claims with actual web sources.`,
+        url: "https://firebase.google.com/docs/ai-logic/grounding-google-search",
+        source: "Firebase Documentation"
       }
     ];
 
     return NextResponse.json({
-      results: mockResults,
+      results: fallbackResults,
       searchTerm,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      note: "This is a fallback endpoint. Firebase AI Logic with Google Search grounding is now the primary fact verification method."
     });
 
   } catch (error) {

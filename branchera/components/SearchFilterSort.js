@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 export default function SearchFilterSort({ 
   discussions, 
@@ -300,8 +300,8 @@ export default function SearchFilterSort({
     return score;
   };
 
-  // Process discussions whenever search, filter, or sort changes
-  useEffect(() => {
+  // Memoize processed discussions to avoid recalculation and infinite loops
+  const processedDiscussions = useMemo(() => {
     let processed = discussions;
 
     // Apply search
@@ -315,12 +315,18 @@ export default function SearchFilterSort({
     // Apply sort
     processed = sortDiscussions(processed, sortBy, searchQuery);
 
-    onResults?.(processed);
+    return processed;
+  }, [discussions, searchQuery, searchType, sortBy, filters, searchContent, filterDiscussions, sortDiscussions]);
+
+  // Effect to notify parent components when results change
+  // Remove callbacks from dependencies to prevent infinite loops
+  useEffect(() => {
+    onResults?.(processedDiscussions);
     onSearchChange?.(searchQuery);
     onSearchTypeChange?.(searchType);
     onFilterChange?.(filters);
     onSortChange?.(sortBy);
-  }, [discussions, searchQuery, searchType, sortBy, filters, searchContent, filterDiscussions, sortDiscussions, onResults, onSearchChange, onSearchTypeChange, onFilterChange, onSortChange]);
+  }, [processedDiscussions, searchQuery, searchType, filters, sortBy]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({
@@ -530,7 +536,7 @@ export default function SearchFilterSort({
           {searchQuery && (
             <span>Search results for &ldquo;<strong>{searchQuery}</strong>&rdquo; • </span>
           )}
-          <span>Showing {discussions.length} discussion{discussions.length !== 1 ? 's' : ''}</span>
+          <span>Showing {processedDiscussions.length} discussion{processedDiscussions.length !== 1 ? 's' : ''}</span>
         </div>
       )}
     </div>
