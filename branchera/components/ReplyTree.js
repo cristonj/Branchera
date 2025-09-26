@@ -7,7 +7,6 @@ import { useDatabase } from '@/hooks/useDatabase';
 import FactCheckResults from './FactCheckResults';
 import SearchHighlight from './SearchHighlight';
 import EditReplyForm from './EditReplyForm';
-import ReplyFilterSort from './ReplyFilterSort';
 
 export default function ReplyTree({ 
   replies, 
@@ -26,18 +25,8 @@ export default function ReplyTree({
   const { editReply } = useDatabase();
   const [expandedReplies, setExpandedReplies] = useState(new Set());
   const [editingReply, setEditingReply] = useState(null);
-  const [filteredReplies, setFilteredReplies] = useState(replies);
   const [replySearchQuery, setReplySearchQuery] = useState('');
-  const [replyFilters, setReplyFilters] = useState({
-    author: '',
-    hasFactCheck: false,
-    hasPoints: false,
-    claim: '',
-    pointsEarned: false,
-    dateRange: 'all',
-    minViews: 0
-  });
-  const [replySort, setReplySort] = useState('newest');
+  const [sortBy, setSortBy] = useState('newest');
 
   const toggleReply = async (replyId) => {
     const wasExpanded = expandedReplies.has(replyId);
@@ -97,6 +86,32 @@ export default function ReplyTree({
 
   const handleEditCancel = () => {
     setEditingReply(null);
+  };
+
+  // Simple search function for replies
+  const filterReplies = (replies, query) => {
+    if (!query.trim()) return replies;
+    
+    const normalizedQuery = query.toLowerCase();
+    return replies.filter(reply => 
+      reply.content?.toLowerCase().includes(normalizedQuery) ||
+      reply.authorName?.toLowerCase().includes(normalizedQuery)
+    );
+  };
+
+  // Simple sort function for replies
+  const sortReplies = (replies, sortBy) => {
+    return [...replies].sort((a, b) => {
+      switch (sortBy) {
+        case 'oldest':
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        case 'author':
+          return (a.authorName || '').localeCompare(b.authorName || '');
+        case 'newest':
+        default:
+          return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+    });
   };
 
   // Build reply tree structure
@@ -315,31 +330,51 @@ export default function ReplyTree({
     );
   };
 
-  const rootReplies = buildReplyTree(filteredReplies);
+  // Apply filtering and sorting
+  const filteredReplies = filterReplies(replies, replySearchQuery);
+  const sortedReplies = sortReplies(filteredReplies, sortBy);
+  const rootReplies = buildReplyTree(sortedReplies);
   const groupedReplies = groupRootRepliesByPoint(rootReplies);
 
   return (
     <div className="space-y-4">
-      {/* Reply Filtering System */}
-      {showFilters && replies.length > 0 && (
-        <ReplyFilterSort
-          replies={replies}
-          onResults={setFilteredReplies}
-          onSearchChange={setReplySearchQuery}
-          onFilterChange={setReplyFilters}
-          onSortChange={setReplySort}
-          initialSearchQuery={replySearchQuery}
-          initialSortBy={replySort}
-          initialFilters={replyFilters}
-        />
-      )}
-
-      {/* Show message when no replies match filters */}
-      {showFilters && replies.length > 0 && filteredReplies.length === 0 && (
-        <div className="text-center py-8 border border-black/20 rounded-lg bg-gray-50">
-          <div className="text-4xl mb-4">🔍</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No replies found</h3>
-          <p className="text-gray-600">Try adjusting your search terms or filters.</p>
+      {/* Simple Reply Search */}
+      {showFilters && replies.length > 2 && (
+        <div className="mb-3 border border-black/20 rounded-lg bg-white p-3">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Search replies..."
+              value={replySearchQuery}
+              onChange={(e) => setReplySearchQuery(e.target.value)}
+              className="flex-1 px-3 py-2 border border-black/20 rounded focus:outline-none focus:ring-2 focus:ring-black text-sm"
+            />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-2 border border-black/20 rounded focus:outline-none focus:ring-2 focus:ring-black text-sm"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="author">By Author</option>
+            </select>
+            {(replySearchQuery || sortBy !== 'newest') && (
+              <button
+                onClick={() => {
+                  setReplySearchQuery('');
+                  setSortBy('newest');
+                }}
+                className="px-3 py-2 border border-black/20 rounded hover:bg-gray-50 text-sm"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+          {replySearchQuery && (
+            <div className="mt-2 text-xs text-gray-600">
+              Showing {filteredReplies.length} of {replies.length} replies
+            </div>
+          )}
         </div>
       )}
 
