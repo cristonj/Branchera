@@ -19,85 +19,84 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const { getDiscussions, getLeaderboard, getUserPoints } = useDatabase();
 
-  const loadDashboardData = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      setLoading(true);
-      
-      // Load all data in parallel
-      const [allDiscussions, leaderboardData, userPoints] = await Promise.all([
-        getDiscussions({ limit: 50 }),
-        getLeaderboard(),
-        getUserPoints(user.uid)
-      ]);
-
-      // Calculate platform stats
-      const totalDiscussions = allDiscussions.length;
-      const totalReplies = allDiscussions.reduce((sum, d) => sum + (d.replyCount || 0), 0);
-      const totalViews = allDiscussions.reduce((sum, d) => sum + (d.views || 0), 0);
-      const totalLikes = allDiscussions.reduce((sum, d) => sum + (d.likes || 0), 0);
-      const totalUsers = leaderboardData.length;
-
-      // Get user's stats
-      const userTotalPoints = userPoints.reduce((sum, point) => sum + (point.pointsEarned || 1), 0);
-      const userRank = leaderboardData.findIndex(entry => entry.userId === user.uid) + 1;
-
-      setStats({
-        platform: {
-          totalDiscussions,
-          totalReplies,
-          totalViews,
-          totalLikes,
-          totalUsers
-        },
-        user: {
-          totalPoints: userTotalPoints,
-          pointsCount: userPoints.length,
-          rank: userRank || null
-        }
-      });
-
-      // Get hot discussions (most liked + most replied in last 7 days)
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      
-      const hotDiscussionsList = allDiscussions
-        .filter(d => new Date(d.createdAt) > weekAgo)
-        .sort((a, b) => {
-          const scoreA = (a.likes || 0) * 2 + (a.replyCount || 0) * 3 + (a.views || 0) * 0.1;
-          const scoreB = (b.likes || 0) * 2 + (b.replyCount || 0) * 3 + (b.views || 0) * 0.1;
-          return scoreB - scoreA;
-        })
-        .slice(0, 5);
-
-      setHotDiscussions(hotDiscussionsList);
-
-      // Get recent activity (latest discussions and user activity)
-      const recentDiscussions = allDiscussions.slice(0, 3);
-      const recentUserActivity = userPoints
-        .sort((a, b) => new Date(b.earnedAt) - new Date(a.earnedAt))
-        .slice(0, 3);
-
-      setRecentActivity({
-        discussions: recentDiscussions,
-        userActivity: recentUserActivity
-      });
-
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, getDiscussions, getLeaderboard, getUserPoints]);
-
   useEffect(() => {
     if (!user) {
       router.push('/login');
       return;
     }
+
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true);
+        
+        // Load all data in parallel
+        const [allDiscussions, leaderboardData, userPoints] = await Promise.all([
+          getDiscussions({ limit: 50 }),
+          getLeaderboard(),
+          getUserPoints(user.uid)
+        ]);
+
+        // Calculate platform stats
+        const totalDiscussions = allDiscussions.length;
+        const totalReplies = allDiscussions.reduce((sum, d) => sum + (d.replyCount || 0), 0);
+        const totalViews = allDiscussions.reduce((sum, d) => sum + (d.views || 0), 0);
+        const totalLikes = allDiscussions.reduce((sum, d) => sum + (d.likes || 0), 0);
+        const totalUsers = leaderboardData.length;
+
+        // Get user's stats
+        const userTotalPoints = userPoints.reduce((sum, point) => sum + (point.pointsEarned || 1), 0);
+        const userRank = leaderboardData.findIndex(entry => entry.userId === user.uid) + 1;
+
+        setStats({
+          platform: {
+            totalDiscussions,
+            totalReplies,
+            totalViews,
+            totalLikes,
+            totalUsers
+          },
+          user: {
+            totalPoints: userTotalPoints,
+            pointsCount: userPoints.length,
+            rank: userRank || null
+          }
+        });
+
+        // Get hot discussions (most liked + most replied in last 7 days)
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        
+        const hotDiscussionsList = allDiscussions
+          .filter(d => new Date(d.createdAt) > weekAgo)
+          .sort((a, b) => {
+            const scoreA = (a.likes || 0) * 2 + (a.replyCount || 0) * 3 + (a.views || 0) * 0.1;
+            const scoreB = (b.likes || 0) * 2 + (b.replyCount || 0) * 3 + (b.views || 0) * 0.1;
+            return scoreB - scoreA;
+          })
+          .slice(0, 5);
+
+        setHotDiscussions(hotDiscussionsList);
+
+        // Get recent activity (latest discussions and user activity)
+        const recentDiscussions = allDiscussions.slice(0, 3);
+        const recentUserActivity = userPoints
+          .sort((a, b) => new Date(b.earnedAt) - new Date(a.earnedAt))
+          .slice(0, 3);
+
+        setRecentActivity({
+          discussions: recentDiscussions,
+          userActivity: recentUserActivity
+        });
+
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadDashboardData();
-  }, [user, router, loadDashboardData]);
+  }, [user?.uid]); // Only run when user changes
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -124,26 +123,26 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Navigation Bar */}
       <TopNav />
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Welcome Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Welcome back, {user.displayName?.split(' ')[0] || 'there'}!
           </h1>
           <p className="text-gray-600">Here&apos;s what&apos;s happening in your community</p>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-xl shadow-sm p-6 animate-pulse">
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="rounded-lg border border-black/20 p-6 animate-pulse">
                 <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
+                <div className="h-8 bg-gray-200 rounded w-3/4 mb-2"></div>
                 <div className="h-3 bg-gray-200 rounded w-2/3"></div>
               </div>
             ))}
