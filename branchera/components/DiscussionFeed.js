@@ -69,7 +69,8 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     } catch (error) {
       console.error('Error loading collected points:', error);
     }
-  }, [user, getUserPoints]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Remove dependencies to prevent constant refreshes
 
   const loadDiscussions = useCallback(async () => {
     try {
@@ -81,11 +82,6 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         orderDirection: 'desc'
       });
       setDiscussions(discussionsData);
-      
-      // Load collected points for visual indicators
-      if (user) {
-        loadCollectedPoints();
-      }
       
       // Generate AI points and fact-check results for older discussions that don't have them
       discussionsData.forEach(discussion => {
@@ -103,11 +99,19 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     } finally {
       setLoading(false);
     }
-  }, [user, loadCollectedPoints]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     loadDiscussions();
   }, [loadDiscussions]); // Include loadDiscussions dependency
+
+  // Load collected points separately to avoid refresh loops
+  useEffect(() => {
+    if (user) {
+      loadCollectedPoints();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid]); // Only load when user ID changes
 
   // Silent refresh without showing loading skeleton to avoid flicker during polling
   const refreshDiscussions = useCallback(async () => {
