@@ -508,7 +508,7 @@ export function useDatabase() {
 
       const completeData = {
         userId: pointData.userId,
-        userName: pointData.userName || 'Anonymous User',
+        userName: formatNameForLeaderboard(pointData.userName) || 'Anonymous User',
         userPhoto: pointData.userPhoto || null,
         discussionId: pointData.discussionId,
         discussionTitle: pointData.discussionTitle || 'Unknown Discussion',
