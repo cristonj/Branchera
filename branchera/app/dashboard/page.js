@@ -135,7 +135,7 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome back, {user.displayName?.split(' ')[0] || 'there'}!
           </h1>
-          <p className="text-gray-600">Here's what's happening in your community</p>
+          <p className="text-gray-600">Here&apos;s what&apos;s happening in your community</p>
         </div>
 
         {loading ? (
