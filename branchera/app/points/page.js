@@ -16,36 +16,36 @@ export default function PointsPage() {
   const { getLeaderboard, getUserPoints } = useDatabase();
 
   const loadLeaderboard = useCallback(async () => {
+    if (!user) return;
+    
     try {
       setLoading(true);
       const leaderboardData = await getLeaderboard();
       setLeaderboard(leaderboardData);
 
       // Find current user's rank and stats
-      if (user) {
-        const userIndex = leaderboardData.findIndex(entry => entry.userId === user.uid);
-        if (userIndex !== -1) {
-          setUserRank(userIndex + 1);
-          setUserStats(leaderboardData[userIndex]);
-        } else {
-          // User not in leaderboard yet, get their points
-          const userPoints = await getUserPoints(user.uid);
-          const totalPoints = userPoints.reduce((sum, point) => sum + (point.pointsEarned || 1), 0);
-          setUserStats({
-            userId: user.uid,
-            userName: user.displayName || 'You',
-            totalPoints: totalPoints,
-            pointCount: userPoints.length
-          });
-          setUserRank(null); // Not ranked yet
-        }
+      const userIndex = leaderboardData.findIndex(entry => entry.userId === user.uid);
+      if (userIndex !== -1) {
+        setUserRank(userIndex + 1);
+        setUserStats(leaderboardData[userIndex]);
+      } else {
+        // User not in leaderboard yet, get their points
+        const userPoints = await getUserPoints(user.uid);
+        const totalPoints = userPoints.reduce((sum, point) => sum + (point.pointsEarned || 1), 0);
+        setUserStats({
+          userId: user.uid,
+          userName: user.displayName || 'You',
+          totalPoints: totalPoints,
+          pointCount: userPoints.length
+        });
+        setUserRank(null); // Not ranked yet
       }
     } catch (error) {
       console.error('Error loading leaderboard:', error);
     } finally {
       setLoading(false);
     }
-  }, [user, getLeaderboard, getUserPoints]);
+  }, []); // Remove dependencies to prevent constant refreshes
 
   useEffect(() => {
     if (!user) {
