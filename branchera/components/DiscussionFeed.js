@@ -37,6 +37,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     hasReplies: false,
     hasFactCheck: false,
     showNewsOnly: false,
+    selectedTags: [],
     dateRange: 'all',
     author: '',
     minLikes: 0,
@@ -905,9 +906,33 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
             {/* Header Row - shows title and controls */}
             <div className={`px-4 py-3 flex items-center justify-between ${isExpanded ? 'h-0' : ''}`}>
                 {!isExpanded && (
-                  <span className="font-semibold text-gray-900 truncate flex-1 min-w-0 mr-4">
-                    <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
-                  </span>
+                  <div className="flex-1 min-w-0 mr-4">
+                    <div className="font-semibold text-gray-900 truncate mb-1">
+                      <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
+                    </div>
+                    {/* Tags in compressed view */}
+                    {discussion.tags && discussion.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {discussion.tags.slice(0, 3).map((tag, index) => (
+                          <span
+                            key={index}
+                            className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${
+                              tag === 'News' 
+                                ? 'bg-red-100 text-red-800 border border-red-200' 
+                                : 'bg-gray-100 text-gray-600 border border-gray-200'
+                            }`}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {discussion.tags.length > 3 && (
+                          <span className="inline-block px-2 py-0.5 text-xs rounded-full font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                            +{discussion.tags.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
               {/* Hide action buttons when expanded - only show likes and replies count */}
               {!isExpanded && (

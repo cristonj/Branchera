@@ -9,6 +9,8 @@ import FactCheckResults from './FactCheckResults';
 export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = false }) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [tags, setTags] = useState([]);
+  const [tagInput, setTagInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFactChecking, setIsFactChecking] = useState(false);
   const [factCheckResults, setFactCheckResults] = useState(null);
@@ -17,6 +19,38 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
   const { createDiscussion, updateAIPoints, updateFactCheckResults } = useDatabase();
   
   const TITLE_CHAR_LIMIT = 100;
+
+  // Predefined tag suggestions
+  const suggestedTags = [
+    'Politics', 'Technology', 'Science', 'Economics', 'Social Issues',
+    'Environment', 'Health', 'Education', 'Entertainment', 'Sports',
+    'Business', 'International', 'Local', 'Opinion', 'News'
+  ];
+
+  // Handle adding tags
+  const handleAddTag = (tagToAdd) => {
+    const trimmedTag = tagToAdd.trim();
+    if (trimmedTag && !tags.includes(trimmedTag) && tags.length < 5) {
+      setTags([...tags, trimmedTag]);
+      setTagInput('');
+    }
+  };
+
+  // Handle removing tags
+  const handleRemoveTag = (tagToRemove) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  // Handle tag input key press
+  const handleTagInputKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddTag(tagInput);
+    } else if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
+      // Remove last tag if backspace is pressed on empty input
+      handleRemoveTag(tags[tags.length - 1]);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,7 +75,8 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
         content: content.trim(),
         authorId: user.uid,
         authorName: user.displayName || user.email,
-        authorPhoto: user.photoURL
+        authorPhoto: user.photoURL,
+        tags: tags.length > 0 ? tags : []
       };
       
       console.log('Creating discussion with data:', discussionData);
@@ -100,6 +135,8 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
       // Reset form
       setTitle('');
       setContent('');
+      setTags([]);
+      setTagInput('');
       setFactCheckResults(null);
       
       // Notify parent component
@@ -178,6 +215,89 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
           />
           <div className="text-sm text-gray-600 mt-1">
             {content.length} characters
+          </div>
+        </div>
+
+        {/* Tags Input */}
+        <div className="mb-4">
+          <label htmlFor="tags" className="block text-sm font-medium text-gray-900 mb-2">
+            Tags (optional)
+          </label>
+          
+          {/* Selected Tags Display */}
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-700 border border-gray-200"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTag(tag)}
+                    className="text-gray-400 hover:text-gray-600"
+                    disabled={isSubmitting}
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Tag Input */}
+          <div className="relative">
+            <input
+              type="text"
+              id="tags"
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={handleTagInputKeyPress}
+              placeholder={tags.length >= 5 ? "Maximum 5 tags allowed" : "Add a tag and press Enter"}
+              className="w-full px-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-1 focus:ring-black"
+              disabled={isSubmitting || tags.length >= 5}
+              maxLength={20}
+            />
+            {tagInput.trim() && (
+              <button
+                type="button"
+                onClick={() => handleAddTag(tagInput)}
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-2 py-1 text-xs bg-black text-white rounded hover:bg-black/80"
+                disabled={isSubmitting || tags.length >= 5}
+              >
+                Add
+              </button>
+            )}
+          </div>
+
+          {/* Suggested Tags */}
+          {tags.length < 5 && (
+            <div className="mt-2">
+              <div className="text-xs text-gray-600 mb-2">Suggested tags:</div>
+              <div className="flex flex-wrap gap-1">
+                {suggestedTags
+                  .filter(suggestedTag => !tags.includes(suggestedTag))
+                  .slice(0, 8)
+                  .map((suggestedTag) => (
+                    <button
+                      key={suggestedTag}
+                      type="button"
+                      onClick={() => handleAddTag(suggestedTag)}
+                      className="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50 text-gray-600"
+                      disabled={isSubmitting}
+                    >
+                      {suggestedTag}
+                    </button>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          <div className="text-sm text-gray-600 mt-1">
+            {tags.length}/5 tags • Tags help others find and filter your discussion
           </div>
         </div>
 

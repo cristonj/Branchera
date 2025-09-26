@@ -294,6 +294,67 @@ Make it punchy, specific, and debate-worthy. ALWAYS include the source attributi
       // Generate an opinionated post about the story
       const post = await this.generateOpinionatedPost(randomStory);
       
+      // Create more specific tags based on category
+      const generateTags = (category, story) => {
+        const baseTags = ['News'];
+        
+        // Add category-specific tags
+        switch (category?.toLowerCase()) {
+          case 'politics':
+            baseTags.push('Politics', 'Government');
+            break;
+          case 'technology':
+            baseTags.push('Technology', 'Innovation');
+            break;
+          case 'science':
+            baseTags.push('Science', 'Research');
+            break;
+          case 'economics':
+            baseTags.push('Economics', 'Business');
+            break;
+          case 'social':
+            baseTags.push('Social Issues', 'Society');
+            break;
+          case 'international':
+            baseTags.push('International', 'Global');
+            break;
+          case 'environment':
+            baseTags.push('Environment', 'Climate');
+            break;
+          case 'health':
+            baseTags.push('Health', 'Medicine');
+            break;
+          default:
+            if (category) {
+              baseTags.push(category.charAt(0).toUpperCase() + category.slice(1));
+            }
+        }
+        
+        // Add additional contextual tags based on content
+        const headline = story.headline?.toLowerCase() || '';
+        const summary = story.summary?.toLowerCase() || '';
+        const content = `${headline} ${summary}`;
+        
+        if (content.includes('election') || content.includes('vote') || content.includes('campaign')) {
+          baseTags.push('Elections');
+        }
+        if (content.includes('climate') || content.includes('warming') || content.includes('carbon')) {
+          baseTags.push('Climate');
+        }
+        if (content.includes('ai ') || content.includes('artificial intelligence') || content.includes('machine learning')) {
+          baseTags.push('AI');
+        }
+        if (content.includes('crypto') || content.includes('bitcoin') || content.includes('blockchain')) {
+          baseTags.push('Cryptocurrency');
+        }
+        if (content.includes('covid') || content.includes('pandemic') || content.includes('vaccine')) {
+          baseTags.push('COVID-19');
+        }
+        
+        // Remove duplicates and limit to 5 tags
+        return [...new Set(baseTags)].slice(0, 5);
+      };
+
       // Create the discussion
       const discussionData = {
         title: post.title,
@@ -301,7 +362,7 @@ Make it punchy, specific, and debate-worthy. ALWAYS include the source attributi
         authorId: 'ai-news-bot',
         authorName: 'AI News Bot',
         authorPhoto: null,
-        tags: ['News', post.category || 'general'],
+        tags: generateTags(post.category, randomStory),
         metadata: {
           isAIGenerated: true,
           newsStory: {
