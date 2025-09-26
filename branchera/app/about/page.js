@@ -14,30 +14,29 @@ export default function AboutPage() {
       
       {/* Main Content */}
       <div className="relative overflow-hidden">
-        <div className="relative flex flex-col items-center justify-center min-h-screen p-4 pt-20">
+        <div className="relative flex flex-col items-center justify-center min-h-screen p-4 pt-8">
           <main className="text-center max-w-6xl w-full">
-            
             {/* Hero Section */}
-            <div className="mb-20">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-black text-white text-sm font-medium mb-8">
+            <div className="mb-16">
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-black text-white text-sm font-medium mb-6">
                 <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
                 Our Story • Our Mission • Our Values
               </div>
               
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 text-black leading-tight">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-black leading-tight">
                 About Branchera
               </h1>
               
-              <p className="text-xl md:text-2xl text-gray-700 font-light max-w-4xl mx-auto leading-relaxed mb-8">
+              <p className="text-xl md:text-2xl text-gray-700 font-light max-w-4xl mx-auto leading-relaxed mb-6">
                 We&rsquo;re building the social platform that puts <span className="font-semibold text-black">people before profit</span> and <span className="font-semibold text-black">dialogue before engagement</span>
               </p>
             </div>
 
             {/* Mission Statement */}
-            <div className="max-w-5xl mx-auto mb-20">
-              <div className="bg-gray-50 border-l-4 border-black p-8 rounded-r-lg">
-                <h2 className="text-2xl font-bold text-black mb-4">Our Founding Question</h2>
-                <p className="text-xl md:text-2xl text-gray-800 font-medium italic leading-relaxed mb-4">
+            <div className="max-w-5xl mx-auto mb-16">
+              <div className="bg-gray-50 border-l-4 border-black p-6 rounded-r-lg">
+                <h2 className="text-2xl font-bold text-black mb-3">Our Founding Question</h2>
+                <p className="text-xl md:text-2xl text-gray-800 font-medium italic leading-relaxed mb-3">
                   &ldquo;What if social media was about maximizing constructive dialogue instead of engagement?&rdquo;
                 </p>
                 <p className="text-lg text-gray-600 leading-relaxed">
@@ -47,9 +46,9 @@ export default function AboutPage() {
             </div>
 
             {/* Core Principles */}
-            <div className="mb-24">
-              <div className="text-center mb-16">
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <div className="mb-20">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
                   Our Core Principles
                 </h2>
                 <p className="text-lg text-gray-600 max-w-3xl mx-auto">
@@ -57,55 +56,55 @@ export default function AboutPage() {
                 </p>
               </div>
               
-              <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+              <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
                 {/* Attack Arguments, Not People */}
-                <div className="bg-white rounded-2xl p-8 border-2 border-black">
-                  <div className="w-16 h-16 mx-auto mb-6 bg-black rounded-2xl flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="bg-white rounded-2xl p-6 border-2 border-black">
+                  <div className="w-14 h-14 mx-auto mb-4 bg-black rounded-2xl flex items-center justify-center">
+                    <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold mb-4 text-black">&ldquo;Attack Arguments, Not People&rdquo;</h3>
+                  <h3 className="text-xl font-bold mb-3 text-black">&ldquo;Attack Arguments, Not People&rdquo;</h3>
                   <p className="text-gray-600 leading-relaxed">
                     The golden rule of constructive discourse. Challenge ideas rigorously while treating people with respect. This principle is built into our platform design and community guidelines.
                   </p>
                 </div>
 
                 {/* Transparency First */}
-                <div className="bg-white rounded-2xl p-8 border-2 border-black">
-                  <div className="w-16 h-16 mx-auto mb-6 bg-black rounded-2xl flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="bg-white rounded-2xl p-6 border-2 border-black">
+                  <div className="w-14 h-14 mx-auto mb-4 bg-black rounded-2xl flex items-center justify-center">
+                    <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold mb-4 text-black">Radical Transparency</h3>
+                  <h3 className="text-xl font-bold mb-3 text-black">Radical Transparency</h3>
                   <p className="text-gray-600 leading-relaxed">
                     Every line of our code is open source. Every AI decision is explainable. Every fact-check shows its sources. No black boxes, no hidden algorithms, no secret sauce.
                   </p>
                 </div>
 
                 {/* Gets Out of Your Way */}
-                <div className="bg-white rounded-2xl p-8 border-2 border-black">
-                  <div className="w-16 h-16 mx-auto mb-6 bg-black rounded-2xl flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="bg-white rounded-2xl p-6 border-2 border-black">
+                  <div className="w-14 h-14 mx-auto mb-4 bg-black rounded-2xl flex items-center justify-center">
+                    <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold mb-4 text-black">Gets Out of Your Way</h3>
+                  <h3 className="text-xl font-bold mb-3 text-black">Gets Out of Your Way</h3>
                   <p className="text-gray-600 leading-relaxed">
                     No infinite scroll. No notification spam. No dark patterns. Clean, focused interface that helps you engage meaningfully, then get back to your life.
                   </p>
                 </div>
 
                 {/* Forever Free */}
-                <div className="bg-white rounded-2xl p-8 border-2 border-black">
-                  <div className="w-16 h-16 mx-auto mb-6 bg-black rounded-2xl flex items-center justify-center">
-                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="bg-white rounded-2xl p-6 border-2 border-black">
+                  <div className="w-14 h-14 mx-auto mb-4 bg-black rounded-2xl flex items-center justify-center">
+                    <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold mb-4 text-black">Forever Free & Ad-Free</h3>
+                  <h3 className="text-xl font-bold mb-3 text-black">Forever Free & Ad-Free</h3>
                   <p className="text-gray-600 leading-relaxed">
                     Built as a public good, not a profit center. No ads, no premium tiers, no paywalls. Funded by community support, not by harvesting your attention or data.
                   </p>
@@ -114,15 +113,15 @@ export default function AboutPage() {
             </div>
 
             {/* The Problem We&rsquo;re Solving */}
-            <div className="mb-24">
-              <div className="text-center mb-16">
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <div className="mb-20">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
                   The Problem We&rsquo;re Solving
                 </h2>
               </div>
               
               <div className="max-w-4xl mx-auto">
-                <div className="bg-red-50 border-l-4 border-red-400 p-6 rounded-r-lg mb-8">
+                <div className="bg-red-50 border-l-4 border-red-400 p-6 rounded-r-lg mb-6">
                   <h3 className="text-xl font-bold text-red-800 mb-3">Traditional Social Media Is Broken</h3>
                   <ul className="text-red-700 space-y-2">
                     <li>• Designed to maximize engagement, not understanding</li>
@@ -149,9 +148,9 @@ export default function AboutPage() {
             </div>
 
             {/* How We&rsquo;re Different */}
-            <div className="mb-24">
-              <div className="text-center mb-16">
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <div className="mb-20">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
                   How We&rsquo;re Different
                 </h2>
                 <p className="text-lg text-gray-600 max-w-3xl mx-auto">
@@ -159,11 +158,11 @@ export default function AboutPage() {
                 </p>
               </div>
               
-              <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
                 {/* Open Source */}
                 <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-6 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                     </svg>
                   </div>
@@ -175,8 +174,8 @@ export default function AboutPage() {
 
                 {/* AI-Powered Truth */}
                 <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-6 bg-blue-100 rounded-full flex items-center justify-center">
-                    <svg className="w-10 h-10 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
@@ -188,8 +187,8 @@ export default function AboutPage() {
 
                 {/* Community Governance */}
                 <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-6 bg-purple-100 rounded-full flex items-center justify-center">
-                    <svg className="w-10 h-10 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
+                    <svg className="w-8 h-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
@@ -202,12 +201,12 @@ export default function AboutPage() {
             </div>
 
             {/* Call to Action */}
-            <div className="relative mb-20">
-              <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-12 border border-black/20 max-w-4xl mx-auto text-center">
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-black">
+            <div className="relative mb-16">
+              <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-10 border border-black/20 max-w-4xl mx-auto text-center">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4 text-black">
                   Join the Movement
                 </h2>
-                <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+                <p className="text-xl text-gray-600 mb-6 max-w-2xl mx-auto leading-relaxed">
                   Be part of building social media that serves humanity, not corporate profits. Help us prove that constructive dialogue can thrive online.
                 </p>
                 
@@ -229,7 +228,7 @@ export default function AboutPage() {
                   )}
                 </div>
                 
-                <p className="text-sm text-gray-500 mt-6">
+                <p className="text-sm text-gray-500 mt-4">
                   Free account • No ads ever • Help shape the future of social media
                 </p>
               </div>

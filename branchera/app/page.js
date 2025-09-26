@@ -19,25 +19,24 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        
-        <div className="relative flex flex-col items-center justify-center min-h-screen p-4 pt-16">
+        <div className="relative flex flex-col items-center justify-center min-h-screen p-4 pt-8">
           <main className="text-center max-w-5xl w-full">
             {/* Brand Badge */}
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-black text-white text-sm font-medium mb-6">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-black text-white text-sm font-medium mb-4">
               <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
               Open Source • Ad-Free • Always
             </div>
             
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-black leading-tight">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-black leading-tight">
               Branchera
             </h1>
             
-            <p className="text-lg md:text-xl lg:text-2xl mb-8 text-gray-700 font-light max-w-4xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl lg:text-2xl mb-6 text-gray-700 font-light max-w-4xl mx-auto leading-relaxed">
               The social app that <span className="font-semibold text-black">gets out of your way</span> — built for constructive dialogue, not endless scrolling
             </p>
 
             {/* Early CTA */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 max-w-md mx-auto">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6 max-w-md mx-auto">
               <Link
                 href="/login"
                 className="flex-1 py-3 px-6 text-center bg-black text-white border-0 hover:bg-black/80 rounded-full transition-all duration-300 font-semibold text-base shadow-lg hover:shadow-xl"
@@ -52,12 +51,12 @@ export default function Home() {
               </Link>
             </div>
 
-            <p className="text-xs text-gray-500 mb-8">
+            <p className="text-xs text-gray-500 mb-6">
               Free forever • No ads • 
               <span className="font-medium text-gray-700">Join our growing community</span>
             </p>
             
-            <div className="max-w-3xl mx-auto mb-6">
+            <div className="max-w-3xl mx-auto mb-4">
               <div className="bg-gray-50 border-l-4 border-black p-4 rounded-r-lg">
                 <p className="text-base md:text-lg text-gray-800 font-medium italic leading-relaxed">
                   &ldquo;What if social media was about maximizing constructive dialogue instead of engagement?&rdquo;
@@ -66,7 +65,7 @@ export default function Home() {
               </div>
             </div>
             
-            <div className="max-w-2xl mx-auto mb-8">
+            <div className="max-w-2xl mx-auto mb-6">
               <div className="bg-black text-white p-3 rounded-lg text-center">
                 <p className="text-base font-semibold">
                   &ldquo;Attack arguments, not people.&rdquo;
@@ -75,14 +74,14 @@ export default function Home() {
               </div>
             </div>
             
-            <p className="text-base md:text-lg text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base md:text-lg text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
               Experience AI-powered fact-checking, transparent discussions with smart point extraction, and a community where substance matters more than likes.
             </p>
 
             {/* Key Features */}
-            <div className="mt-24">
-              <div className="text-center mb-16">
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <div className="mt-16">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
                   A Social Platform Built Differently
                 </h2>
                 <p className="text-lg text-gray-600 max-w-3xl mx-auto">
@@ -90,7 +89,7 @@ export default function Home() {
                 </p>
               </div>
               
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto mb-16">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto mb-12">
                 {/* Open Source & Transparent */}
                 <div className="group relative bg-white rounded-2xl p-8 border border-black/20 hover:border-black transition-all duration-300">
                   <div className="w-16 h-16 mx-auto mb-6 bg-black rounded-2xl flex items-center justify-center">
@@ -132,7 +131,7 @@ export default function Home() {
               </div>
 
               {/* AI-Powered Features Row */}
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
                 {/* AI-Powered Fact Checking */}
                 <div className="group relative bg-white rounded-2xl p-8 border border-black/20 hover:border-black transition-all duration-300">
                   <div className="w-16 h-16 mx-auto mb-6 bg-black rounded-2xl flex items-center justify-center">
@@ -175,9 +174,9 @@ export default function Home() {
             </div>
 
             {/* Coming Soon Features */}
-            <div className="mt-32 mb-20">
-              <div className="text-center mb-16">
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <div className="mt-20 mb-16">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
                   Coming Soon
                 </h2>
                 <p className="text-lg text-gray-600 max-w-3xl mx-auto">
@@ -240,7 +239,7 @@ export default function Home() {
               </div>
 
               {/* Community Roadmap Note */}
-              <div className="text-center mt-12">
+              <div className="text-center mt-8">
                 <div className="inline-flex items-center px-6 py-3 rounded-full bg-black text-white text-sm font-medium">
                     <svg className="w-5 h-5 sm:w-4 sm:h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -250,25 +249,24 @@ export default function Home() {
               </div>
             </div>
 
-
             {/* Call to Action */}
-            <div className="relative mt-20 mb-20">
+            <div className="relative mt-16 mb-16">
               <div className="bg-gradient-to-br from-gray-50 to-white rounded-3xl p-12 border border-black/20 max-w-5xl mx-auto text-center">
                 <div className="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800 text-sm font-medium mb-6">
                   <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></span>
                   Join the Beta • Help Shape the Future
                 </div>
                 
-                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-black">
+                <h2 className="text-3xl md:text-4xl font-bold mb-4 text-black">
                   Ready for Social Media That Respects Your Intelligence?
                 </h2>
                 
-                <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+                <p className="text-xl text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed">
                   Be part of a community that values thoughtful discourse over viral content. Where every claim is fact-checked, every discussion is transparent, and your time is respected.
                 </p>
 
                 {/* Value Props */}
-                <div className="grid md:grid-cols-3 gap-6 mb-10 max-w-4xl mx-auto">
+                <div className="grid md:grid-cols-3 gap-6 mb-8 max-w-4xl mx-auto">
                   <div className="flex items-center justify-center">
                     <svg className="w-6 h-6 sm:w-5 sm:h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -298,7 +296,7 @@ export default function Home() {
                   </Link>
                 </div>
                 
-                <p className="text-sm text-gray-500 mt-6">
+                <p className="text-sm text-gray-500 mt-4">
                   Free account • No credit card required • 
                   <span className="font-semibold text-gray-700">Join our growing community</span> of thoughtful discussers
                 </p>
