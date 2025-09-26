@@ -1045,14 +1045,31 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-blue-600 hover:text-blue-800 underline"
+                                title={discussion.metadata.newsStory.source.urlValidated === false 
+                                  ? `Original article link unavailable. This links to ${discussion.metadata.newsStory.source.name}'s website.`
+                                  : 'Read the original article'
+                                }
                               >
-                                Read Original Article
+                                {discussion.metadata.newsStory.source.urlValidated === false 
+                                  ? `Visit ${discussion.metadata.newsStory.source.name}`
+                                  : 'Read Original Article'
+                                }
                               </a>
+                              {discussion.metadata.newsStory.source.urlValidated === false && (
+                                <span className="text-orange-600 ml-1" title="Original article link was not accessible">
+                                  ⚠️
+                                </span>
+                              )}
                             </>
                           )}
                           {discussion.metadata.newsStory.source.publishedAt && (
                             <span className="text-blue-600 ml-2">
                               • Published: {new Date(discussion.metadata.newsStory.source.publishedAt).toLocaleDateString()}
+                            </span>
+                          )}
+                          {discussion.metadata.newsStory.source.searchQuery && (
+                            <span className="text-gray-500 ml-2 text-xs">
+                              • Search: &ldquo;{discussion.metadata.newsStory.source.searchQuery}&rdquo;
                             </span>
                           )}
                         </span>
