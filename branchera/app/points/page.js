@@ -33,9 +33,25 @@ export default function PointsPage() {
         // User not in leaderboard yet, get their points
         const userPoints = await getUserPoints(user.uid);
         const totalPoints = userPoints.reduce((sum, point) => sum + (point.pointsEarned || 1), 0);
+        // Format user name for consistency
+        const formatNameForLeaderboard = (fullName) => {
+          if (!fullName) return 'You';
+          
+          const nameParts = fullName.trim().split(' ');
+          if (nameParts.length === 1) {
+            return nameParts[0];
+          }
+          
+          const firstName = nameParts[0];
+          const lastName = nameParts[nameParts.length - 1];
+          const lastInitial = lastName.charAt(0).toUpperCase();
+          
+          return `${firstName} ${lastInitial}.`;
+        };
+
         setUserStats({
           userId: user.uid,
-          userName: user.displayName || 'You',
+          userName: formatNameForLeaderboard(user.displayName) || 'You',
           totalPoints: totalPoints,
           pointCount: userPoints.length
         });

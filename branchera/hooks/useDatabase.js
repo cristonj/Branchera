@@ -5,6 +5,23 @@ import { useFirestore } from './useFirestore';
 export function useDatabase() {
   const { addDocument, getDocuments, getDocument, deleteDocument, updateDocument, orderBy, limit } = useFirestore();
 
+  // Helper function to format names as "First Name Last Initial"
+  const formatNameForLeaderboard = (fullName) => {
+    if (!fullName || fullName === 'Anonymous User') return 'Anonymous User';
+    
+    const nameParts = fullName.trim().split(' ');
+    if (nameParts.length === 1) {
+      // If only one name part, return it as is
+      return nameParts[0];
+    }
+    
+    const firstName = nameParts[0];
+    const lastName = nameParts[nameParts.length - 1];
+    const lastInitial = lastName.charAt(0).toUpperCase();
+    
+    return `${firstName} ${lastInitial}.`;
+  };
+
   // Create a discussion with proper validation
   const createDiscussion = async (discussionData) => {
     try {
@@ -491,6 +508,8 @@ export function useDatabase() {
 
       const completeData = {
         userId: pointData.userId,
+        userName: pointData.userName || 'Anonymous User',
+        userPhoto: pointData.userPhoto || null,
         discussionId: pointData.discussionId,
         discussionTitle: pointData.discussionTitle || 'Unknown Discussion',
         originalPoint: pointData.originalPoint,
@@ -587,9 +606,12 @@ export function useDatabase() {
       allPoints.forEach(point => {
         const userId = point.userId;
         if (!userPointsMap.has(userId)) {
+          // For existing points that might not have userName, try to get it from the point data
+          // or fallback to Anonymous User
+          const displayName = point.userName || point.userDisplayName || 'Anonymous User';
           userPointsMap.set(userId, {
             userId: userId,
-            userName: point.userName || 'Anonymous User',
+            userName: formatNameForLeaderboard(displayName),
             userPhoto: point.userPhoto || null,
             totalPoints: 0,
             pointCount: 0,

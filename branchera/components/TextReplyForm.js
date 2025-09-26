@@ -142,6 +142,8 @@ export default function TextReplyForm({
                 // Create user point record
                 const pointData = {
                   userId: user.uid,
+                  userName: user.displayName || user.email,
+                  userPhoto: user.photoURL,
                   discussionId: discussionId,
                   discussionTitle: discussionTitle,
                   originalPoint: selectedPoint.text,
