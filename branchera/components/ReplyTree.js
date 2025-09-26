@@ -27,6 +27,13 @@ export default function ReplyTree({
   const [editingReply, setEditingReply] = useState(null);
   const [replySearchQuery, setReplySearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    author: '',
+    hasFactCheck: false,
+    hasPoints: false,
+    dateRange: 'all'
+  });
 
   const toggleReply = async (replyId) => {
     const wasExpanded = expandedReplies.has(replyId);
@@ -88,18 +95,72 @@ export default function ReplyTree({
     setEditingReply(null);
   };
 
-  // Simple search function for replies
-  const filterReplies = (replies, query) => {
+  // Enhanced search function for replies
+  const searchReplies = (replies, query) => {
     if (!query.trim()) return replies;
     
     const normalizedQuery = query.toLowerCase();
-    return replies.filter(reply => 
-      reply.content?.toLowerCase().includes(normalizedQuery) ||
-      reply.authorName?.toLowerCase().includes(normalizedQuery)
-    );
+    return replies.filter(reply => {
+      return (
+        reply.content?.toLowerCase().includes(normalizedQuery) ||
+        reply.authorName?.toLowerCase().includes(normalizedQuery) ||
+        // Search in fact check results
+        (reply.factCheckResults?.claims || []).some(claim =>
+          claim.text?.toLowerCase().includes(normalizedQuery) ||
+          claim.status?.toLowerCase().includes(normalizedQuery) ||
+          claim.explanation?.toLowerCase().includes(normalizedQuery)
+        ) ||
+        // Search in AI points
+        (reply.aiPoints || []).some(point =>
+          point.text?.toLowerCase().includes(normalizedQuery) ||
+          point.type?.toLowerCase().includes(normalizedQuery)
+        )
+      );
+    });
   };
 
-  // Simple sort function for replies
+  // Enhanced filter function
+  const applyFilters = (replies, filters) => {
+    return replies.filter(reply => {
+      // Author filter
+      if (filters.author && !reply.authorName?.toLowerCase().includes(filters.author.toLowerCase())) {
+        return false;
+      }
+
+      // Has fact check filter
+      if (filters.hasFactCheck && !reply.factCheckResults) {
+        return false;
+      }
+
+      // Has AI points filter
+      if (filters.hasPoints && (!reply.aiPoints || reply.aiPoints.length === 0)) {
+        return false;
+      }
+
+      // Date range filter
+      if (filters.dateRange !== 'all') {
+        const replyDate = new Date(reply.createdAt);
+        const now = new Date();
+        const diffInDays = (now - replyDate) / (1000 * 60 * 60 * 24);
+        
+        switch (filters.dateRange) {
+          case 'today':
+            if (diffInDays > 1) return false;
+            break;
+          case 'week':
+            if (diffInDays > 7) return false;
+            break;
+          case 'month':
+            if (diffInDays > 30) return false;
+            break;
+        }
+      }
+
+      return true;
+    });
+  };
+
+  // Enhanced sort function for replies
   const sortReplies = (replies, sortBy) => {
     return [...replies].sort((a, b) => {
       switch (sortBy) {
@@ -107,6 +168,12 @@ export default function ReplyTree({
           return new Date(a.createdAt) - new Date(b.createdAt);
         case 'author':
           return (a.authorName || '').localeCompare(b.authorName || '');
+        case 'views':
+          return (b.views || 0) - (a.views || 0);
+        case 'points':
+          const aPoints = (a.aiPoints || []).length;
+          const bPoints = (b.aiPoints || []).length;
+          return bPoints - aPoints;
         case 'newest':
         default:
           return new Date(b.createdAt) - new Date(a.createdAt);
@@ -330,51 +397,152 @@ export default function ReplyTree({
     );
   };
 
-  // Apply filtering and sorting
-  const filteredReplies = filterReplies(replies, replySearchQuery);
+  // Apply search, filters, and sorting
+  const searchedReplies = searchReplies(replies, replySearchQuery);
+  const filteredReplies = applyFilters(searchedReplies, filters);
   const sortedReplies = sortReplies(filteredReplies, sortBy);
   const rootReplies = buildReplyTree(sortedReplies);
   const groupedReplies = groupRootRepliesByPoint(rootReplies);
 
   return (
     <div className="space-y-4">
-      {/* Simple Reply Search */}
-      {showFilters && replies.length > 2 && (
-        <div className="mb-3 border border-black/20 rounded-lg bg-white p-3">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Search replies..."
-              value={replySearchQuery}
-              onChange={(e) => setReplySearchQuery(e.target.value)}
-              className="flex-1 px-3 py-2 border border-black/20 rounded focus:outline-none focus:ring-2 focus:ring-black text-sm"
-            />
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-2 border border-black/20 rounded focus:outline-none focus:ring-2 focus:ring-black text-sm"
-            >
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="author">By Author</option>
-            </select>
-            {(replySearchQuery || sortBy !== 'newest') && (
-              <button
-                onClick={() => {
-                  setReplySearchQuery('');
-                  setSortBy('newest');
-                }}
-                className="px-3 py-2 border border-black/20 rounded hover:bg-gray-50 text-sm"
+      {/* Reply Search and Filter Interface */}
+      {showFilters && replies.length > 1 && (
+        <div className="mb-3 border border-black/20 rounded-lg bg-white">
+          {/* Main search bar */}
+          <div className="p-3 border-b border-black/10">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Search replies, authors, claims..."
+                value={replySearchQuery}
+                onChange={(e) => setReplySearchQuery(e.target.value)}
+                className="flex-1 px-3 py-2 border border-black/20 rounded focus:outline-none focus:ring-2 focus:ring-black text-sm"
+              />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-3 py-2 border border-black/20 rounded focus:outline-none focus:ring-2 focus:ring-black text-sm"
               >
-                Clear
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="author">By Author</option>
+                <option value="views">Most Viewed</option>
+                <option value="points">Most Points</option>
+              </select>
+              <button
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className="px-3 py-2 border border-black/20 rounded hover:bg-gray-50 text-sm flex items-center gap-1"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                Filters
               </button>
-            )}
+            </div>
           </div>
-          {replySearchQuery && (
-            <div className="mt-2 text-xs text-gray-600">
-              Showing {filteredReplies.length} of {replies.length} replies
+
+          {/* Advanced filters */}
+          {showAdvancedFilters && (
+            <div className="p-3 bg-gray-50">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* Author filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Author</label>
+                  <input
+                    type="text"
+                    placeholder="Filter by author..."
+                    value={filters.author}
+                    onChange={(e) => setFilters(prev => ({ ...prev, author: e.target.value }))}
+                    className="w-full px-2 py-1 border border-black/20 rounded text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  />
+                </div>
+
+                {/* Date range filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Date Range</label>
+                  <select
+                    value={filters.dateRange}
+                    onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
+                    className="w-full px-2 py-1 border border-black/20 rounded text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  >
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">Past Week</option>
+                    <option value="month">Past Month</option>
+                  </select>
+                </div>
+
+                {/* Content filters */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-medium text-gray-700">Content</label>
+                  <div className="space-y-1">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filters.hasFactCheck}
+                        onChange={(e) => setFilters(prev => ({ ...prev, hasFactCheck: e.target.checked }))}
+                        className="mr-2 rounded focus:ring-black"
+                      />
+                      <span className="text-xs">Has Fact Check</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filters.hasPoints}
+                        onChange={(e) => setFilters(prev => ({ ...prev, hasPoints: e.target.checked }))}
+                        className="mr-2 rounded focus:ring-black"
+                      />
+                      <span className="text-xs">Has AI Points</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Clear filters button */}
+              {(replySearchQuery || sortBy !== 'newest' || filters.author || filters.hasFactCheck || filters.hasPoints || filters.dateRange !== 'all') && (
+                <div className="mt-3 pt-3 border-t border-black/10">
+                  <button
+                    onClick={() => {
+                      setReplySearchQuery('');
+                      setSortBy('newest');
+                      setFilters({
+                        author: '',
+                        hasFactCheck: false,
+                        hasPoints: false,
+                        dateRange: 'all'
+                      });
+                    }}
+                    className="px-3 py-1 text-xs bg-white border border-black/20 rounded hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Clear All Filters
+                  </button>
+                </div>
+              )}
             </div>
           )}
+
+          {/* Results summary */}
+          {(replySearchQuery || filters.author || filters.hasFactCheck || filters.hasPoints || filters.dateRange !== 'all') && (
+            <div className="px-3 py-2 text-xs text-gray-600 bg-gray-50">
+              {replySearchQuery && (
+                <span>Search: &ldquo;<strong>{replySearchQuery}</strong>&rdquo; • </span>
+              )}
+              <span>Showing {sortedReplies.length} of {replies.length} replies</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* No results message */}
+      {showFilters && replies.length > 0 && sortedReplies.length === 0 && (
+        <div className="text-center py-6 border border-black/20 rounded-lg bg-gray-50">
+          <div className="text-3xl mb-2">🔍</div>
+          <h3 className="text-sm font-medium text-gray-900 mb-1">No replies found</h3>
+          <p className="text-xs text-gray-600">Try adjusting your search terms or filters.</p>
         </div>
       )}
 
