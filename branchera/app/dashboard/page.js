@@ -188,7 +188,12 @@ export default function DashboardPage() {
             {/* Hot Discussions */}
             <div className="rounded-lg border border-black/20 p-6 mb-8">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold text-gray-900">🔥 Hot Discussions</h2>
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.5-7 0 0 .5 2 1.5 5 0 0 .5-3 2.5-3s4 4 4 4a8.013 8.013 0 01-1.343 4.657z" />
+                  </svg>
+                  <h2 className="text-lg font-bold text-gray-900">Hot Discussions</h2>
+                </div>
                 <Link 
                   href="/feed" 
                   className="text-sm text-gray-600 hover:text-black transition-colors"
@@ -199,7 +204,11 @@ export default function DashboardPage() {
                 
                 {hotDiscussions.length === 0 ? (
                   <div className="text-center py-8">
-                    <div className="text-4xl mb-3">💬</div>
+                    <div className="mb-3">
+                      <svg className="w-12 h-12 text-gray-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
                     <p className="text-gray-500 mb-4">No hot discussions this week</p>
                     <Link
                       href="/feed"
@@ -244,7 +253,12 @@ export default function DashboardPage() {
             {/* Recent Activity */}
             <div className="rounded-lg border border-black/20 p-6 mb-8">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold text-gray-900">📈 Recent Activity</h2>
+                <div className="flex items-center gap-2">
+                  <svg className="w-5 h-5 text-gray-900" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  <h2 className="text-lg font-bold text-gray-900">Recent Activity</h2>
+                </div>
                 <Link 
                   href="/points" 
                   className="text-sm text-gray-600 hover:text-black transition-colors"
