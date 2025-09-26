@@ -478,6 +478,93 @@ export function useDatabase() {
     }
   };
 
+  // User Points Management
+  const createUserPoint = async (pointData) => {
+    try {
+      console.log('Creating user point with data:', pointData);
+      
+      // Validate required fields
+      if (!pointData.userId || !pointData.discussionId || !pointData.originalPoint || !pointData.rebuttal) {
+        throw new Error('Missing required fields for user point');
+      }
+
+      const completeData = {
+        userId: pointData.userId,
+        discussionId: pointData.discussionId,
+        discussionTitle: pointData.discussionTitle || 'Unknown Discussion',
+        originalPoint: pointData.originalPoint,
+        originalPointId: pointData.originalPointId,
+        rebuttal: pointData.rebuttal,
+        pointsEarned: pointData.pointsEarned || 1,
+        qualityScore: pointData.qualityScore || 'basic', // 'excellent', 'good', 'fair', 'basic'
+        judgeExplanation: pointData.judgeExplanation || '',
+        isFactual: pointData.isFactual || false,
+        isCoherent: pointData.isCoherent || false,
+        earnedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
+
+      const pointId = await addDocument('userPoints', completeData);
+      console.log('User point created successfully with ID:', pointId);
+      
+      return { id: pointId, ...completeData };
+    } catch (error) {
+      console.error('Error creating user point:', error);
+      throw error;
+    }
+  };
+
+  const getUserPoints = async (userId) => {
+    try {
+      console.log('Getting points for user:', userId);
+      
+      // Try with orderBy first
+      try {
+        const points = await getDocuments('userPoints', [
+          // Add where clause for userId when available
+          orderBy('earnedAt', 'desc'),
+          limit(100)
+        ]);
+        
+        // Filter by userId client-side for now
+        return points.filter(point => point.userId === userId);
+      } catch (orderError) {
+        console.warn('OrderBy query failed, trying without ordering:', orderError.message);
+        
+        // Fallback: get without orderBy and sort client-side
+        const points = await getDocuments('userPoints', [limit(100)]);
+        const userPoints = points.filter(point => point.userId === userId);
+        
+        return userPoints.sort((a, b) => new Date(b.earnedAt) - new Date(a.earnedAt));
+      }
+    } catch (error) {
+      console.error('Error fetching user points:', error);
+      return [];
+    }
+  };
+
+  const getUserPointsForDiscussion = async (userId, discussionId) => {
+    try {
+      console.log('Getting points for user in discussion:', userId, discussionId);
+      
+      const allPoints = await getUserPoints(userId);
+      return allPoints.filter(point => point.discussionId === discussionId);
+    } catch (error) {
+      console.error('Error fetching user points for discussion:', error);
+      return [];
+    }
+  };
+
+  const hasUserEarnedPointsForDiscussion = async (userId, discussionId) => {
+    try {
+      const points = await getUserPointsForDiscussion(userId, discussionId);
+      return points.length > 0;
+    } catch (error) {
+      console.error('Error checking if user earned points for discussion:', error);
+      return false;
+    }
+  };
+
   return {
     createDiscussion,
     getDiscussions,
@@ -493,6 +580,10 @@ export function useDatabase() {
     incrementDiscussionView,
     incrementReplyView,
     updateFactCheckResults,
-    updateReplyFactCheckResults
+    updateReplyFactCheckResults,
+    createUserPoint,
+    getUserPoints,
+    getUserPointsForDiscussion,
+    hasUserEarnedPointsForDiscussion
   };
 }

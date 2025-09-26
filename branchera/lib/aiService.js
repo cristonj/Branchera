@@ -434,4 +434,149 @@ Do not include any explanation or additional text, just the JSON object.`;
     }
   }
 
+  // Judge rebuttal quality for points system
+  static async judgeRebuttal(originalPoint, rebuttal, parentFactCheck = null, childFactCheck = null, discussionContext = '') {
+    try {
+      console.log('Judging rebuttal quality:', { originalPoint, rebuttal });
+      
+      const judgement = await this.performRebuttalJudgementWithFirebaseAI(
+        originalPoint, 
+        rebuttal, 
+        parentFactCheck, 
+        childFactCheck, 
+        discussionContext
+      );
+      console.log('Generated rebuttal judgement:', judgement);
+      return judgement;
+    } catch (error) {
+      console.error('Error judging rebuttal:', error);
+      throw error;
+    }
+  }
+
+  // Firebase AI rebuttal judgement using Gemini with Google Search grounding
+  static async performRebuttalJudgementWithFirebaseAI(originalPoint, rebuttal, parentFactCheck, childFactCheck, discussionContext) {
+    // Initialize the Firebase AI backend service
+    const ai = getAI(app, { backend: new GoogleAIBackend() });
+    
+    // Create a GenerativeModel instance with Google Search grounding
+    const model = getGenerativeModel(ai, { 
+      model: "gemini-2.5-flash",
+      // Provide Google Search as a tool that the model can use to generate its response
+      tools: [{ googleSearch: {} }]
+    });
+
+    const factCheckInfo = parentFactCheck || childFactCheck ? `
+
+FACT CHECK CONTEXT:
+${parentFactCheck ? `Original Point Fact Check: ${JSON.stringify(parentFactCheck, null, 2)}` : ''}
+${childFactCheck ? `Rebuttal Fact Check: ${JSON.stringify(childFactCheck, null, 2)}` : ''}` : '';
+
+    const prompt = `
+You are an AI judge evaluating whether a rebuttal deserves points in a discussion system. Users earn points by providing factual and coherent rebuttals to discussion points.
+
+DISCUSSION CONTEXT: ${discussionContext}
+
+ORIGINAL POINT BEING CHALLENGED:
+"${originalPoint}"
+
+USER'S REBUTTAL:
+"${rebuttal}"
+${factCheckInfo}
+
+Your job is to evaluate if this rebuttal deserves points based on these criteria:
+
+1. FACTUAL ACCURACY: Is the rebuttal factually correct? Use Google Search to verify claims if needed.
+2. COHERENCE: Is the rebuttal well-structured, logical, and clearly written?
+3. RELEVANCE: Does it directly address the original point?
+4. EVIDENCE: Does it provide supporting evidence or reasoning?
+5. CONSTRUCTIVENESS: Does it contribute meaningfully to the discussion?
+
+SCORING SYSTEM:
+- Excellent (5 points): Exceptional rebuttal with strong evidence, perfect factual accuracy, and excellent coherence
+- Good (3 points): Solid rebuttal with good evidence, mostly accurate facts, and good coherence  
+- Fair (2 points): Decent rebuttal with some evidence, minor factual issues, adequate coherence
+- Basic (1 point): Simple rebuttal that addresses the point but lacks depth or has factual concerns
+- No Points (0 points): Inaccurate, incoherent, irrelevant, or unconstructive
+
+Use Google Search to verify any factual claims in the rebuttal before making your judgement.
+
+Return ONLY a valid JSON object in this format:
+{
+  "pointsEarned": 0-5,
+  "qualityScore": "excellent|good|fair|basic|none",
+  "isFactual": true/false,
+  "isCoherent": true/false,
+  "isRelevant": true/false,
+  "hasEvidence": true/false,
+  "isConstructive": true/false,
+  "explanation": "Detailed explanation of why this score was given, including fact-check results if applicable",
+  "factualConcerns": ["List any factual inaccuracies found"],
+  "strengths": ["List the strongest aspects of this rebuttal"],
+  "improvements": ["Suggestions for improvement if score is low"]
+}
+
+Be fair but rigorous. Only award high scores for truly exceptional rebuttals that are both factually accurate and well-reasoned.
+
+Do not include any explanation or additional text, just the JSON object.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Get the grounding metadata from the response
+    const groundingMetadata = result.response.candidates?.[0]?.groundingMetadata;
+    
+    try {
+      // Clean up the response to extract just the JSON
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No JSON object found in response');
+      }
+      
+      const judgement = JSON.parse(jsonMatch[0]);
+      
+      // Validate the structure
+      if (typeof judgement.pointsEarned !== 'number' || !judgement.qualityScore) {
+        throw new Error('Invalid judgement structure');
+      }
+      
+      // Ensure points are within valid range
+      judgement.pointsEarned = Math.max(0, Math.min(5, judgement.pointsEarned));
+      
+      // If we have grounding metadata, this judgement was made with Google Search
+      if (groundingMetadata) {
+        console.log('Rebuttal judgement was grounded with Google Search');
+        
+        // Add grounding information to the result
+        judgement.grounding = {
+          searchPerformed: true,
+          searchQueries: groundingMetadata.webSearchQueries || [],
+          sources: (groundingMetadata.groundingChunks || []).map(chunk => ({
+            title: chunk.web?.title,
+            uri: chunk.web?.uri
+          })).filter(source => source.title && source.uri),
+          searchEntryPoint: groundingMetadata.searchEntryPoint?.renderedContent || null,
+          groundingSupports: groundingMetadata.groundingSupports || []
+        };
+      } else {
+        // No grounding metadata means the model didn't use Google Search
+        console.log('Rebuttal judgement completed without Google Search grounding');
+        judgement.grounding = {
+          searchPerformed: false,
+          searchQueries: [],
+          sources: [],
+          searchEntryPoint: null,
+          groundingSupports: []
+        };
+      }
+      
+      return judgement;
+    } catch (parseError) {
+      console.error('Error parsing rebuttal judgement response:', parseError);
+      console.error('Raw response:', text);
+      throw new Error('Failed to parse rebuttal judgement response');
+    }
+  }
+
 }
