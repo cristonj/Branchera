@@ -45,6 +45,7 @@ export default function PointsPage() {
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Remove dependencies to prevent constant refreshes
 
   useEffect(() => {
@@ -52,8 +53,11 @@ export default function PointsPage() {
       router.push('/login');
       return;
     }
+    
+    // Load leaderboard only once when component mounts and user is available
     loadLeaderboard();
-  }, [user, router, loadLeaderboard]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid]); // Only depend on user ID to prevent constant refreshes
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Never';
