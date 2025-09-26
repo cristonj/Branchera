@@ -372,20 +372,21 @@ export default function DiscussionItem({
   // If showing compact view and not expanded, show simplified version
   if (showCompactView && !isExpanded) {
     return (
-      <div className="border border-black/10 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+      <button
+        onClick={() => toggleDiscussion(discussion.id)}
+        className="w-full border border-black/10 rounded-lg p-4 hover:bg-gray-50 transition-colors text-left"
+      >
         <div className="flex items-start gap-3">
           <div className="flex-1 min-w-0">
-            <button
-              onClick={() => toggleDiscussion(discussion.id)}
-              className="text-left w-full"
-            >
-              <h3 className="font-medium text-gray-900 mb-1 hover:text-black transition-colors">
-                <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
-              </h3>
-            </button>
+            <h3 className="font-medium text-gray-900 mb-1 hover:text-black transition-colors">
+              <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
+            </h3>
             <div className="flex items-center gap-4 text-sm text-gray-500">
               <button
-                onClick={() => toggleReplies(discussion.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleReplies(discussion.id);
+                }}
                 className="flex items-center gap-1 hover:text-gray-700"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -394,7 +395,10 @@ export default function DiscussionItem({
                 {discussion.replyCount || 0}
               </button>
               <button
-                onClick={() => handleLike(discussion.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLike(discussion.id);
+                }}
                 className="flex items-center gap-1 hover:text-gray-700"
                 disabled={!user}
               >
@@ -406,17 +410,13 @@ export default function DiscussionItem({
               <span>{formatDate(discussion.createdAt)}</span>
             </div>
           </div>
-          <button
-            onClick={() => toggleDiscussion(discussion.id)}
-            className="flex items-center gap-3 text-left flex-shrink-0"
-            title="Expand discussion"
-          >
+          <div className="flex items-center gap-3 text-left flex-shrink-0">
             <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-          </button>
+          </div>
         </div>
-      </div>
+      </button>
     );
   }
 
@@ -433,8 +433,11 @@ export default function DiscussionItem({
       </button>
       
       {/* Header Row - shows title and controls */}
-      <div className={`px-4 py-3 flex items-center justify-between ${isExpanded ? 'h-0' : ''}`}>
-        {!isExpanded && (
+      {!isExpanded && (
+        <button
+          onClick={() => toggleDiscussion(discussion.id)}
+          className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left"
+        >
           <div className="flex-1 min-w-0 mr-4">
             <div className="font-semibold text-gray-900 truncate mb-1">
               <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
@@ -462,13 +465,13 @@ export default function DiscussionItem({
               </div>
             )}
           </div>
-        )}
-        
-        {/* Hide action buttons when expanded - only show likes and replies count */}
-        {!isExpanded && (
+          
           <div className="flex items-center gap-4">
             <button
-              onClick={() => toggleReplies(discussion.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleReplies(discussion.id);
+              }}
               className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -477,7 +480,10 @@ export default function DiscussionItem({
               {discussion.replyCount || 0}
             </button>
             <button
-              onClick={() => handleLike(discussion.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleLike(discussion.id);
+              }}
               className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
               disabled={!user}
             >
@@ -487,18 +493,14 @@ export default function DiscussionItem({
               {discussion.likes || 0}
             </button>
 
-            <button
-              onClick={() => toggleDiscussion(discussion.id)}
-              className="flex items-center gap-3 text-left flex-1 min-w-0"
-              title={isExpanded ? 'Collapse' : 'Expand'}
-            >
+            <div className="flex items-center gap-3 text-left flex-shrink-0">
               <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </button>
+            </div>
           </div>
-        )}
-      </div>
+        </button>
+      )}
 
       {/* Expanded Content */}
       {isExpanded && (
