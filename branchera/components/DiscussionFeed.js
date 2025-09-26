@@ -343,18 +343,15 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     }
   }, [searchQuery]);
 
-  // Clean up timeout and refs on unmount
+  // Clean up timeout on unmount
   useEffect(() => {
     const currentSearchTimeout = searchTimeoutRef.current;
-    const currentReplyFormRefs = replyFormRefs.current;
     
     return () => {
       if (currentSearchTimeout) {
         clearTimeout(currentSearchTimeout);
         searchTimeoutRef.current = null;
       }
-      // Clear reply form refs
-      currentReplyFormRefs.clear();
     };
   }, []);
 
