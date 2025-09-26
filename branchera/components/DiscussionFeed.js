@@ -178,7 +178,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       console.error('Error in news post creation (non-blocking):', error);
       // This is intentionally non-blocking - errors here should never affect the main UI
     }
-  }, [user, createDiscussion, loadDiscussions, updateAIPoints, updateFactCheckResults]);
+  }, [user, createDiscussion, updateAIPoints, updateFactCheckResults]);
 
   useEffect(() => {
     loadDiscussions();
