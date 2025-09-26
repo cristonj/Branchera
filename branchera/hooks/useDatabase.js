@@ -585,6 +585,32 @@ export function useDatabase() {
     }
   };
 
+  // Enrich replies with points earned by user
+  const enrichRepliesWithPoints = async (replies, userId) => {
+    if (!replies || !userId) return replies;
+    
+    try {
+      const userPoints = await getUserPoints(userId);
+      const pointsByReplyId = new Map();
+      
+      // Create a map of reply IDs to points earned
+      userPoints.forEach(point => {
+        if (point.replyId && point.pointsEarned) {
+          pointsByReplyId.set(point.replyId, point.pointsEarned);
+        }
+      });
+      
+      // Enrich replies with points data
+      return replies.map(reply => ({
+        ...reply,
+        pointsEarnedByUser: pointsByReplyId.get(reply.id) || null
+      }));
+    } catch (error) {
+      console.error('Error enriching replies with points:', error);
+      return replies;
+    }
+  };
+
   // Check if user has collected a specific AI point
   const hasUserCollectedPoint = async (userId, discussionId, originalPointId) => {
     try {
@@ -681,6 +707,7 @@ export function useDatabase() {
     getUserPoints,
     getUserPointsForDiscussion,
     hasUserEarnedPointsForDiscussion,
+    enrichRepliesWithPoints,
     hasUserCollectedPoint,
     getLeaderboard,
     getPointCounts

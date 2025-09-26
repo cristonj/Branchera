@@ -455,10 +455,10 @@ Do not include any explanation or additional text, just the JSON object.`;
     }
   }
 
-  // Judge rebuttal quality for points system
+  // Judge response quality for points system
   static async judgeRebuttal(originalPoint, rebuttal, parentFactCheck = null, childFactCheck = null, discussionContext = '') {
     try {
-      console.log('Judging rebuttal quality:', { originalPoint, rebuttal });
+      console.log('Judging response quality:', { originalPoint, rebuttal });
       
       const judgement = await this.performRebuttalJudgementWithFirebaseAI(
         originalPoint, 
@@ -481,10 +481,10 @@ Do not include any explanation or additional text, just the JSON object.`;
         isRelevant: true, // Assume relevance if replying to a point
         hasEvidence: false,
         isConstructive: true,
-        explanation: 'Unable to evaluate this rebuttal due to a technical issue. Your reply has been submitted successfully. Please try replying again to earn points.',
+        explanation: 'Unable to evaluate this response due to a technical issue. Your reply has been submitted successfully. Please try replying again to earn points.',
         factualConcerns: ['Technical evaluation error - please try again'],
         strengths: ['Your reply was submitted successfully'],
-        improvements: ['Try submitting your rebuttal again for point evaluation'],
+        improvements: ['Try submitting your response again for point evaluation'],
         grounding: {
           searchPerformed: false,
           searchQueries: [],
@@ -499,7 +499,7 @@ Do not include any explanation or additional text, just the JSON object.`;
     }
   }
 
-  // Firebase AI rebuttal judgement using Gemini with Google Search grounding
+  // Firebase AI response judgement using Gemini with Google Search grounding
   static async performRebuttalJudgementWithFirebaseAI(originalPoint, rebuttal, parentFactCheck, childFactCheck, discussionContext) {
     // Initialize the Firebase AI backend service
     const ai = getAI(app, { backend: new GoogleAIBackend() });
@@ -518,31 +518,31 @@ ${parentFactCheck ? `Original Point Fact Check: ${JSON.stringify(parentFactCheck
 ${childFactCheck ? `Rebuttal Fact Check: ${JSON.stringify(childFactCheck, null, 2)}` : ''}` : '';
 
     const prompt = `
-You are an AI judge evaluating whether a rebuttal deserves points in a discussion system. Users earn points by providing factual and coherent rebuttals to discussion points.
+You are an AI judge evaluating whether a response deserves points in a discussion system. Users earn points by providing factual, coherent, and constructive responses to discussion points.
 
 DISCUSSION CONTEXT: ${discussionContext}
 
-ORIGINAL POINT BEING CHALLENGED:
+ORIGINAL POINT BEING ADDRESSED:
 "${originalPoint}"
 
-USER'S REBUTTAL:
+USER'S RESPONSE:
 "${rebuttal}"
 ${factCheckInfo}
 
-Your job is to evaluate if this rebuttal deserves points based on these criteria:
+Your job is to evaluate if this response deserves points based on these criteria:
 
-1. FACTUAL ACCURACY: Is the rebuttal factually correct? Use Google Search to verify claims if needed.
-2. COHERENCE: Is the rebuttal well-structured, logical, and clearly written?
+1. FACTUAL ACCURACY: Is the response factually correct? Use Google Search to verify claims if needed.
+2. COHERENCE: Is the response well-structured, logical, and clearly written?
 3. RELEVANCE: Does it directly address the original point?
 4. EVIDENCE: Does it provide supporting evidence or reasoning?
 5. CONSTRUCTIVENESS: Does it contribute meaningfully to the discussion?
 
 SCORING SYSTEM (BE VERY STINGY WITH POINTS):
-- 3 points: EXCEPTIONAL rebuttal with comprehensive research, perfect factual accuracy from authoritative sources, sophisticated analysis, and expert-level insight that significantly advances the discussion
-- 2 points: GOOD rebuttal with solid research-backed evidence, strong factual accuracy, clear logical reasoning, and meaningful contribution to the discussion
-- 1 point: BASIC rebuttal that adequately addresses the point with some supporting evidence or reasoning, OR any rebuttal that is coherent, relevant, and constructive even if it lacks depth or comprehensive research
+- 3 points: EXCEPTIONAL response with comprehensive research, perfect factual accuracy from authoritative sources, sophisticated analysis, and expert-level insight that significantly advances the discussion
+- 2 points: GOOD response with solid research-backed evidence, strong factual accuracy, clear logical reasoning, and meaningful contribution to the discussion
+- 1 point: Any response that addresses the original point and is coherent, relevant, and constructive - this includes rebuttals, supporting arguments, additional evidence, clarifying questions, or thoughtful extensions of the discussion
 
-Use Google Search to verify any factual claims in the rebuttal before making your judgement.
+Use Google Search to verify any factual claims in the response before making your judgement.
 
 Return ONLY a valid JSON object in this format:
 {
@@ -565,15 +565,15 @@ CRITICAL: Your explanation must be CRYSTAL CLEAR about why points were awarded. 
 - Why this particular score was given (reference the scoring criteria directly)
 
 Examples of GOOD explanations:
-- "You earned 2 points because you provided factually accurate data from the CDC about vaccination rates and clearly explained how this contradicts the original claim. Your reasoning was logical and well-structured. To earn 3 points, try including more diverse sources and addressing potential counterarguments."
-- "You earned 1 point because your rebuttal directly addresses the original point and shows basic reasoning. However, you didn't provide any sources to back up your claims about economic growth, and some of your assertions need fact-checking. Try including links to authoritative sources next time."
+- "You earned 2 points because you provided factually accurate data from the CDC about vaccination rates and clearly explained how this relates to the original claim. Your reasoning was logical and well-structured. To earn 3 points, try including more diverse sources and addressing potential counterarguments."
+- "You earned 1 point because your response directly addresses the original point and shows clear reasoning. However, you didn't provide any sources to back up your claims about economic growth, and some of your assertions need fact-checking. Try including links to authoritative sources next time."
 
 Examples of BAD explanations:
 - "Good job" (not specific)
 - "Your argument needs work" (not actionable)
 - "This deserves points because it's well-written" (doesn't explain criteria)
 
-Be STINGY with higher points but always award at least 1 point for any coherent, relevant rebuttal. Award 3 points only for rebuttals that demonstrate exceptional research, expert-level knowledge, and comprehensive sourced evidence. Award 2 points only for rebuttals with solid research and strong factual backing. Award 1 point for any rebuttal that addresses the original point and is coherent, relevant, and constructive, even if it lacks extensive research or evidence.
+Be STINGY with higher points but always award at least 1 point for any coherent, relevant response. Award 3 points only for responses that demonstrate exceptional research, expert-level knowledge, and comprehensive sourced evidence. Award 2 points only for responses with solid research and strong factual backing. Award 1 point for any response that addresses the original point and is coherent, relevant, and constructive, even if it lacks extensive research or evidence.
 
 Do not include any explanation or additional text, just the JSON object.`;
 

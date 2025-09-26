@@ -146,6 +146,7 @@ export default function TextReplyForm({
                   userPhoto: user.photoURL,
                   discussionId: discussionId,
                   discussionTitle: discussionTitle,
+                  replyId: createdReply.id,
                   originalPoint: selectedPoint.text,
                   originalPointId: selectedPoint.id,
                   rebuttal: replyData.content,
@@ -344,7 +345,7 @@ export default function TextReplyForm({
       {selectedPoint && (
         <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded-lg">
           <div className="text-xs text-purple-800">
-            💡 <strong>Earn Points:</strong> Provide a factual and coherent rebuttal to this point to earn 1-3 points! 
+            💡 <strong>Earn Points:</strong> Provide a factual and coherent response to this point to earn 1-3 points! 
             (One collection per discussion)
           </div>
         </div>
