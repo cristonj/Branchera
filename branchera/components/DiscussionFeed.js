@@ -1047,7 +1047,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                                 className="text-blue-600 hover:text-blue-800 underline"
                                 title={discussion.metadata.newsStory.source.urlValidated === false 
                                   ? `Original article link unavailable. This links to ${discussion.metadata.newsStory.source.name}'s website.`
-                                  : 'Read the original article'
+                                  : discussion.metadata.newsStory.source.groundingTitle 
+                                    ? `Read: ${discussion.metadata.newsStory.source.groundingTitle}`
+                                    : 'Read the original article'
                                 }
                               >
                                 {discussion.metadata.newsStory.source.urlValidated === false 
