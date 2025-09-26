@@ -45,6 +45,15 @@ export default function Home() {
               </div>
             </div>
             
+            <div className="max-w-2xl mx-auto mb-8">
+              <div className="bg-black text-white p-4 rounded-lg text-center">
+                <p className="text-lg font-semibold">
+                  "Attack arguments, not people."
+                </p>
+                <p className="text-sm text-gray-300 mt-1">The golden rule of constructive discourse</p>
+              </div>
+            </div>
+            
             <p className="text-lg md:text-xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
               Experience AI-powered fact-checking, transparent discussions with smart point extraction, and a community where substance matters more than likes. Forever free, forever open source, forever ad-free.
             </p>
