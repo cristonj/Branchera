@@ -474,7 +474,7 @@ Do not include any explanation or additional text, just the JSON object.`;
       
       // Return a safe fallback judgement to prevent crashes
       const fallbackJudgement = {
-        pointsEarned: 0,
+        pointsEarned: 1,
         qualityScore: 'none',
         isFactual: false,
         isCoherent: true, // Assume basic coherence if we got this far
@@ -540,14 +540,13 @@ Your job is to evaluate if this rebuttal deserves points based on these criteria
 SCORING SYSTEM (BE VERY STINGY WITH POINTS):
 - 3 points: EXCEPTIONAL rebuttal with comprehensive research, perfect factual accuracy from authoritative sources, sophisticated analysis, and expert-level insight that significantly advances the discussion
 - 2 points: GOOD rebuttal with solid research-backed evidence, strong factual accuracy, clear logical reasoning, and meaningful contribution to the discussion
-- 1 point: BASIC rebuttal that adequately addresses the point with some supporting evidence or reasoning, but lacks depth or comprehensive research
-- 0 points: Does NOT address the original point, OR contains factual inaccuracies, OR is incoherent, irrelevant, unsupported by evidence, or unconstructive
+- 1 point: BASIC rebuttal that adequately addresses the point with some supporting evidence or reasoning, OR any rebuttal that is coherent, relevant, and constructive even if it lacks depth or comprehensive research
 
 Use Google Search to verify any factual claims in the rebuttal before making your judgement.
 
 Return ONLY a valid JSON object in this format:
 {
-  "pointsEarned": 0-3,
+  "pointsEarned": 1-3,
   "qualityScore": "exceptional|good|basic|none",
   "isFactual": true/false,
   "isCoherent": true/false,
@@ -574,7 +573,7 @@ Examples of BAD explanations:
 - "Your argument needs work" (not actionable)
 - "This deserves points because it's well-written" (doesn't explain criteria)
 
-Be EXTREMELY STINGY with points. Award 3 points only for rebuttals that demonstrate exceptional research, expert-level knowledge, and comprehensive sourced evidence. Award 2 points only for rebuttals with solid research and strong factual backing. Award 1 point only for basic but adequate responses. Award 0 points if the rebuttal fails to properly address the original point or lacks sufficient evidence/research.
+Be STINGY with higher points but always award at least 1 point for any coherent, relevant rebuttal. Award 3 points only for rebuttals that demonstrate exceptional research, expert-level knowledge, and comprehensive sourced evidence. Award 2 points only for rebuttals with solid research and strong factual backing. Award 1 point for any rebuttal that addresses the original point and is coherent, relevant, and constructive, even if it lacks extensive research or evidence.
 
 Do not include any explanation or additional text, just the JSON object.`;
 
@@ -609,7 +608,7 @@ Do not include any explanation or additional text, just the JSON object.`;
       
       // Ensure all required properties exist with safe defaults
       const safeJudgement = {
-        pointsEarned: 0,
+        pointsEarned: 1,
         qualityScore: 'none',
         isFactual: false,
         isCoherent: false,
@@ -625,12 +624,12 @@ Do not include any explanation or additional text, just the JSON object.`;
       
       // Validate and fix pointsEarned
       if (typeof safeJudgement.pointsEarned !== 'number' || isNaN(safeJudgement.pointsEarned)) {
-        console.warn('Invalid pointsEarned value, defaulting to 0:', safeJudgement.pointsEarned);
-        safeJudgement.pointsEarned = 0;
+        console.warn('Invalid pointsEarned value, defaulting to 1:', safeJudgement.pointsEarned);
+        safeJudgement.pointsEarned = 1;
       }
       
-      // Ensure points are within valid range
-      safeJudgement.pointsEarned = Math.max(0, Math.min(3, Math.floor(safeJudgement.pointsEarned)));
+      // Ensure points are within valid range (1-3)
+      safeJudgement.pointsEarned = Math.max(1, Math.min(3, Math.floor(safeJudgement.pointsEarned)));
       
       // Validate qualityScore
       const validQualityScores = ['exceptional', 'good', 'basic', 'none'];
