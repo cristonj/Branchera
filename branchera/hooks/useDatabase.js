@@ -565,6 +565,57 @@ export function useDatabase() {
     }
   };
 
+  // Check if user has collected a specific AI point
+  const hasUserCollectedPoint = async (userId, discussionId, originalPointId) => {
+    try {
+      const points = await getUserPointsForDiscussion(userId, discussionId);
+      return points.some(point => point.originalPointId === originalPointId);
+    } catch (error) {
+      console.error('Error checking if user collected point:', error);
+      return false;
+    }
+  };
+
+  // Get all users and their total points for leaderboard
+  const getLeaderboard = async () => {
+    try {
+      const allPoints = await getDocuments('userPoints', [limit(1000)]);
+      
+      // Group points by user
+      const userPointsMap = new Map();
+      allPoints.forEach(point => {
+        const userId = point.userId;
+        if (!userPointsMap.has(userId)) {
+          userPointsMap.set(userId, {
+            userId: userId,
+            userName: point.userName || 'Anonymous User',
+            userPhoto: point.userPhoto || null,
+            totalPoints: 0,
+            pointCount: 0,
+            lastEarned: null
+          });
+        }
+        
+        const userData = userPointsMap.get(userId);
+        userData.totalPoints += point.pointsEarned || 1;
+        userData.pointCount += 1;
+        
+        if (!userData.lastEarned || new Date(point.earnedAt) > new Date(userData.lastEarned)) {
+          userData.lastEarned = point.earnedAt;
+        }
+      });
+      
+      // Convert to array and sort by total points
+      const leaderboard = Array.from(userPointsMap.values())
+        .sort((a, b) => b.totalPoints - a.totalPoints);
+      
+      return leaderboard;
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      return [];
+    }
+  };
+
   return {
     createDiscussion,
     getDiscussions,
@@ -584,6 +635,8 @@ export function useDatabase() {
     createUserPoint,
     getUserPoints,
     getUserPointsForDiscussion,
-    hasUserEarnedPointsForDiscussion
+    hasUserEarnedPointsForDiscussion,
+    hasUserCollectedPoint,
+    getLeaderboard
   };
 }

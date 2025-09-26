@@ -41,11 +41,24 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   });
   const [currentSort, setCurrentSort] = useState('newest');
   const [isUserSearching, setIsUserSearching] = useState(false);
+  const [collectedPoints, setCollectedPoints] = useState(new Map()); // Track which points user has collected
   const searchTimeoutRef = useRef(null);
   
   const { updateDocument } = useFirestore();
-  const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults } = useDatabase();
+  const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint } = useDatabase();
   const { user } = useAuth();
+
+  const loadCollectedPoints = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      // For now, we'll check each point individually when rendering
+      // This is a placeholder for the collected points functionality
+      console.log('Loading collected points for user:', user.uid);
+    } catch (error) {
+      console.error('Error loading collected points:', error);
+    }
+  }, [user]);
 
   const loadDiscussions = useCallback(async () => {
     try {
@@ -57,6 +70,11 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         orderDirection: 'desc'
       });
       setDiscussions(discussionsData);
+      
+      // Load collected points for visual indicators
+      if (user) {
+        loadCollectedPoints();
+      }
       
       // Generate AI points and fact-check results for older discussions that don't have them
       discussionsData.forEach(discussion => {
@@ -74,7 +92,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     } finally {
       setLoading(false);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, loadCollectedPoints]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     loadDiscussions();
@@ -529,18 +547,45 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     });
   };
 
-  const handlePointClick = (discussion, point) => {
+  const handlePointClick = async (discussion, point) => {
     if (!user) return;
     
-    // Set the discussion and point for reply
-    setSelectedDiscussion(discussion);
-    setSelectedPoint(point);
-    setSelectedReplyType('general'); // Default reply type
-    setReplyingToReply(null);
-    setSelectedReplyForPoints(null);
+    // Check if user has already collected this point
+    const pointKey = `${discussion.id}-${point.id}`;
+    const hasCollected = collectedPoints.has(pointKey);
     
-    // Start reply form
-    setReplyingTo(discussion.id);
+    if (hasCollected) {
+      // Point already collected, just show it's collected
+      return;
+    }
+    
+    try {
+      // Create a user point entry for collecting this point
+      const pointData = {
+        userId: user.uid,
+        userName: user.displayName || 'Anonymous User',
+        userPhoto: user.photoURL || null,
+        discussionId: discussion.id,
+        discussionTitle: discussion.title,
+        originalPoint: point.text,
+        originalPointId: point.id,
+        rebuttal: 'Point collected', // Simple collection, no rebuttal needed
+        pointsEarned: 1,
+        qualityScore: 'basic',
+        judgeExplanation: 'Point collected for engagement',
+        isFactual: true,
+        isCoherent: true
+      };
+      
+      await createUserPoint(pointData);
+      
+      // Update local state to show point as collected
+      setCollectedPoints(prev => new Map(prev).set(pointKey, true));
+      
+      console.log('Point collected successfully:', point.text);
+    } catch (error) {
+      console.error('Error collecting point:', error);
+    }
   };
 
   // Handle point clicks from replies
@@ -675,12 +720,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         {onStartDiscussion && (
           <button
             onClick={onStartDiscussion}
-            className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-full hover:bg-black/80 transition-colors font-medium text-sm"
+            className="px-4 py-2 border border-black text-black hover:bg-black hover:text-white transition-colors"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Start a Discussion
+            Start Discussion
           </button>
         )}
       </div>
@@ -818,31 +860,51 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                     {expandedAIPoints.has(discussion.id) && (
                       <div className="px-3 pb-3 border-t border-black/10">
                         <div className="mt-2 space-y-2">
-                          {discussion.aiPoints.map((point) => (
-                            <button
-                              key={point.id}
-                              onClick={() => handlePointClick(discussion, point)}
-                              className="w-full flex items-start gap-2 p-3 text-left rounded-lg hover:bg-gray-50 border border-transparent hover:border-black/20"
-                              disabled={!user}
-                            >
-                              <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm text-gray-900">
-                                  <SearchHighlight text={point.text} searchQuery={searchQuery} />
-                                </p>
+                          {discussion.aiPoints.map((point) => {
+                            const pointKey = `${discussion.id}-${point.id}`;
+                            const isCollected = collectedPoints.has(pointKey);
+                            
+                            return (
+                              <button
+                                key={point.id}
+                                onClick={() => handlePointClick(discussion, point)}
+                                className={`w-full flex items-start gap-3 p-3 text-left rounded-lg border transition-all ${
+                                  isCollected 
+                                    ? 'bg-green-50 border-green-200 cursor-default' 
+                                    : 'hover:bg-gray-50 border-transparent hover:border-black/20 cursor-pointer'
+                                }`}
+                                disabled={!user || isCollected}
+                              >
+                                {/* Checkbox indicator */}
+                                <div className="flex-shrink-0 mt-0.5">
+                                  {isCollected ? (
+                                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </div>
+                                  ) : (
+                                    <div className="w-5 h-5 border-2 border-gray-300 rounded-full hover:border-green-400 transition-colors"></div>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className={`text-sm ${isCollected ? 'text-green-800' : 'text-gray-900'}`}>
+                                    <SearchHighlight text={point.text} searchQuery={searchQuery} />
+                                  </p>
                                 {point.type && (
                                   <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
                                     <SearchHighlight text={point.type} searchQuery={searchQuery} />
                                   </span>
                                 )}
                                 {user && (
-                                  <div className="text-xs text-gray-600 mt-1">
-                                    Click to reply to this point
+                                  <div className={`text-xs mt-1 ${isCollected ? 'text-green-600' : 'text-gray-600'}`}>
+                                    {isCollected ? 'Point collected!' : 'Click to collect this point'}
                                   </div>
                                 )}
                               </div>
                             </button>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     )}
