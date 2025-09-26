@@ -48,6 +48,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const [collectedPoints, setCollectedPoints] = useState(new Map()); // Track which points user has collected
   const [pointCounts, setPointCounts] = useState(new Map()); // Track how many points earned for each AI point
   const searchTimeoutRef = useRef(null);
+  const replyFormRefs = useRef(new Map()); // Track refs for reply forms to enable smooth scrolling
   
   const { updateDocument } = useFirestore();
   const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint, getUserPoints, getPointCounts, createDiscussion } = useDatabase();
@@ -286,6 +287,41 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     loadPointCounts();
   }, [user, loadCollectedPoints, loadPointCounts]);
 
+  // Enhanced smooth scroll function with fallbacks
+  const smoothScrollToReplyForm = useCallback((discussionId) => {
+    const scrollToElement = () => {
+      const replyFormElement = replyFormRefs.current.get(discussionId);
+      if (replyFormElement) {
+        // Check if smooth scrolling is supported
+        if ('scrollBehavior' in document.documentElement.style) {
+          replyFormElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+            inline: 'nearest'
+          });
+        } else {
+          // Fallback for browsers that don't support smooth scrolling
+          replyFormElement.scrollIntoView();
+        }
+        return true;
+      }
+      return false;
+    };
+
+    // Try immediately first
+    if (!scrollToElement()) {
+      // If not found, try again after a short delay for rendering
+      setTimeout(() => {
+        if (!scrollToElement()) {
+          // Final attempt after a longer delay
+          setTimeout(() => {
+            scrollToElement();
+          }, 300);
+        }
+      }, 150);
+    }
+  }, []);
+
   // Initialize filtered discussions when discussions change
   useEffect(() => {
     setFilteredDiscussions(discussions);
@@ -317,13 +353,18 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     }
   }, [searchQuery]);
 
-  // Clean up timeout on unmount
+  // Clean up timeout and refs on unmount
   useEffect(() => {
+    const currentSearchTimeout = searchTimeoutRef.current;
+    const currentReplyFormRefs = replyFormRefs.current;
+    
     return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
+      if (currentSearchTimeout) {
+        clearTimeout(currentSearchTimeout);
         searchTimeoutRef.current = null;
       }
+      // Clear reply form refs
+      currentReplyFormRefs.clear();
     };
   }, []);
 
@@ -609,6 +650,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     // For now, just start a basic reply to the reply without points
     // This can be enhanced later if needed
     setSelectedReplyForPoints(null);
+    
+    // Smooth scroll to reply form
+    smoothScrollToReplyForm(selectedDiscussion.id);
   };
 
   const handleReplyAdded = (discussionId, newReply) => {
@@ -725,6 +769,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     
     // Start reply form
     setReplyingTo(discussion.id);
+    
+    // Smooth scroll to reply form
+    smoothScrollToReplyForm(discussion.id);
   };
 
   // Handle point clicks from replies
@@ -763,6 +810,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     
     // Start reply form
     setReplyingTo(discussion.id);
+    
+    // Smooth scroll to reply form
+    smoothScrollToReplyForm(discussion.id);
   };
 
   const toggleDiscussion = async (discussionId) => {
@@ -1240,7 +1290,16 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
 
                 {/* Reply form */}
                 {replyingTo === discussion.id && !editingDiscussion && (
-                  <div className="mt-3">
+                  <div 
+                    className="mt-3"
+                    ref={(el) => {
+                      if (el) {
+                        replyFormRefs.current.set(discussion.id, el);
+                      } else {
+                        replyFormRefs.current.delete(discussion.id);
+                      }
+                    }}
+                  >
                     <TextReplyForm
                       discussionId={discussion.id}
                       selectedPoint={selectedPoint}
