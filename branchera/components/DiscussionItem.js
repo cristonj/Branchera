@@ -404,31 +404,30 @@ export default function DiscussionItem({
               </div>
             )}
             <div className="flex items-center gap-4 text-sm text-gray-500">
-              <button
+              <div
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleReplies(discussion.id);
                 }}
-                className="flex items-center gap-1 hover:text-gray-700"
+                className="flex items-center gap-1 hover:text-gray-700 cursor-pointer"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
                 {discussion.replyCount || 0}
-              </button>
-              <button
+              </div>
+              <div
                 onClick={(e) => {
                   e.stopPropagation();
-                  handleLike(discussion.id);
+                  if (user) handleLike(discussion.id);
                 }}
-                className="flex items-center gap-1 hover:text-gray-700"
-                disabled={!user}
+                className={`flex items-center gap-1 hover:text-gray-700 ${user ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
               >
                 <svg className="w-4 h-4" fill={user && (discussion.likedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
                 {discussion.likes || 0}
-              </button>
+              </div>
               <span>{formatDate(discussion.createdAt)}</span>
             </div>
           </div>
@@ -449,7 +448,7 @@ export default function DiscussionItem({
         className={`flex ${isExpanded ? '' : 'hidden'} w-full justify-end `}
         title={isExpanded ? 'Collapse' : 'Expand'}
       >
-        <svg className={`w-5 h-5 rotate-90 mr-4 mt-2`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <svg className={`w-5 h-5 rotate-90 mr-4 mt-4`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </button>
@@ -489,31 +488,30 @@ export default function DiscussionItem({
           </div>
           
           <div className="flex items-center gap-4">
-            <button
+            <div
               onClick={(e) => {
                 e.stopPropagation();
                 toggleReplies(discussion.id);
               }}
-              className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
+              className="flex items-center gap-1 text-sm text-gray-800 hover:text-black cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
               {discussion.replyCount || 0}
-            </button>
-            <button
+            </div>
+            <div
               onClick={(e) => {
                 e.stopPropagation();
-                handleLike(discussion.id);
+                if (user) handleLike(discussion.id);
               }}
-              className="flex items-center gap-1 text-sm text-gray-800 hover:text-black"
-              disabled={!user}
+              className={`flex items-center gap-1 text-sm text-gray-800 hover:text-black ${user ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
             >
               <svg className="w-4 h-4" fill={user && (discussion.likedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
               {discussion.likes || 0}
-            </button>
+            </div>
 
             <div className="flex items-center gap-3 text-left flex-shrink-0">
               <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -526,7 +524,7 @@ export default function DiscussionItem({
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="px-4 pb-4 pt-1">
+        <div className="px-4 pb-4 pt-1 -mt-8 mr-6">
           {/* Title and author info */}
           <div className="pb-2">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">
