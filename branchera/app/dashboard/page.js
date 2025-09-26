@@ -18,10 +18,6 @@ export default function DashboardPage() {
   const [hotDiscussions, setHotDiscussions] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [inspirationalMessage] = useState(() => {
-    // Select a random message when component mounts
-    return INSPIRATIONAL_MESSAGES[Math.floor(Math.random() * INSPIRATIONAL_MESSAGES.length)];
-  });
   const { getDiscussions, getLeaderboard, getUserPoints } = useDatabase();
 
   useEffect(() => {
@@ -140,16 +136,6 @@ export default function DashboardPage() {
             Welcome back, {user.displayName?.split(' ')[0] || 'there'}!
           </h1>
           <p className="text-gray-600 mb-6">Here&apos;s what&apos;s happening in your community</p>
-          
-          {/* Inspirational Message */}
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-gray-50 border-l-4 border-black p-4 rounded-r-lg">
-              <p className="text-sm md:text-base text-gray-800 font-medium italic leading-relaxed">
-                &ldquo;{inspirationalMessage.text}&rdquo;
-              </p>
-              <p className="text-xs text-gray-600 mt-2">— {inspirationalMessage.attribution}</p>
-            </div>
-          </div>
         </div>
 
         {loading ? (
