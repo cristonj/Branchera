@@ -15,6 +15,7 @@ import { AIService } from '@/lib/aiService';
 import { usePolling } from '@/hooks/usePolling';
 import { REALTIME_CONFIG } from '@/lib/realtimeConfig';
 import { NewsService } from '@/lib/newsService';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const [discussions, setDiscussions] = useState([]);
@@ -50,6 +51,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const { updateDocument } = useFirestore();
   const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint, getUserPoints, getPointCounts, createDiscussion } = useDatabase();
   const { user } = useAuth();
+  const { showSuccessToast, showErrorToast } = useToast();
 
   const loadCollectedPoints = useCallback(async () => {
     if (!user) return;
@@ -532,10 +534,11 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       // Remove from local state
       setDiscussions(prev => prev.filter(d => d.id !== discussionId));
       
+      showSuccessToast('Discussion deleted successfully');
       console.log('Discussion deleted successfully');
     } catch (error) {
       console.error('Error deleting discussion:', error);
-      alert(error.message || 'Failed to delete discussion');
+      showErrorToast(error.message || 'Failed to delete discussion');
     }
   };
 
@@ -648,10 +651,11 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         )
       );
       
+      showSuccessToast('Reply deleted successfully');
       console.log('Reply deleted successfully');
     } catch (error) {
       console.error('Error deleting reply:', error);
-      alert(error.message || 'Failed to delete reply');
+      showErrorToast(error.message || 'Failed to delete reply');
     }
   };
 
@@ -1209,6 +1213,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                       }}
                       onPointClick={handleReplyPointClick}
                       maxLevel={3}
+                      showFilters={true}
                     />
                   </div>
                 )}

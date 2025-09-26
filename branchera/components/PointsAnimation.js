@@ -11,13 +11,13 @@ export default function PointsAnimation({ points, qualityScore, onComplete }) {
       setIsVisible(true);
       setStage('appearing');
 
-      // Animation sequence
+      // Animation sequence - shorter duration since we also have toast notifications
       const timer1 = setTimeout(() => setStage('celebrating'), 100);
-      const timer2 = setTimeout(() => setStage('disappearing'), 2000);
+      const timer2 = setTimeout(() => setStage('disappearing'), 1500);
       const timer3 = setTimeout(() => {
         setIsVisible(false);
         onComplete?.();
-      }, 2800);
+      }, 2000);
 
       return () => {
         clearTimeout(timer1);

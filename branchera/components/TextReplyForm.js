@@ -6,6 +6,7 @@ import { useDatabase } from '@/hooks/useDatabase';
 import { AIService } from '@/lib/aiService';
 import FactCheckResults from './FactCheckResults';
 import PointsAnimation from './PointsAnimation';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function TextReplyForm({ 
   discussionId, 
@@ -31,6 +32,7 @@ export default function TextReplyForm({
   
   const { user } = useAuth();
   const { addReply, updateReplyFactCheckResults, createUserPoint, hasUserEarnedPointsForDiscussion } = useDatabase();
+  const { showPointsToast, showSuccessToast, showErrorToast } = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -136,10 +138,20 @@ export default function TextReplyForm({
                 onPointsEarned();
               }
               
-              // Show points animation
+              // Show both animations and toast notification for immediate feedback
               setPointsEarned(judgement.pointsEarned);
               setQualityScore(judgement.qualityScore);
               setShowPointsAnimation(true);
+              
+              // Show immediate toast notification
+              showPointsToast(
+                judgement.pointsEarned, 
+                judgement.qualityScore, 
+                judgement.explanation
+              );
+            } else {
+              // Show feedback even when no points are earned
+              showSuccessToast('Reply submitted! Keep trying for better rebuttals to earn points.', 3000);
             }
           } else {
             console.log('User has already earned points for this discussion');
@@ -164,7 +176,7 @@ export default function TextReplyForm({
       console.log('Reply creation process completed successfully');
     } catch (error) {
       console.error('Error adding reply:', error);
-      alert(`Failed to add reply: ${error.message}`);
+      showErrorToast(`Failed to add reply: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
