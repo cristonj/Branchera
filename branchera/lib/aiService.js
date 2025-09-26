@@ -147,24 +147,25 @@ Do not include any explanation or additional text, just the JSON array.`;
     }
   }
 
-  // Firebase AI fact checking using Gemini with web search
+  // Firebase AI fact checking using Gemini with Google Search grounding
   static async performFactCheckWithFirebaseAI(content, title = '') {
     // Initialize the Firebase AI backend service
     const ai = getAI(app, { backend: new GoogleAIBackend() });
     
-    // Create a GenerativeModel instance
-    const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+    // Create a GenerativeModel instance with Google Search grounding
+    const model = getGenerativeModel(ai, { 
+      model: "gemini-2.5-flash",
+      // Provide Google Search as a tool that the model can use to generate its response
+      tools: [{ googleSearch: {} }]
+    });
 
     const prompt = `
-You are a fact-checking AI. Analyze the following content for factual claims that can be verified.
+You are a fact-checking AI with access to Google Search. Analyze the following content for factual claims that can be verified using current, real-time information from the web.
 
 Title: ${title}
 Content: ${content}
 
-For each factual claim found, determine:
-1. If it's a verifiable fact (not opinion, prediction, or subjective statement)
-2. Whether it appears to be accurate based on your knowledge
-3. What specific search terms would be best to verify this claim
+For each factual claim you find, use Google Search to verify its accuracy with current information. Then provide a comprehensive fact-check analysis.
 
 Return ONLY a valid JSON object in this format:
 {
@@ -174,31 +175,36 @@ Return ONLY a valid JSON object in this format:
       "text": "The specific factual claim from the content",
       "category": "statistic|date|location|person|event|other",
       "confidence": "high|medium|low",
-      "status": "likely_accurate|needs_verification|likely_inaccurate|unverifiable",
-      "searchTerms": ["search term 1", "search term 2"],
-      "explanation": "Brief explanation of why this needs fact-checking"
+      "status": "verified_accurate|verified_inaccurate|partially_accurate|insufficient_evidence|unverifiable",
+      "explanation": "Detailed explanation based on search results",
+      "evidence": "Key evidence found through web search",
+      "lastUpdated": "When this information was last verified"
     }
   ],
   "summary": {
     "totalClaims": 0,
-    "needsVerification": 0,
-    "overallConfidence": "high|medium|low"
+    "verifiedClaims": 0,
+    "accuracy": "high|medium|low",
+    "searchPerformed": true
   }
 }
 
 Guidelines:
+- Use Google Search to verify each claim with current information
 - Only include verifiable factual claims (no opinions, predictions, or subjective statements)
 - Focus on specific numbers, dates, names, locations, events
-- Exclude common knowledge or obviously true statements
+- Provide evidence-based verification using search results
 - Maximum 5 claims per content
 - Keep claim text under 100 characters
-- Search terms should be specific and focused
 
 Do not include any explanation or additional text, just the JSON object.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
+    
+    // Get the grounding metadata from the response
+    const groundingMetadata = result.response.candidates?.[0]?.groundingMetadata;
     
     try {
       // Clean up the response to extract just the JSON
@@ -214,33 +220,37 @@ Do not include any explanation or additional text, just the JSON object.`;
         throw new Error('Invalid fact check result structure');
       }
       
-      // If there are claims that need verification, perform web searches
-      if (factCheckResult.claims.length > 0) {
-        const verifiedClaims = await Promise.all(
-          factCheckResult.claims.map(async (claim) => {
-            if (claim.status === 'needs_verification' && claim.searchTerms && claim.searchTerms.length > 0) {
-              try {
-                // Use the first search term for web search
-                const searchResults = await this.performWebSearch(claim.searchTerms[0]);
-                return {
-                  ...claim,
-                  webSearchResults: searchResults,
-                  verificationStatus: 'searched'
-                };
-              } catch (searchError) {
-                console.error('Error performing web search for claim:', claim.id, searchError);
-                return {
-                  ...claim,
-                  webSearchResults: null,
-                  verificationStatus: 'search_failed'
-                };
-              }
-            }
-            return claim;
-          })
-        );
+      // If we have grounding metadata, this is a grounded result with real Google Search
+      if (groundingMetadata) {
+        console.log('Fact check was grounded with Google Search');
         
-        factCheckResult.claims = verifiedClaims;
+        // Add grounding information to the result
+        factCheckResult.grounding = {
+          searchPerformed: true,
+          searchQueries: groundingMetadata.webSearchQueries || [],
+          sources: (groundingMetadata.groundingChunks || []).map(chunk => ({
+            title: chunk.web?.title,
+            uri: chunk.web?.uri
+          })).filter(source => source.title && source.uri),
+          searchEntryPoint: groundingMetadata.searchEntryPoint?.renderedContent || null,
+          groundingSupports: groundingMetadata.groundingSupports || []
+        };
+        
+        // Update summary to reflect that search was performed
+        factCheckResult.summary.searchPerformed = true;
+        factCheckResult.summary.sourcesFound = factCheckResult.grounding.sources.length;
+      } else {
+        // No grounding metadata means the model didn't use Google Search
+        console.log('Fact check completed without Google Search grounding');
+        factCheckResult.grounding = {
+          searchPerformed: false,
+          searchQueries: [],
+          sources: [],
+          searchEntryPoint: null,
+          groundingSupports: []
+        };
+        factCheckResult.summary.searchPerformed = false;
+        factCheckResult.summary.sourcesFound = 0;
       }
       
       return factCheckResult;
@@ -251,24 +261,28 @@ Do not include any explanation or additional text, just the JSON object.`;
     }
   }
 
-  // Firebase AI fact checking for points using Gemini with web search
+  // Firebase AI fact checking for points using Gemini with Google Search grounding
   static async performPointsFactCheckWithFirebaseAI(claimPoints, title = '') {
     // Initialize the Firebase AI backend service
     const ai = getAI(app, { backend: new GoogleAIBackend() });
     
-    // Create a GenerativeModel instance
-    const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+    // Create a GenerativeModel instance with Google Search grounding
+    const model = getGenerativeModel(ai, { 
+      model: "gemini-2.5-flash",
+      // Provide Google Search as a tool that the model can use to generate its response
+      tools: [{ googleSearch: {} }]
+    });
 
     const pointsText = claimPoints.map(point => `- ${point.text} (${point.type})`).join('\n');
 
     const prompt = `
-You are a fact-checking AI. Analyze the following discussion points that have been identified as potential claims or evidence. Determine which ones contain verifiable factual claims.
+You are a fact-checking AI with access to Google Search. Analyze the following discussion points that have been identified as potential claims or evidence. Use Google Search to verify any factual claims you find.
 
 Title: ${title}
 Discussion Points:
 ${pointsText}
 
-For each point that contains a verifiable factual claim, extract the specific claim and analyze it:
+For each point that contains a verifiable factual claim, extract the specific claim and use Google Search to verify its accuracy with current information:
 
 Return ONLY a valid JSON object in this format:
 {
@@ -280,25 +294,27 @@ Return ONLY a valid JSON object in this format:
       "originalPoint": "The original point text",
       "category": "statistic|date|location|person|event|other",
       "confidence": "high|medium|low",
-      "status": "likely_accurate|needs_verification|likely_inaccurate|unverifiable",
-      "searchTerms": ["search term 1", "search term 2"],
-      "explanation": "Brief explanation of why this needs fact-checking"
+      "status": "verified_accurate|verified_inaccurate|partially_accurate|insufficient_evidence|unverifiable",
+      "explanation": "Detailed explanation based on search results",
+      "evidence": "Key evidence found through web search",
+      "lastUpdated": "When this information was last verified"
     }
   ],
   "summary": {
     "totalClaims": 0,
-    "needsVerification": 0,
-    "overallConfidence": "high|medium|low"
+    "verifiedClaims": 0,
+    "accuracy": "high|medium|low",
+    "searchPerformed": true
   }
 }
 
 Guidelines:
+- Use Google Search to verify each claim with current information
 - Only extract verifiable factual claims from the points (no opinions, predictions, or subjective statements)
 - Focus on specific numbers, dates, names, locations, events within the points
-- Exclude common knowledge or obviously true statements
+- Provide evidence-based verification using search results
 - Maximum 5 claims total
 - Keep claim text under 100 characters
-- Search terms should be specific and focused
 - Include the original point ID for reference
 
 Do not include any explanation or additional text, just the JSON object.`;
@@ -306,6 +322,9 @@ Do not include any explanation or additional text, just the JSON object.`;
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
+    
+    // Get the grounding metadata from the response
+    const groundingMetadata = result.response.candidates?.[0]?.groundingMetadata;
     
     try {
       // Clean up the response to extract just the JSON
@@ -321,33 +340,37 @@ Do not include any explanation or additional text, just the JSON object.`;
         throw new Error('Invalid fact check result structure');
       }
       
-      // If there are claims that need verification, perform web searches
-      if (factCheckResult.claims.length > 0) {
-        const verifiedClaims = await Promise.all(
-          factCheckResult.claims.map(async (claim) => {
-            if (claim.status === 'needs_verification' && claim.searchTerms && claim.searchTerms.length > 0) {
-              try {
-                // Use the first search term for web search
-                const searchResults = await this.performWebSearch(claim.searchTerms[0]);
-                return {
-                  ...claim,
-                  webSearchResults: searchResults,
-                  verificationStatus: 'searched'
-                };
-              } catch (searchError) {
-                console.error('Error performing web search for claim:', claim.id, searchError);
-                return {
-                  ...claim,
-                  webSearchResults: null,
-                  verificationStatus: 'search_failed'
-                };
-              }
-            }
-            return claim;
-          })
-        );
+      // If we have grounding metadata, this is a grounded result with real Google Search
+      if (groundingMetadata) {
+        console.log('Points fact check was grounded with Google Search');
         
-        factCheckResult.claims = verifiedClaims;
+        // Add grounding information to the result
+        factCheckResult.grounding = {
+          searchPerformed: true,
+          searchQueries: groundingMetadata.webSearchQueries || [],
+          sources: (groundingMetadata.groundingChunks || []).map(chunk => ({
+            title: chunk.web?.title,
+            uri: chunk.web?.uri
+          })).filter(source => source.title && source.uri),
+          searchEntryPoint: groundingMetadata.searchEntryPoint?.renderedContent || null,
+          groundingSupports: groundingMetadata.groundingSupports || []
+        };
+        
+        // Update summary to reflect that search was performed
+        factCheckResult.summary.searchPerformed = true;
+        factCheckResult.summary.sourcesFound = factCheckResult.grounding.sources.length;
+      } else {
+        // No grounding metadata means the model didn't use Google Search
+        console.log('Points fact check completed without Google Search grounding');
+        factCheckResult.grounding = {
+          searchPerformed: false,
+          searchQueries: [],
+          sources: [],
+          searchEntryPoint: null,
+          groundingSupports: []
+        };
+        factCheckResult.summary.searchPerformed = false;
+        factCheckResult.summary.sourcesFound = 0;
       }
       
       return factCheckResult;

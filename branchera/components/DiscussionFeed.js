@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { useFirestore } from '@/hooks/useFirestore';
 import { useDatabase } from '@/hooks/useDatabase';
@@ -40,6 +40,8 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     minViews: 0
   });
   const [currentSort, setCurrentSort] = useState('newest');
+  const [isUserSearching, setIsUserSearching] = useState(false);
+  const searchTimeoutRef = useRef(null);
   
   const { updateDocument } = useFirestore();
   const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults } = useDatabase();
@@ -80,6 +82,12 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
 
   // Silent refresh without showing loading skeleton to avoid flicker during polling
   const refreshDiscussions = useCallback(async () => {
+    // Don't refresh if user is actively searching
+    if (isUserSearching) {
+      console.log('Skipping refresh - user is searching');
+      return;
+    }
+    
     try {
       const discussionsData = await getDiscussions({
         limit: 20,
@@ -90,13 +98,13 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     } catch (error) {
       console.error('Background refresh failed:', error);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isUserSearching]);
 
-  // Poll for near-realtime updates
+  // Poll for near-realtime updates, but pause when user is actively searching
   usePolling(
     refreshDiscussions,
     REALTIME_CONFIG.pollingIntervalMs,
-    { enabled: true, immediate: false, pauseOnHidden: REALTIME_CONFIG.pauseOnHidden }
+    { enabled: !isUserSearching, immediate: false, pauseOnHidden: REALTIME_CONFIG.pauseOnHidden }
   );
 
   // Add new discussion to the top of the feed when created
@@ -111,6 +119,42 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   useEffect(() => {
     setFilteredDiscussions(discussions);
   }, [discussions]);
+
+  // Handle search query changes and manage searching state
+  const handleSearchChange = useCallback((query) => {
+    // Prevent duplicate calls with the same query
+    if (query === searchQuery) {
+      return;
+    }
+    
+    setSearchQuery(query);
+    
+    // Clear any existing timeout since we're removing the timeout mechanism
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = null;
+    }
+    
+    if (query.trim()) {
+      // User is searching - pause polling until search is cleared
+      console.log('User started searching:', query, '- polling paused');
+      setIsUserSearching(true);
+    } else {
+      // Search cleared - resume polling
+      console.log('Search cleared, resuming polling');
+      setIsUserSearching(false);
+    }
+  }, [searchQuery]);
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+        searchTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Generate AI points for a discussion
   const generateAIPointsForDiscussion = async (discussion) => {
@@ -645,7 +689,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         key="search-filter-sort"
         discussions={discussions}
         onResults={setFilteredDiscussions}
-        onSearchChange={setSearchQuery}
+        onSearchChange={handleSearchChange}
         onSearchTypeChange={setCurrentSearchType}
         onFilterChange={setCurrentFilters}
         onSortChange={setCurrentSort}
