@@ -16,6 +16,7 @@ export default function SearchFilterSort({
     hasReplies: false,
     hasFactCheck: false,
     showNewsOnly: false,
+    selectedTags: [],
     dateRange: 'all',
     author: '',
     minLikes: 0,
@@ -27,6 +28,33 @@ export default function SearchFilterSort({
   const [sortBy, setSortBy] = useState(initialSortBy);
   const [filters, setFilters] = useState(initialFilters);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Get all unique tags from discussions for the tag filter
+  const availableTags = useMemo(() => {
+    const tagSet = new Set();
+    discussions.forEach(discussion => {
+      if (discussion.tags && Array.isArray(discussion.tags)) {
+        discussion.tags.forEach(tag => tagSet.add(tag));
+      }
+    });
+    return Array.from(tagSet).sort();
+  }, [discussions]);
+
+  // Handle tag selection
+  const handleTagSelection = (tag) => {
+    const currentSelectedTags = filters.selectedTags || [];
+    let newSelectedTags;
+    
+    if (currentSelectedTags.includes(tag)) {
+      // Remove tag if already selected
+      newSelectedTags = currentSelectedTags.filter(t => t !== tag);
+    } else {
+      // Add tag if not selected
+      newSelectedTags = [...currentSelectedTags, tag];
+    }
+    
+    handleFilterChange('selectedTags', newSelectedTags);
+  };
 
   // Sync internal state with props when they change
   useEffect(() => {
@@ -209,6 +237,17 @@ export default function SearchFilterSort({
         return false;
       }
 
+      // Selected tags filter (must have ALL selected tags)
+      if (filters.selectedTags && filters.selectedTags.length > 0) {
+        const discussionTags = discussion.tags || [];
+        const hasAllSelectedTags = filters.selectedTags.every(selectedTag => 
+          discussionTags.includes(selectedTag)
+        );
+        if (!hasAllSelectedTags) {
+          return false;
+        }
+      }
+
       // Date range filter
       if (filters.dateRange !== 'all') {
         const discussionDate = new Date(discussion.createdAt);
@@ -360,6 +399,7 @@ export default function SearchFilterSort({
       hasReplies: false,
       hasFactCheck: false,
       showNewsOnly: false,
+      selectedTags: [],
       dateRange: 'all',
       author: '',
       minLikes: 0,
@@ -372,6 +412,7 @@ export default function SearchFilterSort({
     filters.hasReplies || 
     filters.hasFactCheck || 
     filters.showNewsOnly ||
+    (filters.selectedTags && filters.selectedTags.length > 0) ||
     filters.dateRange !== 'all' || 
     filters.author || 
     filters.minLikes > 0 || 
@@ -539,6 +580,41 @@ export default function SearchFilterSort({
                 </label>
               </div>
             </div>
+
+            {/* Tag Filters */}
+            {availableTags.length > 0 && (
+              <div className="space-y-2 md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">Filter by Tags</label>
+                <div className="flex flex-wrap gap-2">
+                  {availableTags.map((tag) => {
+                    const isSelected = filters.selectedTags && filters.selectedTags.includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => handleTagSelection(tag)}
+                        className={`px-3 py-1 text-xs rounded-full font-medium border transition-colors ${
+                          isSelected
+                            ? tag === 'News'
+                              ? 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200'
+                              : 'bg-black text-white border-black hover:bg-black/80'
+                            : tag === 'News'
+                              ? 'bg-white text-red-600 border-red-200 hover:bg-red-50'
+                              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    );
+                  })}
+                </div>
+                {filters.selectedTags && filters.selectedTags.length > 0 && (
+                  <div className="text-xs text-gray-600">
+                    Showing discussions with {filters.selectedTags.length > 1 ? 'all of these tags' : 'this tag'}: {filters.selectedTags.join(', ')}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Clear Filters Button */}
