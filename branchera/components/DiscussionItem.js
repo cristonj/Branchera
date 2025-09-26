@@ -449,7 +449,7 @@ export default function DiscussionItem({
         className={`flex ${isExpanded ? '' : 'hidden'} w-full justify-end `}
         title={isExpanded ? 'Collapse' : 'Expand'}
       >
-        <svg className={`w-5 h-5 rotate-90 mr-4 mt-4`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <svg className={`w-5 h-5 rotate-90 mr-4 mt-2`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
       </button>
@@ -526,7 +526,7 @@ export default function DiscussionItem({
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="px-4 pb-4 pt-4">
+        <div className="px-4 pb-4 pt-1">
           {/* Title and author info */}
           <div className="pb-2">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">
