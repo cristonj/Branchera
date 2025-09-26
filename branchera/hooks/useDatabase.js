@@ -478,6 +478,166 @@ export function useDatabase() {
     }
   };
 
+  // User Points Management
+  const createUserPoint = async (pointData) => {
+    try {
+      console.log('Creating user point with data:', pointData);
+      
+      // Validate required fields
+      if (!pointData.userId || !pointData.discussionId || !pointData.originalPoint || !pointData.rebuttal) {
+        throw new Error('Missing required fields for user point');
+      }
+
+      const completeData = {
+        userId: pointData.userId,
+        discussionId: pointData.discussionId,
+        discussionTitle: pointData.discussionTitle || 'Unknown Discussion',
+        originalPoint: pointData.originalPoint,
+        originalPointId: pointData.originalPointId,
+        rebuttal: pointData.rebuttal,
+        pointsEarned: pointData.pointsEarned || 1,
+        qualityScore: pointData.qualityScore || 'basic', // 'excellent', 'good', 'fair', 'basic'
+        judgeExplanation: pointData.judgeExplanation || '',
+        isFactual: pointData.isFactual || false,
+        isCoherent: pointData.isCoherent || false,
+        earnedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      };
+
+      const pointId = await addDocument('userPoints', completeData);
+      console.log('User point created successfully with ID:', pointId);
+      
+      return { id: pointId, ...completeData };
+    } catch (error) {
+      console.error('Error creating user point:', error);
+      throw error;
+    }
+  };
+
+  const getUserPoints = async (userId) => {
+    try {
+      console.log('Getting points for user:', userId);
+      
+      // Try with orderBy first
+      try {
+        const points = await getDocuments('userPoints', [
+          // Add where clause for userId when available
+          orderBy('earnedAt', 'desc'),
+          limit(100)
+        ]);
+        
+        // Filter by userId client-side for now
+        return points.filter(point => point.userId === userId);
+      } catch (orderError) {
+        console.warn('OrderBy query failed, trying without ordering:', orderError.message);
+        
+        // Fallback: get without orderBy and sort client-side
+        const points = await getDocuments('userPoints', [limit(100)]);
+        const userPoints = points.filter(point => point.userId === userId);
+        
+        return userPoints.sort((a, b) => new Date(b.earnedAt) - new Date(a.earnedAt));
+      }
+    } catch (error) {
+      console.error('Error fetching user points:', error);
+      return [];
+    }
+  };
+
+  const getUserPointsForDiscussion = async (userId, discussionId) => {
+    try {
+      console.log('Getting points for user in discussion:', userId, discussionId);
+      
+      const allPoints = await getUserPoints(userId);
+      return allPoints.filter(point => point.discussionId === discussionId);
+    } catch (error) {
+      console.error('Error fetching user points for discussion:', error);
+      return [];
+    }
+  };
+
+  const hasUserEarnedPointsForDiscussion = async (userId, discussionId) => {
+    try {
+      const points = await getUserPointsForDiscussion(userId, discussionId);
+      return points.length > 0;
+    } catch (error) {
+      console.error('Error checking if user earned points for discussion:', error);
+      return false;
+    }
+  };
+
+  // Check if user has collected a specific AI point
+  const hasUserCollectedPoint = async (userId, discussionId, originalPointId) => {
+    try {
+      const points = await getUserPointsForDiscussion(userId, discussionId);
+      return points.some(point => point.originalPointId === originalPointId);
+    } catch (error) {
+      console.error('Error checking if user collected point:', error);
+      return false;
+    }
+  };
+
+  // Get all users and their total points for leaderboard
+  const getLeaderboard = async () => {
+    try {
+      const allPoints = await getDocuments('userPoints', [limit(1000)]);
+      
+      // Group points by user
+      const userPointsMap = new Map();
+      allPoints.forEach(point => {
+        const userId = point.userId;
+        if (!userPointsMap.has(userId)) {
+          userPointsMap.set(userId, {
+            userId: userId,
+            userName: point.userName || 'Anonymous User',
+            userPhoto: point.userPhoto || null,
+            totalPoints: 0,
+            pointCount: 0,
+            lastEarned: null
+          });
+        }
+        
+        const userData = userPointsMap.get(userId);
+        userData.totalPoints += point.pointsEarned || 1;
+        userData.pointCount += 1;
+        
+        if (!userData.lastEarned || new Date(point.earnedAt) > new Date(userData.lastEarned)) {
+          userData.lastEarned = point.earnedAt;
+        }
+      });
+      
+      // Convert to array and sort by total points
+      const leaderboard = Array.from(userPointsMap.values())
+        .sort((a, b) => b.totalPoints - a.totalPoints);
+      
+      return leaderboard;
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      return [];
+    }
+  };
+
+  // Get point counts for AI points (how many users earned points for each point)
+  const getPointCounts = async () => {
+    try {
+      const allPoints = await getDocuments('userPoints', [limit(1000)]);
+      
+      // Group by discussion and original point ID
+      const pointCountsMap = new Map();
+      allPoints.forEach(point => {
+        if (point.originalPointId) {
+          const pointKey = `${point.discussionId}-${point.originalPointId}`;
+          const currentCount = pointCountsMap.get(pointKey) || 0;
+          pointCountsMap.set(pointKey, currentCount + 1);
+        }
+      });
+      
+      return pointCountsMap;
+    } catch (error) {
+      console.error('Error fetching point counts:', error);
+      return new Map();
+    }
+  };
+
   return {
     createDiscussion,
     getDiscussions,
@@ -493,6 +653,13 @@ export function useDatabase() {
     incrementDiscussionView,
     incrementReplyView,
     updateFactCheckResults,
-    updateReplyFactCheckResults
+    updateReplyFactCheckResults,
+    createUserPoint,
+    getUserPoints,
+    getUserPointsForDiscussion,
+    hasUserEarnedPointsForDiscussion,
+    hasUserCollectedPoint,
+    getLeaderboard,
+    getPointCounts
   };
 }

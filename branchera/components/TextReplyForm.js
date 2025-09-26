@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useDatabase } from '@/hooks/useDatabase';
 import { AIService } from '@/lib/aiService';
 import FactCheckResults from './FactCheckResults';
+import PointsAnimation from './PointsAnimation';
 
 export default function TextReplyForm({ 
   discussionId, 
@@ -13,15 +14,23 @@ export default function TextReplyForm({
   selectedPoint = null, 
   replyType = 'general',
   replyingToReply = null,
-  selectedReplyForPoints = null
+  selectedReplyForPoints = null,
+  discussionTitle = '',
+  discussionContent = '',
+  parentFactCheck = null,
+  onPointsEarned = null
 }) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFactChecking, setIsFactChecking] = useState(false);
   const [factCheckResults, setFactCheckResults] = useState(null);
+  const [pointsEarned, setPointsEarned] = useState(0);
+  const [qualityScore, setQualityScore] = useState('');
+  const [showPointsAnimation, setShowPointsAnimation] = useState(false);
+  const [isJudging, setIsJudging] = useState(false);
   
   const { user } = useAuth();
-  const { addReply, updateReplyFactCheckResults } = useDatabase();
+  const { addReply, updateReplyFactCheckResults, createUserPoint, hasUserEarnedPointsForDiscussion } = useDatabase();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,6 +62,8 @@ export default function TextReplyForm({
       
       // Generate points and fact check the reply content based on those points
       setIsFactChecking(true);
+      let replyFactCheck = null;
+      
       try {
         console.log('Generating points for reply content...');
         
@@ -62,22 +73,83 @@ export default function TextReplyForm({
         
         // Fact check based on the generated points
         console.log('Fact checking reply based on generated points...');
-        const factCheck = await AIService.factCheckPoints(replyPoints, 'Reply');
-        console.log('Reply fact check results based on points:', factCheck);
+        replyFactCheck = await AIService.factCheckPoints(replyPoints, 'Reply');
+        console.log('Reply fact check results based on points:', replyFactCheck);
         
         // Update the reply with fact check results
-        await updateReplyFactCheckResults(discussionId, createdReply.id, factCheck);
-        console.log('Reply fact check results saved:', factCheck);
+        await updateReplyFactCheckResults(discussionId, createdReply.id, replyFactCheck);
+        console.log('Reply fact check results saved:', replyFactCheck);
         
         // Update the created reply object with fact check results
-        createdReply.factCheckResults = factCheck;
+        createdReply.factCheckResults = replyFactCheck;
         createdReply.factCheckGenerated = true;
-        setFactCheckResults(factCheck);
+        setFactCheckResults(replyFactCheck);
       } catch (factCheckError) {
         console.error('Error fact checking reply:', factCheckError);
         // Don't fail the reply creation if fact checking fails
       } finally {
         setIsFactChecking(false);
+      }
+
+      // Check if this is a rebuttal to a specific point and if user can earn points
+      if (selectedPoint && selectedPoint.text) {
+        try {
+          // Check if user has already earned points for this discussion
+          const hasEarnedPoints = await hasUserEarnedPointsForDiscussion(user.uid, discussionId);
+          
+          if (!hasEarnedPoints) {
+            setIsJudging(true);
+            console.log('Judging rebuttal for points...');
+            
+            // Get AI judgement on the rebuttal
+            const judgement = await AIService.judgeRebuttal(
+              selectedPoint.text,
+              replyData.content,
+              parentFactCheck,
+              replyFactCheck,
+              `${discussionTitle}: ${discussionContent}`
+            );
+            
+            console.log('AI judgement result:', judgement);
+            
+            if (judgement.pointsEarned > 0) {
+              // Create user point record
+              const pointData = {
+                userId: user.uid,
+                discussionId: discussionId,
+                discussionTitle: discussionTitle,
+                originalPoint: selectedPoint.text,
+                originalPointId: selectedPoint.id,
+                rebuttal: replyData.content,
+                pointsEarned: judgement.pointsEarned,
+                qualityScore: judgement.qualityScore,
+                judgeExplanation: judgement.explanation,
+                isFactual: judgement.isFactual,
+                isCoherent: judgement.isCoherent
+              };
+              
+              await createUserPoint(pointData);
+              console.log('User point created successfully');
+              
+              // Refresh points data in parent component
+              if (onPointsEarned) {
+                onPointsEarned();
+              }
+              
+              // Show points animation
+              setPointsEarned(judgement.pointsEarned);
+              setQualityScore(judgement.qualityScore);
+              setShowPointsAnimation(true);
+            }
+          } else {
+            console.log('User has already earned points for this discussion');
+          }
+        } catch (judgingError) {
+          console.error('Error judging rebuttal:', judgingError);
+          // Don't fail the reply creation if judging fails
+        } finally {
+          setIsJudging(false);
+        }
       }
       
       // Reset form
@@ -169,7 +241,7 @@ export default function TextReplyForm({
             {isSubmitting ? (
               <>
                 <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Replying...
+                {isJudging ? 'Judging...' : isFactChecking ? 'Fact-checking...' : 'Replying...'}
               </>
             ) : (
               'Reply'
@@ -183,6 +255,25 @@ export default function TextReplyForm({
         factCheckResults={factCheckResults} 
         isLoading={isFactChecking} 
       />
+
+      {/* Points Animation */}
+      {showPointsAnimation && (
+        <PointsAnimation
+          points={pointsEarned}
+          qualityScore={qualityScore}
+          onComplete={() => setShowPointsAnimation(false)}
+        />
+      )}
+
+      {/* Points eligibility notice */}
+      {selectedPoint && (
+        <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded-lg">
+          <div className="text-xs text-purple-800">
+            💡 <strong>Earn Points:</strong> Provide a factual and coherent rebuttal to this point to earn 1-5 points! 
+            (One collection per discussion)
+          </div>
+        </div>
+      )}
     </div>
   );
 }

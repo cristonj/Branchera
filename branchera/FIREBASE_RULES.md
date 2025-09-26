@@ -20,6 +20,14 @@ service cloud.firestore {
       allow update: if request.auth != null;
       allow delete: if request.auth != null && request.auth.uid == resource.data.authorId;
     }
+    
+    // User points collection - users can create their own points and read all points for leaderboard
+    match /userPoints/{pointId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow update: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
   }
 }
 ```
@@ -63,9 +71,14 @@ service firebase.storage {
 ## What These Rules Do
 
 ### Firestore Rules:
-- **Read**: Any authenticated user can read all discussions
-- **Create**: Only authenticated users can create discussions, and only with their own user ID as authorId
-- **Update**: Any authenticated user can update discussions (for likes/plays)
+- **Discussions**:
+  - **Read**: Any authenticated user can read all discussions
+  - **Create**: Only authenticated users can create discussions, and only with their own user ID as authorId
+  - **Update**: Any authenticated user can update discussions (for likes/plays)
+- **User Points**:
+  - **Read**: Any authenticated user can read all points (for leaderboard)
+  - **Create**: Users can only create points with their own user ID
+  - **Update/Delete**: Users can only modify their own points
 
 ### Storage Rules:
 - **Read**: Any authenticated user can read audio files

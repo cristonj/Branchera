@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 import DiscussionFeed from '@/components/DiscussionFeed';
 import DiscussionDialog from '@/components/DiscussionDialog';
 
@@ -47,6 +48,16 @@ export default function DashboardPage() {
             </h1>
             
             <div className="flex items-center gap-4">
+              <Link 
+                href="/points"
+                className="p-2 bg-white text-black border border-black/20 hover:bg-gray-50 rounded-full transition-colors"
+                title="Leaderboard"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M5 9V21H1V9H5ZM14 3V21H10V3H14ZM23 6V21H19V6H23ZM3 7H7V19H3V7ZM12 1H16V19H12V1ZM21 4H25V19H21V4Z" transform="scale(0.8) translate(1.5, 1.5)"/>
+                </svg>
+              </Link>
+              
               <div className="flex items-center gap-3">
                 {user.photoURL && (
                   <Image
