@@ -381,6 +381,28 @@ export default function DiscussionItem({
             <h3 className="font-medium text-gray-900 mb-1 hover:text-black transition-colors">
               <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
             </h3>
+            {/* Tags in compact view */}
+            {discussion.tags && discussion.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-2">
+                {discussion.tags.slice(0, 3).map((tag, index) => (
+                  <span
+                    key={index}
+                    className={`inline-block px-2 py-0.5 text-xs rounded-full font-medium ${
+                      tag === 'News' 
+                        ? 'bg-red-100 text-red-800 border border-red-200' 
+                        : 'bg-gray-100 text-gray-600 border border-gray-200'
+                    }`}
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {discussion.tags.length > 3 && (
+                  <span className="inline-block px-2 py-0.5 text-xs rounded-full font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                    +{discussion.tags.length - 3}
+                  </span>
+                )}
+              </div>
+            )}
             <div className="flex items-center gap-4 text-sm text-gray-500">
               <button
                 onClick={(e) => {
