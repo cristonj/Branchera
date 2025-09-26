@@ -94,7 +94,7 @@ export default function PointsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen">
       {/* Navigation Bar */}
       <nav className="border-b border-black/20">
         <div className="max-w-4xl mx-auto px-4">
@@ -118,26 +118,25 @@ export default function PointsPage() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-black mb-2">Leaderboard</h1>
-          <p className="text-gray-600">Top point collectors in the community</p>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">Leaderboard</h2>
         </div>
 
         {/* User Stats Card */}
         {userStats && (
-          <div className="mb-8 p-6 border-2 border-black bg-gray-50">
-            <h2 className="text-lg font-bold text-black mb-2">Your Stats</h2>
+          <div className="mb-6 p-4 border border-black/20 rounded-lg bg-white">
+            <h3 className="text-lg font-medium text-gray-900 mb-3">Your Stats</h3>
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold text-black">{userStats.totalPoints}</div>
+                <div className="text-2xl font-bold text-gray-900">{userStats.totalPoints}</div>
                 <div className="text-sm text-gray-600">Points Collected</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-black">{userStats.pointCount}</div>
+                <div className="text-2xl font-bold text-gray-900">{userStats.pointCount}</div>
                 <div className="text-sm text-gray-600">Total Points</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-black">
+                <div className="text-2xl font-bold text-gray-900">
                   {userRank ? `#${userRank}` : 'Unranked'}
                 </div>
                 <div className="text-sm text-gray-600">Rank</div>

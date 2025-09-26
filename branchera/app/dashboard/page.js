@@ -50,7 +50,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4">
               <Link 
                 href="/points"
-                className="p-2 bg-purple-600 text-white hover:bg-purple-700 rounded-full transition-colors"
+                className="p-2 bg-white text-black border border-black/20 hover:bg-gray-50 rounded-full transition-colors"
                 title="Leaderboard"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
