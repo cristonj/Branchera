@@ -45,20 +45,31 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const searchTimeoutRef = useRef(null);
   
   const { updateDocument } = useFirestore();
-  const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint } = useDatabase();
+  const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint, getUserPoints } = useDatabase();
   const { user } = useAuth();
 
   const loadCollectedPoints = useCallback(async () => {
     if (!user) return;
     
     try {
-      // For now, we'll check each point individually when rendering
-      // This is a placeholder for the collected points functionality
-      console.log('Loading collected points for user:', user.uid);
+      // Load all user's points to show visual indicators
+      const userPoints = await getUserPoints(user.uid);
+      const collected = new Map();
+      
+      // For each point, create a key to track collection status
+      userPoints.forEach(point => {
+        if (point.originalPointId) {
+          const pointKey = `${point.discussionId}-${point.originalPointId}`;
+          collected.set(pointKey, true);
+        }
+      });
+      
+      setCollectedPoints(collected);
+      console.log('Loaded collected points:', collected.size);
     } catch (error) {
       console.error('Error loading collected points:', error);
     }
-  }, [user]);
+  }, [user, getUserPoints]);
 
   const loadDiscussions = useCallback(async () => {
     try {
@@ -547,45 +558,18 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     });
   };
 
-  const handlePointClick = async (discussion, point) => {
+  const handlePointClick = (discussion, point) => {
     if (!user) return;
     
-    // Check if user has already collected this point
-    const pointKey = `${discussion.id}-${point.id}`;
-    const hasCollected = collectedPoints.has(pointKey);
+    // Set the discussion and point for reply
+    setSelectedDiscussion(discussion);
+    setSelectedPoint(point);
+    setSelectedReplyType('general'); // Default reply type
+    setReplyingToReply(null);
+    setSelectedReplyForPoints(null);
     
-    if (hasCollected) {
-      // Point already collected, just show it's collected
-      return;
-    }
-    
-    try {
-      // Create a user point entry for collecting this point
-      const pointData = {
-        userId: user.uid,
-        userName: user.displayName || 'Anonymous User',
-        userPhoto: user.photoURL || null,
-        discussionId: discussion.id,
-        discussionTitle: discussion.title,
-        originalPoint: point.text,
-        originalPointId: point.id,
-        rebuttal: 'Point collected', // Simple collection, no rebuttal needed
-        pointsEarned: 1,
-        qualityScore: 'basic',
-        judgeExplanation: 'Point collected for engagement',
-        isFactual: true,
-        isCoherent: true
-      };
-      
-      await createUserPoint(pointData);
-      
-      // Update local state to show point as collected
-      setCollectedPoints(prev => new Map(prev).set(pointKey, true));
-      
-      console.log('Point collected successfully:', point.text);
-    } catch (error) {
-      console.error('Error collecting point:', error);
-    }
+    // Start reply form
+    setReplyingTo(discussion.id);
   };
 
   // Handle point clicks from replies
@@ -873,10 +857,10 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                                 onClick={() => handlePointClick(discussion, point)}
                                 className={`w-full flex items-start gap-3 p-3 text-left rounded-lg border transition-all ${
                                   isCollected 
-                                    ? 'bg-green-50 border-green-200 cursor-default' 
-                                    : 'hover:bg-gray-50 border-transparent hover:border-black/20 cursor-pointer'
+                                    ? 'bg-green-50 border-green-200' 
+                                    : 'hover:bg-gray-50 border-transparent hover:border-black/20'
                                 }`}
-                                disabled={!user || isCollected}
+                                disabled={!user}
                               >
                                 {/* Checkbox indicator */}
                                 <div className="flex-shrink-0 mt-0.5">
@@ -887,7 +871,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                                       </svg>
                                     </div>
                                   ) : (
-                                    <div className="w-5 h-5 border-2 border-gray-300 rounded-full hover:border-green-400 transition-colors"></div>
+                                    <div className="w-1 h-1 bg-black rounded-full mt-2"></div>
                                   )}
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -901,7 +885,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                                 )}
                                 {user && (
                                   <div className={`text-xs mt-1 ${isCollected ? 'text-green-600' : 'text-gray-600'}`}>
-                                    {isCollected ? 'Point collected!' : 'Click to collect this point'}
+                                    {isCollected ? 'Point earned!' : 'Click to reply to this point'}
                                   </div>
                                 )}
                               </div>

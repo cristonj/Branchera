@@ -35,4 +35,4 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-<!-- Build trigger: Reverted UI buttons to original rounded design, Firebase rules updated for points system -->
+<!-- Build trigger: Fixed points system to require AI-judged replies that address specific points, visual indicators show earned points -->
