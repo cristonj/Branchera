@@ -616,6 +616,28 @@ export function useDatabase() {
     }
   };
 
+  // Get point counts for AI points (how many users earned points for each point)
+  const getPointCounts = async () => {
+    try {
+      const allPoints = await getDocuments('userPoints', [limit(1000)]);
+      
+      // Group by discussion and original point ID
+      const pointCountsMap = new Map();
+      allPoints.forEach(point => {
+        if (point.originalPointId) {
+          const pointKey = `${point.discussionId}-${point.originalPointId}`;
+          const currentCount = pointCountsMap.get(pointKey) || 0;
+          pointCountsMap.set(pointKey, currentCount + 1);
+        }
+      });
+      
+      return pointCountsMap;
+    } catch (error) {
+      console.error('Error fetching point counts:', error);
+      return new Map();
+    }
+  };
+
   return {
     createDiscussion,
     getDiscussions,
@@ -637,6 +659,7 @@ export function useDatabase() {
     getUserPointsForDiscussion,
     hasUserEarnedPointsForDiscussion,
     hasUserCollectedPoint,
-    getLeaderboard
+    getLeaderboard,
+    getPointCounts
   };
 }
