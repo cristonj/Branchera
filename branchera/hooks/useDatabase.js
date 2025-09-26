@@ -35,7 +35,8 @@ export function useDatabase() {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         // Add metadata for better querying
-        tags: [],
+        tags: discussionData.tags || [],
+        metadata: discussionData.metadata || null,
         isActive: true
       };
 

@@ -15,6 +15,7 @@ export default function SearchFilterSort({
   initialFilters = {
     hasReplies: false,
     hasFactCheck: false,
+    showNewsOnly: false,
     dateRange: 'all',
     author: '',
     minLikes: 0,
@@ -203,6 +204,11 @@ export default function SearchFilterSort({
         return false;
       }
 
+      // Show news only filter
+      if (filters.showNewsOnly && (!discussion.tags || !discussion.tags.includes('News'))) {
+        return false;
+      }
+
       // Date range filter
       if (filters.dateRange !== 'all') {
         const discussionDate = new Date(discussion.createdAt);
@@ -353,6 +359,7 @@ export default function SearchFilterSort({
     setFilters({
       hasReplies: false,
       hasFactCheck: false,
+      showNewsOnly: false,
       dateRange: 'all',
       author: '',
       minLikes: 0,
@@ -364,6 +371,7 @@ export default function SearchFilterSort({
     searchType !== 'all' ||
     filters.hasReplies || 
     filters.hasFactCheck || 
+    filters.showNewsOnly ||
     filters.dateRange !== 'all' || 
     filters.author || 
     filters.minLikes > 0 || 
@@ -519,6 +527,15 @@ export default function SearchFilterSort({
                     className="mr-2 rounded focus:ring-black"
                   />
                   <span className="text-sm">Has Fact Check</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={filters.showNewsOnly}
+                    onChange={(e) => handleFilterChange('showNewsOnly', e.target.checked)}
+                    className="mr-2 rounded focus:ring-black"
+                  />
+                  <span className="text-sm">News Only</span>
                 </label>
               </div>
             </div>
