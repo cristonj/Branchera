@@ -41,11 +41,49 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   });
   const [currentSort, setCurrentSort] = useState('newest');
   const [isUserSearching, setIsUserSearching] = useState(false);
+  const [collectedPoints, setCollectedPoints] = useState(new Map()); // Track which points user has collected
+  const [pointCounts, setPointCounts] = useState(new Map()); // Track how many points earned for each AI point
   const searchTimeoutRef = useRef(null);
   
   const { updateDocument } = useFirestore();
-  const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults } = useDatabase();
+  const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint, getUserPoints, getPointCounts } = useDatabase();
   const { user } = useAuth();
+
+  const loadCollectedPoints = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      // Load all user's points to show visual indicators
+      const userPoints = await getUserPoints(user.uid);
+      const collected = new Map();
+      
+      // For each point, create a key to track collection status
+      userPoints.forEach(point => {
+        if (point.originalPointId) {
+          const pointKey = `${point.discussionId}-${point.originalPointId}`;
+          collected.set(pointKey, true);
+        }
+      });
+      
+      setCollectedPoints(collected);
+      console.log('Loaded collected points:', collected.size);
+    } catch (error) {
+      console.error('Error loading collected points:', error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Remove dependencies to prevent constant refreshes
+
+  const loadPointCounts = useCallback(async () => {
+    try {
+      // Load point counts for all AI points
+      const counts = await getPointCounts();
+      setPointCounts(counts);
+      console.log('Loaded point counts:', counts.size);
+    } catch (error) {
+      console.error('Error loading point counts:', error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Remove dependencies to prevent constant refreshes
 
   const loadDiscussions = useCallback(async () => {
     try {
@@ -80,6 +118,15 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     loadDiscussions();
   }, [loadDiscussions]); // Include loadDiscussions dependency
 
+  // Load collected points and point counts separately to avoid refresh loops
+  useEffect(() => {
+    if (user) {
+      loadCollectedPoints();
+    }
+    loadPointCounts(); // Load point counts for all users
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid]); // Only load when user ID changes
+
   // Silent refresh without showing loading skeleton to avoid flicker during polling
   const refreshDiscussions = useCallback(async () => {
     // Don't refresh if user is actively searching
@@ -98,7 +145,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     } catch (error) {
       console.error('Background refresh failed:', error);
     }
-  }, [isUserSearching]);
+  }, [isUserSearching, getDiscussions]);
 
   // Poll for near-realtime updates, but pause when user is actively searching
   usePolling(
@@ -110,10 +157,31 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   // Add new discussion to the top of the feed when created
   useEffect(() => {
     if (newDiscussion) {
-      setDiscussions(prev => [newDiscussion, ...prev]);
-      // AI points are now generated during discussion creation
+      setDiscussions(prev => {
+        // Check if discussion already exists to prevent duplicates
+        const existsIndex = prev.findIndex(d => d.id === newDiscussion.id);
+        if (existsIndex !== -1) {
+          // Update existing discussion with new data
+          const updated = [...prev];
+          updated[existsIndex] = newDiscussion;
+          return updated;
+        } else {
+          // Add new discussion to the top
+          return [newDiscussion, ...prev];
+        }
+      });
+      // Refresh point counts to show new points earned
+      loadPointCounts();
     }
-  }, [newDiscussion]);
+  }, [newDiscussion, loadPointCounts]);
+
+  // Function to refresh point counts and collected points (called after earning points)
+  const refreshPointsData = useCallback(() => {
+    if (user) {
+      loadCollectedPoints();
+    }
+    loadPointCounts();
+  }, [user, loadCollectedPoints, loadPointCounts]);
 
   // Initialize filtered discussions when discussions change
   useEffect(() => {
@@ -818,31 +886,62 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                     {expandedAIPoints.has(discussion.id) && (
                       <div className="px-3 pb-3 border-t border-black/10">
                         <div className="mt-2 space-y-2">
-                          {discussion.aiPoints.map((point) => (
-                            <button
-                              key={point.id}
-                              onClick={() => handlePointClick(discussion, point)}
-                              className="w-full flex items-start gap-2 p-3 text-left rounded-lg hover:bg-gray-50 border border-transparent hover:border-black/20"
-                              disabled={!user}
-                            >
-                              <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm text-gray-900">
-                                  <SearchHighlight text={point.text} searchQuery={searchQuery} />
-                                </p>
-                                {point.type && (
-                                  <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
-                                    <SearchHighlight text={point.type} searchQuery={searchQuery} />
-                                  </span>
-                                )}
+                          {discussion.aiPoints.map((point) => {
+                            const pointKey = `${discussion.id}-${point.id}`;
+                            const isCollected = collectedPoints.has(pointKey);
+                            const pointCount = pointCounts.get(pointKey) || 0;
+                            
+                            return (
+                              <button
+                                key={point.id}
+                                onClick={() => handlePointClick(discussion, point)}
+                                className={`w-full flex items-start gap-3 p-3 text-left rounded-lg border transition-all ${
+                                  isCollected 
+                                    ? 'bg-green-50 border-green-200' 
+                                    : 'hover:bg-gray-50 border-transparent hover:border-black/20'
+                                }`}
+                                disabled={!user}
+                              >
+                                {/* Checkbox indicator */}
+                                <div className="flex-shrink-0 mt-0.5">
+                                  {isCollected ? (
+                                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </div>
+                                  ) : (
+                                    <div className="w-1 h-1 bg-black rounded-full mt-2"></div>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className={`text-sm ${isCollected ? 'text-green-800' : 'text-gray-900'}`}>
+                                    <SearchHighlight text={point.text} searchQuery={searchQuery} />
+                                  </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  {point.type && (
+                                    <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white uppercase tracking-wide">
+                                      <SearchHighlight text={point.type} searchQuery={searchQuery} />
+                                    </span>
+                                  )}
+                                  {pointCount > 0 && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full bg-purple-100 text-purple-800 font-medium">
+                                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                                      </svg>
+                                      {pointCount}
+                                    </span>
+                                  )}
+                                </div>
                                 {user && (
-                                  <div className="text-xs text-gray-600 mt-1">
-                                    Click to reply to this point
+                                  <div className={`text-xs mt-1 ${isCollected ? 'text-green-600' : 'text-gray-600'}`}>
+                                    {isCollected ? 'Point earned!' : 'Click to reply to this point'}
                                   </div>
                                 )}
                               </div>
                             </button>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -928,6 +1027,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                       discussionContent={discussion.content}
                       parentFactCheck={discussion.factCheckResults}
                       onReplyAdded={(reply) => handleReplyAdded(discussion.id, reply)}
+                      onPointsEarned={refreshPointsData}
                       onCancel={() => {
                         setReplyingTo(null);
                         setSelectedPoint(null);

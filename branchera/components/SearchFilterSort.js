@@ -44,31 +44,7 @@ export default function SearchFilterSort({
     setFilters(initialFilters);
   }, [initialFilters]);
 
-  // Search function that searches through discussions and replies
-  const searchContent = useCallback((discussions, query, type) => {
-    if (!query.trim()) return discussions;
-
-    const normalizedQuery = query.toLowerCase().trim();
-    
-    return discussions.filter(discussion => {
-      // Search in discussion
-      const discussionMatches = searchInDiscussion(discussion, normalizedQuery, type);
-      
-      // Search in replies if type allows
-      const replyMatches = (type === 'all' || type === 'replies') 
-        ? searchInReplies(discussion.replies || [], normalizedQuery)
-        : false;
-
-      return discussionMatches || replyMatches;
-    }).map(discussion => {
-      // Add search metadata for highlighting
-      return {
-        ...discussion,
-        searchMatches: getSearchMatches(discussion, normalizedQuery, type)
-      };
-    });
-  }, []);
-
+  // Helper functions for searching (no useCallback needed as they don't depend on props/state)
   const searchInDiscussion = (discussion, query, type) => {
     switch (type) {
       case 'title':
@@ -92,14 +68,44 @@ export default function SearchFilterSort({
   const searchInReplies = (replies, query) => {
     if (!Array.isArray(replies)) return false;
     
-    return replies.some(reply => 
-      reply.content?.toLowerCase().includes(query) ||
-      reply.authorName?.toLowerCase().includes(query) ||
-      searchInFactCheck(reply.factCheckResults, query) ||
-      searchInAIPoints(reply.aiPoints, query) ||
-      searchInReplies(reply.children || [], query) // Recursive search in nested replies
-    );
+    const searchRepliesRecursively = (repliesArray, searchQuery) => {
+      return repliesArray.some(reply => 
+        reply.content?.toLowerCase().includes(searchQuery) ||
+        reply.authorName?.toLowerCase().includes(searchQuery) ||
+        searchInFactCheck(reply.factCheckResults, searchQuery) ||
+        searchInAIPoints(reply.aiPoints, searchQuery) ||
+        (reply.children && searchRepliesRecursively(reply.children, searchQuery))
+      );
+    };
+    
+    return searchRepliesRecursively(replies, query);
   };
+
+  // Search function that searches through discussions and replies
+  const searchContent = useCallback((discussions, query, type) => {
+    if (!query.trim()) return discussions;
+
+    const normalizedQuery = query.toLowerCase().trim();
+    
+    return discussions.filter(discussion => {
+      // Search in discussion
+      const discussionMatches = searchInDiscussion(discussion, normalizedQuery, type);
+      
+      // Search in replies if type allows
+      const replyMatches = (type === 'all' || type === 'replies') 
+        ? searchInReplies(discussion.replies || [], normalizedQuery)
+        : false;
+
+      return discussionMatches || replyMatches;
+    }).map(discussion => {
+      // Add search metadata for highlighting
+      return {
+        ...discussion,
+        searchMatches: getSearchMatches(discussion, normalizedQuery, type)
+      };
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const searchInFactCheck = (factCheckResults, query) => {
     if (!factCheckResults || !Array.isArray(factCheckResults.claims)) return false;
@@ -126,6 +132,31 @@ export default function SearchFilterSort({
       point.text?.toLowerCase().includes(query) ||
       point.type?.toLowerCase().includes(query)
     );
+  };
+
+  const getReplyMatches = (replies, query) => {
+    if (!Array.isArray(replies)) return [];
+    
+    const getMatches = (repliesArray, searchQuery) => {
+      return repliesArray.map(reply => ({
+        id: reply.id,
+        matches: {
+          content: reply.content?.toLowerCase().includes(searchQuery),
+          author: reply.authorName?.toLowerCase().includes(searchQuery),
+          factCheck: searchInFactCheck(reply.factCheckResults, searchQuery),
+          aiPoints: searchInAIPoints(reply.aiPoints, searchQuery)
+        },
+        children: getMatches(reply.children || [], searchQuery)
+      })).filter(replyMatch => 
+        replyMatch.matches.content || 
+        replyMatch.matches.author || 
+        replyMatch.matches.factCheck || 
+        replyMatch.matches.aiPoints ||
+        replyMatch.children.length > 0
+      );
+    };
+    
+    return getMatches(replies, query);
   };
 
   const getSearchMatches = (discussion, query, type) => {
@@ -157,27 +188,6 @@ export default function SearchFilterSort({
     }
 
     return matches;
-  };
-
-  const getReplyMatches = (replies, query) => {
-    if (!Array.isArray(replies)) return [];
-    
-    return replies.map(reply => ({
-      id: reply.id,
-      matches: {
-        content: reply.content?.toLowerCase().includes(query),
-        author: reply.authorName?.toLowerCase().includes(query),
-        factCheck: searchInFactCheck(reply.factCheckResults, query),
-        aiPoints: searchInAIPoints(reply.aiPoints, query)
-      },
-      children: getReplyMatches(reply.children || [], query)
-    })).filter(replyMatch => 
-      replyMatch.matches.content || 
-      replyMatch.matches.author || 
-      replyMatch.matches.factCheck || 
-      replyMatch.matches.aiPoints ||
-      replyMatch.children.length > 0
-    );
   };
 
   // Filter function
@@ -253,6 +263,7 @@ export default function SearchFilterSort({
     });
 
     return sorted;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const calculateRelevanceScore = (discussion, query) => {

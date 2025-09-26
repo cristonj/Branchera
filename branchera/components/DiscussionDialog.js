@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import TextDiscussionForm from './TextDiscussionForm';
 
 export default function DiscussionDialog({ isOpen, onClose, onDiscussionCreated }) {
@@ -36,18 +36,18 @@ export default function DiscussionDialog({ isOpen, onClose, onDiscussionCreated 
     }
   };
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = useCallback((e) => {
     if (e.key === 'Escape') {
       onClose();
     }
-  };
+  }, [onClose]);
 
   useEffect(() => {
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
     }
-  }, [isOpen]);
+  }, [isOpen, handleKeyDown]);
 
   if (!isVisible) return null;
 

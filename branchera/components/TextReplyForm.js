@@ -17,7 +17,8 @@ export default function TextReplyForm({
   selectedReplyForPoints = null,
   discussionTitle = '',
   discussionContent = '',
-  parentFactCheck = null
+  parentFactCheck = null,
+  onPointsEarned = null
 }) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -129,6 +130,11 @@ export default function TextReplyForm({
               
               await createUserPoint(pointData);
               console.log('User point created successfully');
+              
+              // Refresh points data in parent component
+              if (onPointsEarned) {
+                onPointsEarned();
+              }
               
               // Show points animation
               setPointsEarned(judgement.pointsEarned);
