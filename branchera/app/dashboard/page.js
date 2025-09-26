@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useDatabase } from '@/hooks/useDatabase';
 import Link from 'next/link';
 import TopNav from '@/components/TopNav';
+import DiscussionItem from '@/components/DiscussionItem';
 
 
 export default function DashboardPage() {
@@ -18,7 +19,104 @@ export default function DashboardPage() {
   const [hotDiscussions, setHotDiscussions] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { getDiscussions, getLeaderboard, getUserPoints } = useDatabase();
+  
+  // State for discussion components
+  const [expandedDiscussions, setExpandedDiscussions] = useState(new Set());
+  const [expandedReplies, setExpandedReplies] = useState(new Set());
+  const [expandedAIPoints, setExpandedAIPoints] = useState(new Set());
+  const [collectedPoints, setCollectedPoints] = useState(new Map());
+  const [pointCounts, setPointCounts] = useState(new Map());
+  
+  const { getDiscussions, getLeaderboard, getUserPoints, getPointCounts } = useDatabase();
+
+  // Load collected points for the user
+  const loadCollectedPoints = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const userPoints = await getUserPoints(user.uid);
+      const collected = new Map();
+      
+      userPoints.forEach(point => {
+        if (point.originalPointId) {
+          const pointKey = `${point.discussionId}-${point.originalPointId}`;
+          collected.set(pointKey, true);
+        }
+      });
+      
+      setCollectedPoints(collected);
+    } catch (error) {
+      console.error('Error loading collected points:', error);
+    }
+  }, [user, getUserPoints]);
+
+  // Load point counts for all AI points
+  const loadPointCounts = useCallback(async () => {
+    try {
+      const counts = await getPointCounts();
+      setPointCounts(counts);
+    } catch (error) {
+      console.error('Error loading point counts:', error);
+    }
+  }, [getPointCounts]);
+
+  // Handle discussion updates from DiscussionItem components
+  const handleDiscussionUpdate = useCallback((discussionId, updatedData) => {
+    if (updatedData === null) {
+      // Delete discussion
+      setHotDiscussions(prev => prev.filter(d => d.id !== discussionId));
+      setRecentActivity(prev => ({
+        ...prev,
+        discussions: prev.discussions?.filter(d => d.id !== discussionId) || []
+      }));
+    } else {
+      // Update discussion
+      const updateDiscussion = (discussions) => 
+        discussions.map(d => d.id === discussionId ? { ...d, ...updatedData } : d);
+      
+      setHotDiscussions(prev => updateDiscussion(prev));
+      setRecentActivity(prev => ({
+        ...prev,
+        discussions: prev.discussions ? updateDiscussion(prev.discussions) : []
+      }));
+    }
+  }, []);
+
+  // Handle reply additions
+  const handleReplyAdded = useCallback((discussionId, newReply) => {
+    const updateDiscussion = (discussions) =>
+      discussions.map(d => {
+        if (d.id === discussionId) {
+          const updatedReplies = [
+            ...(d.replies || []).filter(r => r.id !== newReply.id),
+            newReply
+          ];
+          return {
+            ...d,
+            replies: updatedReplies,
+            replyCount: updatedReplies.length
+          };
+        }
+        return d;
+      });
+    
+    setHotDiscussions(prev => updateDiscussion(prev));
+    setRecentActivity(prev => ({
+      ...prev,
+      discussions: prev.discussions ? updateDiscussion(prev.discussions) : []
+    }));
+    
+    // Expand replies to show the new reply
+    setExpandedReplies(prev => new Set([...prev, discussionId]));
+  }, []);
+
+  // Refresh points data
+  const refreshPointsData = useCallback(() => {
+    if (user) {
+      loadCollectedPoints();
+    }
+    loadPointCounts();
+  }, [user, loadCollectedPoints, loadPointCounts]);
 
   useEffect(() => {
     if (!user) {
@@ -98,6 +196,14 @@ export default function DashboardPage() {
 
     loadDashboardData();
   }, [user?.uid]); // Only run when user changes
+
+  // Load collected points and point counts
+  useEffect(() => {
+    if (user) {
+      loadCollectedPoints();
+    }
+    loadPointCounts();
+  }, [user?.uid, loadCollectedPoints, loadPointCounts]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -220,30 +326,26 @@ export default function DashboardPage() {
                 ) : (
                   <div className="space-y-3">
                     {hotDiscussions.map((discussion, index) => (
-                      <div key={discussion.id} className="border border-black/10 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-start gap-3">
-                          <div className="text-sm font-bold text-gray-400">#{index + 1}</div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-gray-900 mb-1 truncate">
-                              {discussion.title}
-                            </h3>
-                            <div className="flex items-center gap-4 text-sm text-gray-500">
-                              <span className="flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                </svg>
-                                {discussion.likes || 0}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                </svg>
-                                {discussion.replyCount || 0}
-                              </span>
-                              <span>{formatDate(discussion.createdAt)}</span>
-                            </div>
-                          </div>
+                      <div key={discussion.id} className="relative">
+                        <div className="absolute left-3 top-3 z-10 text-sm font-bold text-gray-400 bg-white px-2 py-1 rounded shadow-sm">
+                          #{index + 1}
                         </div>
+                        <DiscussionItem
+                          discussion={discussion}
+                          searchQuery=""
+                          onDiscussionUpdate={handleDiscussionUpdate}
+                          onReplyAdded={handleReplyAdded}
+                          expandedDiscussions={expandedDiscussions}
+                          setExpandedDiscussions={setExpandedDiscussions}
+                          expandedReplies={expandedReplies}
+                          setExpandedReplies={setExpandedReplies}
+                          expandedAIPoints={expandedAIPoints}
+                          setExpandedAIPoints={setExpandedAIPoints}
+                          collectedPoints={collectedPoints}
+                          pointCounts={pointCounts}
+                          refreshPointsData={refreshPointsData}
+                          showCompactView={true}
+                        />
                       </div>
                     ))}
                   </div>
@@ -271,15 +373,25 @@ export default function DashboardPage() {
                   {/* Recent Discussions */}
                   <div>
                     <h3 className="text-sm font-medium text-gray-700 mb-3">Latest Discussions</h3>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {recentActivity.discussions?.slice(0, 3).map((discussion) => (
-                        <div key={discussion.id} className="flex items-center gap-3 text-sm">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
-                          <div className="flex-1 min-w-0">
-                            <span className="text-gray-900 truncate block">{discussion.title}</span>
-                            <span className="text-gray-500 text-xs">by {discussion.authorName} • {formatDate(discussion.createdAt)}</span>
-                          </div>
-                        </div>
+                        <DiscussionItem
+                          key={discussion.id}
+                          discussion={discussion}
+                          searchQuery=""
+                          onDiscussionUpdate={handleDiscussionUpdate}
+                          onReplyAdded={handleReplyAdded}
+                          expandedDiscussions={expandedDiscussions}
+                          setExpandedDiscussions={setExpandedDiscussions}
+                          expandedReplies={expandedReplies}
+                          setExpandedReplies={setExpandedReplies}
+                          expandedAIPoints={expandedAIPoints}
+                          setExpandedAIPoints={setExpandedAIPoints}
+                          collectedPoints={collectedPoints}
+                          pointCounts={pointCounts}
+                          refreshPointsData={refreshPointsData}
+                          showCompactView={true}
+                        />
                       ))}
                     </div>
                   </div>
