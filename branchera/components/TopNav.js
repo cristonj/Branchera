@@ -93,6 +93,13 @@ export default function TopNav() {
                     Dashboard
                   </Link>
                   <Link
+                    href="/feed"
+                    onClick={closeDropdown}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    Feed
+                  </Link>
+                  <Link
                     href="/points"
                     onClick={closeDropdown}
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
