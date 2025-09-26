@@ -526,10 +526,10 @@ export default function DiscussionItem({
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="px-4 pb-4 -mt-12">
+        <div className="px-4 pb-4 pt-4">
           {/* Title and author info */}
           <div className="pb-2">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3 -mt-4 mr-12">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">
               <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
             </h3>
             <div className="flex items-center gap-3">
