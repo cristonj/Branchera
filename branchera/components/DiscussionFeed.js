@@ -924,6 +924,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                       replyType={selectedReplyType}
                       replyingToReply={replyingToReply}
                       selectedReplyForPoints={selectedReplyForPoints}
+                      discussionTitle={discussion.title}
+                      discussionContent={discussion.content}
+                      parentFactCheck={discussion.factCheckResults}
                       onReplyAdded={(reply) => handleReplyAdded(discussion.id, reply)}
                       onCancel={() => {
                         setReplyingTo(null);
