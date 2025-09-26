@@ -67,9 +67,9 @@ export default function SearchFilterSort({
         searchMatches: getSearchMatches(discussion, normalizedQuery, type)
       };
     });
-  }, []);
+  }, [getSearchMatches, searchInDiscussion, searchInReplies]);
 
-  const searchInDiscussion = (discussion, query, type) => {
+  const searchInDiscussion = useCallback((discussion, query, type) => {
     switch (type) {
       case 'title':
         return discussion.title?.toLowerCase().includes(query);
@@ -87,19 +87,23 @@ export default function SearchFilterSort({
           searchInAIPoints(discussion.aiPoints, query)
         );
     }
-  };
+  }, []);
 
-  const searchInReplies = (replies, query) => {
+  const searchInReplies = useCallback((replies, query) => {
     if (!Array.isArray(replies)) return false;
     
-    return replies.some(reply => 
-      reply.content?.toLowerCase().includes(query) ||
-      reply.authorName?.toLowerCase().includes(query) ||
-      searchInFactCheck(reply.factCheckResults, query) ||
-      searchInAIPoints(reply.aiPoints, query) ||
-      searchInReplies(reply.children || [], query) // Recursive search in nested replies
-    );
-  };
+    const searchRepliesRecursively = (repliesArray, searchQuery) => {
+      return repliesArray.some(reply => 
+        reply.content?.toLowerCase().includes(searchQuery) ||
+        reply.authorName?.toLowerCase().includes(searchQuery) ||
+        searchInFactCheck(reply.factCheckResults, searchQuery) ||
+        searchInAIPoints(reply.aiPoints, searchQuery) ||
+        (reply.children && searchRepliesRecursively(reply.children, searchQuery))
+      );
+    };
+    
+    return searchRepliesRecursively(replies, query);
+  }, []);
 
   const searchInFactCheck = (factCheckResults, query) => {
     if (!factCheckResults || !Array.isArray(factCheckResults.claims)) return false;
@@ -128,7 +132,7 @@ export default function SearchFilterSort({
     );
   };
 
-  const getSearchMatches = (discussion, query, type) => {
+  const getSearchMatches = useCallback((discussion, query, type) => {
     const matches = {
       title: false,
       content: false,
@@ -157,28 +161,32 @@ export default function SearchFilterSort({
     }
 
     return matches;
-  };
+  }, [getReplyMatches]);
 
-  const getReplyMatches = (replies, query) => {
+  const getReplyMatches = useCallback((replies, query) => {
     if (!Array.isArray(replies)) return [];
     
-    return replies.map(reply => ({
-      id: reply.id,
-      matches: {
-        content: reply.content?.toLowerCase().includes(query),
-        author: reply.authorName?.toLowerCase().includes(query),
-        factCheck: searchInFactCheck(reply.factCheckResults, query),
-        aiPoints: searchInAIPoints(reply.aiPoints, query)
-      },
-      children: getReplyMatches(reply.children || [], query)
-    })).filter(replyMatch => 
-      replyMatch.matches.content || 
-      replyMatch.matches.author || 
-      replyMatch.matches.factCheck || 
-      replyMatch.matches.aiPoints ||
-      replyMatch.children.length > 0
-    );
-  };
+    const getMatches = (repliesArray, searchQuery) => {
+      return repliesArray.map(reply => ({
+        id: reply.id,
+        matches: {
+          content: reply.content?.toLowerCase().includes(searchQuery),
+          author: reply.authorName?.toLowerCase().includes(searchQuery),
+          factCheck: searchInFactCheck(reply.factCheckResults, searchQuery),
+          aiPoints: searchInAIPoints(reply.aiPoints, searchQuery)
+        },
+        children: getMatches(reply.children || [], searchQuery)
+      })).filter(replyMatch => 
+        replyMatch.matches.content || 
+        replyMatch.matches.author || 
+        replyMatch.matches.factCheck || 
+        replyMatch.matches.aiPoints ||
+        replyMatch.children.length > 0
+      );
+    };
+    
+    return getMatches(replies, query);
+  }, []);
 
   // Filter function
   const filterDiscussions = useCallback((discussions, filters) => {
@@ -253,9 +261,9 @@ export default function SearchFilterSort({
     });
 
     return sorted;
-  }, []);
+  }, [calculateRelevanceScore]);
 
-  const calculateRelevanceScore = (discussion, query) => {
+  const calculateRelevanceScore = useCallback((discussion, query) => {
     let score = 0;
     const normalizedQuery = query.toLowerCase();
     
@@ -298,7 +306,7 @@ export default function SearchFilterSort({
     score += Math.log(1 + (discussion.replyCount || 0)) * 0.4;
     
     return score;
-  };
+  }, [searchInReplies]);
 
   // Memoize processed discussions to avoid recalculation and infinite loops
   const processedDiscussions = useMemo(() => {

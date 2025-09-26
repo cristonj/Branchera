@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useDatabase } from '@/hooks/useDatabase';
@@ -22,9 +22,10 @@ export default function PointsPage() {
       return;
     }
     loadUserPoints();
-  }, [user, router]);
+  }, [user, router, loadUserPoints]);
 
-  const loadUserPoints = async () => {
+  const loadUserPoints = useCallback(async () => {
+    if (!user?.uid) return;
     try {
       setLoading(true);
       const points = await getUserPoints(user.uid);
@@ -36,7 +37,7 @@ export default function PointsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.uid, getUserPoints]);
 
   const calculateAchievements = (points) => {
     const achievements = [];
@@ -239,7 +240,7 @@ export default function PointsPage() {
                             <strong>Point you challenged:</strong>
                           </div>
                           <div className="text-sm text-gray-900 italic">
-                            "{point.originalPoint}"
+                            &ldquo;{point.originalPoint}&rdquo;
                           </div>
                         </div>
                         

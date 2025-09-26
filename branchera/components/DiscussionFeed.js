@@ -98,7 +98,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     } catch (error) {
       console.error('Background refresh failed:', error);
     }
-  }, [isUserSearching]);
+  }, [isUserSearching, getDiscussions]);
 
   // Poll for near-realtime updates, but pause when user is actively searching
   usePolling(
