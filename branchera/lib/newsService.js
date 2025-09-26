@@ -52,6 +52,88 @@ export class NewsService {
     }
   }
 
+  // Get fallback URL for major news publications
+  static getFallbackUrl(publicationName) {
+    const fallbackUrls = {
+      'reuters': 'https://www.reuters.com',
+      'associated press': 'https://apnews.com',
+      'ap': 'https://apnews.com',
+      'bbc': 'https://www.bbc.com/news',
+      'cnn': 'https://www.cnn.com',
+      'npr': 'https://www.npr.org/sections/news',
+      'washington post': 'https://www.washingtonpost.com',
+      'new york times': 'https://www.nytimes.com',
+      'wall street journal': 'https://www.wsj.com',
+      'usa today': 'https://www.usatoday.com',
+      'abc news': 'https://abcnews.go.com',
+      'nbc news': 'https://www.nbcnews.com',
+      'cbs news': 'https://www.cbsnews.com',
+      'fox news': 'https://www.foxnews.com',
+      'politico': 'https://www.politico.com',
+      'the guardian': 'https://www.theguardian.com',
+      'bloomberg': 'https://www.bloomberg.com',
+      'financial times': 'https://www.ft.com',
+      'time': 'https://time.com',
+      'newsweek': 'https://www.newsweek.com'
+    };
+    
+    const normalizedName = (publicationName || '').toLowerCase().trim();
+    
+    // Try exact match first
+    if (fallbackUrls[normalizedName]) {
+      return fallbackUrls[normalizedName];
+    }
+    
+    // Try partial matches
+    for (const [key, url] of Object.entries(fallbackUrls)) {
+      if (normalizedName.includes(key) || key.includes(normalizedName)) {
+        return url;
+      }
+    }
+    
+    // Default fallback to a news aggregator
+    return 'https://news.google.com';
+  }
+
+  // Validate if a URL is accessible
+  static async validateUrl(url) {
+    try {
+      // Basic URL format validation
+      const urlObj = new URL(url);
+      if (!urlObj.protocol.startsWith('http')) {
+        return false;
+      }
+      
+      // Skip validation for obviously fake URLs or examples
+      if (url.includes('example.com') || url.includes('placeholder') || url.includes('sample')) {
+        return false;
+      }
+      
+      // Create a timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 8000); // 8 second timeout
+      });
+      
+      // Try to fetch the URL with a HEAD request to check if it exists
+      const fetchPromise = fetch(url, {
+        method: 'HEAD',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0; +https://branchera.com)',
+          'Accept': '*/*',
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
+      const response = await Promise.race([fetchPromise, timeoutPromise]);
+      
+      // Accept 2xx status codes and also 3xx redirects (which might be normal)
+      return response.ok || (response.status >= 300 && response.status < 400);
+    } catch (error) {
+      console.warn('URL validation failed for:', url, error.message);
+      return false;
+    }
+  }
+
   // Fetch current news stories
   static async fetchNewsStories() {
     try {
@@ -79,7 +161,9 @@ For each story, provide:
 - A brief summary (2-3 sentences)
 - The main controversy or discussion points
 - Key stakeholders or perspectives involved
-- CRITICAL: Source information including publication name and URL
+- Source publication name
+
+IMPORTANT: Use Google Search grounding to find real, current news articles. The actual URLs will be extracted automatically from the search results.
 
 Return ONLY a valid JSON array in this format:
 [
@@ -91,19 +175,17 @@ Return ONLY a valid JSON array in this format:
     "category": "politics|technology|science|economics|social|international|environment|other",
     "source": {
       "name": "Publication Name (e.g., Reuters, BBC, Associated Press)",
-      "url": "https://example.com/full-article-url",
       "publishedAt": "2024-01-15T10:30:00Z"
     }
   }
 ]
 
 CRITICAL REQUIREMENTS:
-- ALWAYS include complete source information with working URLs
+- Use Google Search grounding to find real, current news stories
 - Use only reputable, well-known news sources (Reuters, AP, BBC, CNN, NPR, etc.)
-- Ensure URLs are real and accessible
-- Include publication timestamp when available
 - Make sure all stories are current, factual, and from reliable sources
-- Do not include speculation or unverified claims`;
+- Do not include speculation or unverified claims
+- Focus on stories that will generate meaningful discussion and debate`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -122,8 +204,70 @@ CRITICAL REQUIREMENTS:
           throw new Error('Invalid news stories structure');
         }
         
-        console.log(`Fetched ${stories.length} news stories`);
-        return stories;
+        console.log(`Fetched ${stories.length} news stories, extracting real URLs from grounding data...`);
+        
+        // Extract actual URLs from Google Search grounding data
+        const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
+        const groundingSources = [];
+        
+        if (groundingMetadata && groundingMetadata.groundingChunks) {
+          console.log(`Found ${groundingMetadata.groundingChunks.length} grounding sources`);
+          groundingMetadata.groundingChunks.forEach(chunk => {
+            if (chunk.web?.uri && chunk.web?.title) {
+              groundingSources.push({
+                title: chunk.web.title,
+                url: chunk.web.uri
+              });
+            }
+          });
+        }
+        
+        console.log(`Extracted ${groundingSources.length} real URLs from search results`);
+        
+        // Match stories with actual URLs from grounding data
+        const enhancedStories = stories.map((story, index) => {
+          // Try to find a matching source from grounding data
+          let matchedSource = null;
+          
+          // First, try to find exact title matches
+          matchedSource = groundingSources.find(source => 
+            source.title.toLowerCase().includes(story.headline.toLowerCase().slice(0, 20)) ||
+            story.headline.toLowerCase().includes(source.title.toLowerCase().slice(0, 20))
+          );
+          
+          // If no exact match, try to match by publication name
+          if (!matchedSource && story.source?.name) {
+            matchedSource = groundingSources.find(source => 
+              source.url.toLowerCase().includes(story.source.name.toLowerCase().replace(/\s+/g, '')) ||
+              source.title.toLowerCase().includes(story.source.name.toLowerCase())
+            );
+          }
+          
+          // If still no match, use sources in order (assuming they correspond to stories)
+          if (!matchedSource && groundingSources[index]) {
+            matchedSource = groundingSources[index];
+          }
+          
+          // Update story with real URL if found
+          if (matchedSource) {
+            story.source = story.source || {};
+            story.source.url = matchedSource.url;
+            story.source.urlValidated = true;
+            story.source.groundingTitle = matchedSource.title;
+            console.log(`Matched story "${story.headline}" with real URL: ${matchedSource.url}`);
+          } else {
+            // Fallback to publication homepage if no grounding source found
+            story.source = story.source || {};
+            story.source.url = this.getFallbackUrl(story.source.name);
+            story.source.urlValidated = false;
+            console.warn(`No grounding source found for "${story.headline}", using fallback URL`);
+          }
+          
+          return story;
+        });
+        
+        console.log(`Enhanced ${enhancedStories.length} news stories with real URLs`);
+        return enhancedStories;
       } catch (parseError) {
         console.error('Error parsing news stories response:', parseError);
         console.error('Raw response:', text);
