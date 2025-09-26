@@ -44,6 +44,43 @@ export default function SearchFilterSort({
     setFilters(initialFilters);
   }, [initialFilters]);
 
+  // Helper functions for searching (no useCallback needed as they don't depend on props/state)
+  const searchInDiscussion = (discussion, query, type) => {
+    switch (type) {
+      case 'title':
+        return discussion.title?.toLowerCase().includes(query);
+      case 'content':
+        return discussion.content?.toLowerCase().includes(query);
+      case 'factcheck':
+        return searchInFactCheck(discussion.factCheckResults, query);
+      case 'all':
+      default:
+        return (
+          discussion.title?.toLowerCase().includes(query) ||
+          discussion.content?.toLowerCase().includes(query) ||
+          discussion.authorName?.toLowerCase().includes(query) ||
+          searchInFactCheck(discussion.factCheckResults, query) ||
+          searchInAIPoints(discussion.aiPoints, query)
+        );
+    }
+  };
+
+  const searchInReplies = (replies, query) => {
+    if (!Array.isArray(replies)) return false;
+    
+    const searchRepliesRecursively = (repliesArray, searchQuery) => {
+      return repliesArray.some(reply => 
+        reply.content?.toLowerCase().includes(searchQuery) ||
+        reply.authorName?.toLowerCase().includes(searchQuery) ||
+        searchInFactCheck(reply.factCheckResults, searchQuery) ||
+        searchInAIPoints(reply.aiPoints, searchQuery) ||
+        (reply.children && searchRepliesRecursively(reply.children, searchQuery))
+      );
+    };
+    
+    return searchRepliesRecursively(replies, query);
+  };
+
   // Search function that searches through discussions and replies
   const searchContent = useCallback((discussions, query, type) => {
     if (!query.trim()) return discussions;
@@ -67,43 +104,7 @@ export default function SearchFilterSort({
         searchMatches: getSearchMatches(discussion, normalizedQuery, type)
       };
     });
-  }, [getSearchMatches, searchInDiscussion, searchInReplies]);
-
-  const searchInDiscussion = useCallback((discussion, query, type) => {
-    switch (type) {
-      case 'title':
-        return discussion.title?.toLowerCase().includes(query);
-      case 'content':
-        return discussion.content?.toLowerCase().includes(query);
-      case 'factcheck':
-        return searchInFactCheck(discussion.factCheckResults, query);
-      case 'all':
-      default:
-        return (
-          discussion.title?.toLowerCase().includes(query) ||
-          discussion.content?.toLowerCase().includes(query) ||
-          discussion.authorName?.toLowerCase().includes(query) ||
-          searchInFactCheck(discussion.factCheckResults, query) ||
-          searchInAIPoints(discussion.aiPoints, query)
-        );
-    }
-  }, []);
-
-  const searchInReplies = useCallback((replies, query) => {
-    if (!Array.isArray(replies)) return false;
-    
-    const searchRepliesRecursively = (repliesArray, searchQuery) => {
-      return repliesArray.some(reply => 
-        reply.content?.toLowerCase().includes(searchQuery) ||
-        reply.authorName?.toLowerCase().includes(searchQuery) ||
-        searchInFactCheck(reply.factCheckResults, searchQuery) ||
-        searchInAIPoints(reply.aiPoints, searchQuery) ||
-        (reply.children && searchRepliesRecursively(reply.children, searchQuery))
-      );
-    };
-    
-    return searchRepliesRecursively(replies, query);
-  }, []);
+  }, [getSearchMatches]);
 
   const searchInFactCheck = (factCheckResults, query) => {
     if (!factCheckResults || !Array.isArray(factCheckResults.claims)) return false;
@@ -130,6 +131,31 @@ export default function SearchFilterSort({
       point.text?.toLowerCase().includes(query) ||
       point.type?.toLowerCase().includes(query)
     );
+  };
+
+  const getReplyMatches = (replies, query) => {
+    if (!Array.isArray(replies)) return [];
+    
+    const getMatches = (repliesArray, searchQuery) => {
+      return repliesArray.map(reply => ({
+        id: reply.id,
+        matches: {
+          content: reply.content?.toLowerCase().includes(searchQuery),
+          author: reply.authorName?.toLowerCase().includes(searchQuery),
+          factCheck: searchInFactCheck(reply.factCheckResults, searchQuery),
+          aiPoints: searchInAIPoints(reply.aiPoints, searchQuery)
+        },
+        children: getMatches(reply.children || [], searchQuery)
+      })).filter(replyMatch => 
+        replyMatch.matches.content || 
+        replyMatch.matches.author || 
+        replyMatch.matches.factCheck || 
+        replyMatch.matches.aiPoints ||
+        replyMatch.children.length > 0
+      );
+    };
+    
+    return getMatches(replies, query);
   };
 
   const getSearchMatches = useCallback((discussion, query, type) => {
@@ -161,31 +187,6 @@ export default function SearchFilterSort({
     }
 
     return matches;
-  }, [getReplyMatches]);
-
-  const getReplyMatches = useCallback((replies, query) => {
-    if (!Array.isArray(replies)) return [];
-    
-    const getMatches = (repliesArray, searchQuery) => {
-      return repliesArray.map(reply => ({
-        id: reply.id,
-        matches: {
-          content: reply.content?.toLowerCase().includes(searchQuery),
-          author: reply.authorName?.toLowerCase().includes(searchQuery),
-          factCheck: searchInFactCheck(reply.factCheckResults, searchQuery),
-          aiPoints: searchInAIPoints(reply.aiPoints, searchQuery)
-        },
-        children: getMatches(reply.children || [], searchQuery)
-      })).filter(replyMatch => 
-        replyMatch.matches.content || 
-        replyMatch.matches.author || 
-        replyMatch.matches.factCheck || 
-        replyMatch.matches.aiPoints ||
-        replyMatch.children.length > 0
-      );
-    };
-    
-    return getMatches(replies, query);
   }, []);
 
   // Filter function
@@ -306,7 +307,7 @@ export default function SearchFilterSort({
     score += Math.log(1 + (discussion.replyCount || 0)) * 0.4;
     
     return score;
-  }, [searchInReplies]);
+  }, []);
 
   // Memoize processed discussions to avoid recalculation and infinite loops
   const processedDiscussions = useMemo(() => {
