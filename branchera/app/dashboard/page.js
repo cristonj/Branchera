@@ -325,28 +325,24 @@ export default function DashboardPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {hotDiscussions.map((discussion, index) => (
-                      <div key={discussion.id} className="relative">
-                        <div className="absolute left-3 top-3 z-10 text-sm font-bold text-gray-400 bg-white px-2 py-1 rounded shadow-sm">
-                          #{index + 1}
-                        </div>
-                        <DiscussionItem
-                          discussion={discussion}
-                          searchQuery=""
-                          onDiscussionUpdate={handleDiscussionUpdate}
-                          onReplyAdded={handleReplyAdded}
-                          expandedDiscussions={expandedDiscussions}
-                          setExpandedDiscussions={setExpandedDiscussions}
-                          expandedReplies={expandedReplies}
-                          setExpandedReplies={setExpandedReplies}
-                          expandedAIPoints={expandedAIPoints}
-                          setExpandedAIPoints={setExpandedAIPoints}
-                          collectedPoints={collectedPoints}
-                          pointCounts={pointCounts}
-                          refreshPointsData={refreshPointsData}
-                          showCompactView={true}
-                        />
-                      </div>
+                    {hotDiscussions.map((discussion) => (
+                      <DiscussionItem
+                        key={discussion.id}
+                        discussion={discussion}
+                        searchQuery=""
+                        onDiscussionUpdate={handleDiscussionUpdate}
+                        onReplyAdded={handleReplyAdded}
+                        expandedDiscussions={expandedDiscussions}
+                        setExpandedDiscussions={setExpandedDiscussions}
+                        expandedReplies={expandedReplies}
+                        setExpandedReplies={setExpandedReplies}
+                        expandedAIPoints={expandedAIPoints}
+                        setExpandedAIPoints={setExpandedAIPoints}
+                        collectedPoints={collectedPoints}
+                        pointCounts={pointCounts}
+                        refreshPointsData={refreshPointsData}
+                        showCompactView={true}
+                      />
                     ))}
                   </div>
                 )}
