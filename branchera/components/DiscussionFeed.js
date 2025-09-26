@@ -312,10 +312,14 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   }, []);
 
 
-  // Initialize filtered discussions when discussions change
+  // Initialize filtered discussions when discussions change, but preserve search results
   useEffect(() => {
-    setFilteredDiscussions(discussions);
-  }, [discussions]);
+    // Only reset to show all discussions if there's no active search or filters
+    if (!searchQuery.trim() && !isUserSearching) {
+      setFilteredDiscussions(discussions);
+    }
+    // If there is an active search, let the SearchFilterSort component handle the filtering
+  }, [discussions, searchQuery, isUserSearching]);
 
   // Handle search query changes and manage searching state
   const handleSearchChange = useCallback((query) => {
