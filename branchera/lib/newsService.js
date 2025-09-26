@@ -79,6 +79,7 @@ For each story, provide:
 - A brief summary (2-3 sentences)
 - The main controversy or discussion points
 - Key stakeholders or perspectives involved
+- CRITICAL: Source information including publication name and URL
 
 Return ONLY a valid JSON array in this format:
 [
@@ -87,11 +88,22 @@ Return ONLY a valid JSON array in this format:
     "summary": "Brief 2-3 sentence summary of the story",
     "discussionPoints": ["Point 1 that people debate", "Point 2 that creates discussion", "Point 3 with different perspectives"],
     "stakeholders": ["Group 1", "Group 2", "Group 3"],
-    "category": "politics|technology|science|economics|social|international|environment|other"
+    "category": "politics|technology|science|economics|social|international|environment|other",
+    "source": {
+      "name": "Publication Name (e.g., Reuters, BBC, Associated Press)",
+      "url": "https://example.com/full-article-url",
+      "publishedAt": "2024-01-15T10:30:00Z"
+    }
   }
 ]
 
-Make sure all stories are current, factual, and from reliable sources. Do not include speculation or unverified claims.`;
+CRITICAL REQUIREMENTS:
+- ALWAYS include complete source information with working URLs
+- Use only reputable, well-known news sources (Reuters, AP, BBC, CNN, NPR, etc.)
+- Ensure URLs are real and accessible
+- Include publication timestamp when available
+- Make sure all stories are current, factual, and from reliable sources
+- Do not include speculation or unverified claims`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -196,36 +208,41 @@ Headline: ${story.headline}
 Summary: ${story.summary}
 Discussion Points: ${story.discussionPoints.join(', ')}
 Category: ${story.category}
+Source: ${story.source?.name || 'Unknown'} ${story.source?.url ? `(${story.source.url})` : ''}
 
 Your task:
 1. Pick ONE specific, debatable aspect of this story
 2. Take a clear position in 2-3 sentences
 3. Give ONE strong reason supporting your position
 4. End with a direct question that invites challenge
+5. ALWAYS include a source attribution at the end
 
 STRICT REQUIREMENTS:
-- MAXIMUM 150 words total
+- MAXIMUM 150 words total (excluding source attribution)
 - Be DIRECT and SPECIFIC (no fluff or filler)
 - Focus on ONE precise claim, not multiple issues
 - Use active voice and short sentences
 - Write in first person ("I think", "I believe")
 - Make ONE clear argument, not several weak ones
+- MUST end with source attribution: "Source: [Publication] - [URL]"
 
 BAD example (too long, vague):
 "This complex issue has many facets and various stakeholders have different perspectives on the matter, which creates an interesting dynamic that we should all consider carefully..."
 
-GOOD example (concise, specific):
-"I think this policy will backfire. Small businesses can't absorb these costs without laying off workers - we saw this exact pattern in Seattle in 2019. Are supporters ignoring the employment data, or do they think this time will be different?"
+GOOD example (concise, specific with source):
+"I think this policy will backfire. Small businesses can't absorb these costs without laying off workers - we saw this exact pattern in Seattle in 2019. Are supporters ignoring the employment data, or do they think this time will be different?
+
+Source: Reuters - https://reuters.com/business/policy-analysis-2024"
 
 Return ONLY a valid JSON object in this format:
 {
   "title": "Direct title stating your position (under 60 characters)",
-  "content": "Your concise post (under 150 words, 2-4 short paragraphs max)",
+  "content": "Your concise post (under 150 words, 2-4 short paragraphs max) ending with 'Source: [Publication] - [URL]'",
   "stance": "One sentence describing your position",
   "category": "${story.category}"
 }
 
-Make it punchy, specific, and debate-worthy. Cut all unnecessary words.`;
+Make it punchy, specific, and debate-worthy. ALWAYS include the source attribution.`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -291,7 +308,12 @@ Make it punchy, specific, and debate-worthy. Cut all unnecessary words.`;
             headline: randomStory.headline,
             summary: randomStory.summary,
             category: randomStory.category,
-            stance: post.stance
+            stance: post.stance,
+            source: randomStory.source || {
+              name: 'News Source',
+              url: null,
+              publishedAt: null
+            }
           },
           generatedAt: new Date().toISOString()
         }
