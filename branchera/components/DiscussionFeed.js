@@ -14,6 +14,7 @@ import EditDiscussionForm from './EditDiscussionForm';
 import { AIService } from '@/lib/aiService';
 import { usePolling } from '@/hooks/usePolling';
 import { REALTIME_CONFIG } from '@/lib/realtimeConfig';
+import { NewsService } from '@/lib/newsService';
 
 export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const [discussions, setDiscussions] = useState([]);
@@ -34,6 +35,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const [currentFilters, setCurrentFilters] = useState({
     hasReplies: false,
     hasFactCheck: false,
+    showNewsOnly: false,
     dateRange: 'all',
     author: '',
     minLikes: 0,
@@ -46,7 +48,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const searchTimeoutRef = useRef(null);
   
   const { updateDocument } = useFirestore();
-  const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint, getUserPoints, getPointCounts } = useDatabase();
+  const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint, getUserPoints, getPointCounts, createDiscussion } = useDatabase();
   const { user } = useAuth();
 
   const loadCollectedPoints = useCallback(async () => {
@@ -105,6 +107,12 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
           generateFactCheckForDiscussion(discussion);
         }
       });
+      
+      // Check if we should create an auto-news post (non-blocking, after page loads)
+      setTimeout(() => {
+        checkAndCreateNewsPost(discussionsData);
+      }, 100);
+      
     } catch (error) {
       console.error('Error loading discussions:', error);
       // Set empty array to prevent crashes
@@ -113,6 +121,54 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       setLoading(false);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Check if we should create a news post and create one if needed (non-blocking)
+  const checkAndCreateNewsPost = useCallback(async (discussionsData) => {
+    // Wrap everything in a try-catch to ensure this never blocks the UI
+    try {
+      console.log('Checking if we should create an AI news post...');
+      
+      // Only check if we have user context (don't create posts for anonymous users)
+      if (!user) {
+        console.log('No user logged in, skipping news post check');
+        return;
+      }
+      
+      // Add a timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('News post creation timeout')), 30000)
+      );
+      
+      const shouldCreatePromise = NewsService.shouldCreateNewsPost(discussionsData);
+      
+      const shouldCreate = await Promise.race([shouldCreatePromise, timeoutPromise]);
+      
+      if (shouldCreate) {
+        console.log('Creating AI news post...');
+        
+        // Create news post with timeout protection
+        const createNewsPromise = NewsService.createNewsDiscussion(createDiscussion);
+        const newsDiscussion = await Promise.race([createNewsPromise, timeoutPromise]);
+        
+        if (newsDiscussion) {
+          console.log('AI news post created successfully:', newsDiscussion.title);
+          
+          // Add the new discussion to the current list
+          setDiscussions(prev => [newsDiscussion, ...prev]);
+          
+          // Optional: refresh discussions after a delay (don't await this)
+          setTimeout(() => {
+            loadDiscussions().catch(err => console.error('Error refreshing after news post:', err));
+          }, 2000);
+        }
+      } else {
+        console.log('No need to create AI news post at this time');
+      }
+    } catch (error) {
+      console.error('Error in news post creation (non-blocking):', error);
+      // This is intentionally non-blocking - errors here should never affect the main UI
+    }
+  }, [user, createDiscussion, loadDiscussions]);
 
   useEffect(() => {
     loadDiscussions();
@@ -855,6 +911,41 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                     <SearchHighlight text={discussion.content} searchQuery={searchQuery} />
                   </p>
                 </div>
+
+                {/* Tags */}
+                {discussion.tags && discussion.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {discussion.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className={`inline-block px-3 py-1 text-xs rounded-full font-medium ${
+                          tag === 'News' 
+                            ? 'bg-red-100 text-red-800 border border-red-200' 
+                            : 'bg-gray-100 text-gray-700 border border-gray-200'
+                        }`}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* AI Generated Indicator */}
+                {discussion.metadata?.isAIGenerated && (
+                  <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center gap-2 text-sm">
+                      <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                      <span className="text-blue-800 font-medium">AI-Generated Discussion</span>
+                      {discussion.metadata.newsStory?.stance && (
+                        <span className="text-blue-700">
+                          • Stance: {discussion.metadata.newsStory.stance}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Fact Check Results */}
                 {discussion.factCheckResults && (
