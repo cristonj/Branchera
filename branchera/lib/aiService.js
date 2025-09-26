@@ -471,7 +471,31 @@ Do not include any explanation or additional text, just the JSON object.`;
       return judgement;
     } catch (error) {
       console.error('Error judging rebuttal:', error);
-      throw error;
+      
+      // Return a safe fallback judgement to prevent crashes
+      const fallbackJudgement = {
+        pointsEarned: 0,
+        qualityScore: 'none',
+        isFactual: false,
+        isCoherent: true, // Assume basic coherence if we got this far
+        isRelevant: true, // Assume relevance if replying to a point
+        hasEvidence: false,
+        isConstructive: true,
+        explanation: 'Unable to evaluate this rebuttal due to a technical issue. Your reply has been submitted successfully. Please try replying again to earn points.',
+        factualConcerns: ['Technical evaluation error - please try again'],
+        strengths: ['Your reply was submitted successfully'],
+        improvements: ['Try submitting your rebuttal again for point evaluation'],
+        grounding: {
+          searchPerformed: false,
+          searchQueries: [],
+          sources: [],
+          searchEntryPoint: null,
+          groundingSupports: []
+        }
+      };
+      
+      console.log('Returning fallback judgement due to error:', fallbackJudgement);
+      return fallbackJudgement;
     }
   }
 
@@ -565,18 +589,72 @@ Do not include any explanation or additional text, just the JSON object.`;
       // Clean up the response to extract just the JSON
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
+        console.error('AI response did not contain JSON object:', text);
         throw new Error('No JSON object found in response');
       }
       
-      const judgement = JSON.parse(jsonMatch[0]);
+      let judgement;
+      try {
+        judgement = JSON.parse(jsonMatch[0]);
+      } catch (parseError) {
+        console.error('Failed to parse JSON from AI response:', jsonMatch[0]);
+        throw new Error(`JSON parsing failed: ${parseError.message}`);
+      }
       
-      // Validate the structure
-      if (typeof judgement.pointsEarned !== 'number' || !judgement.qualityScore) {
-        throw new Error('Invalid judgement structure');
+      // Validate and sanitize the structure with defaults
+      if (!judgement || typeof judgement !== 'object') {
+        console.error('Invalid judgement object:', judgement);
+        throw new Error('Invalid judgement structure - not an object');
+      }
+      
+      // Ensure all required properties exist with safe defaults
+      const safeJudgement = {
+        pointsEarned: 0,
+        qualityScore: 'none',
+        isFactual: false,
+        isCoherent: false,
+        isRelevant: false,
+        hasEvidence: false,
+        isConstructive: false,
+        explanation: 'No explanation provided',
+        factualConcerns: [],
+        strengths: [],
+        improvements: [],
+        ...judgement
+      };
+      
+      // Validate and fix pointsEarned
+      if (typeof safeJudgement.pointsEarned !== 'number' || isNaN(safeJudgement.pointsEarned)) {
+        console.warn('Invalid pointsEarned value, defaulting to 0:', safeJudgement.pointsEarned);
+        safeJudgement.pointsEarned = 0;
       }
       
       // Ensure points are within valid range
-      judgement.pointsEarned = Math.max(0, Math.min(3, judgement.pointsEarned));
+      safeJudgement.pointsEarned = Math.max(0, Math.min(3, Math.floor(safeJudgement.pointsEarned)));
+      
+      // Validate qualityScore
+      const validQualityScores = ['exceptional', 'good', 'basic', 'none'];
+      if (!validQualityScores.includes(safeJudgement.qualityScore)) {
+        console.warn('Invalid qualityScore, defaulting to none:', safeJudgement.qualityScore);
+        safeJudgement.qualityScore = 'none';
+      }
+      
+      // Ensure explanation is a string
+      if (typeof safeJudgement.explanation !== 'string') {
+        console.warn('Invalid explanation type, converting to string:', safeJudgement.explanation);
+        safeJudgement.explanation = String(safeJudgement.explanation || 'No explanation provided');
+      }
+      
+      // Ensure arrays are actually arrays
+      ['factualConcerns', 'strengths', 'improvements'].forEach(field => {
+        if (!Array.isArray(safeJudgement[field])) {
+          console.warn(`Invalid ${field} type, defaulting to empty array:`, safeJudgement[field]);
+          safeJudgement[field] = [];
+        }
+      });
+      
+      // Use the sanitized judgement
+      judgement = safeJudgement;
       
       // If we have grounding metadata, this judgement was made with Google Search
       if (groundingMetadata) {

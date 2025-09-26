@@ -103,58 +103,114 @@ export default function TextReplyForm({
             setIsJudging(true);
             console.log('Judging rebuttal for points...');
             
-            // Get AI judgement on the rebuttal
-            const judgement = await AIService.judgeRebuttal(
-              selectedPoint.text,
-              replyData.content,
-              parentFactCheck,
-              replyFactCheck,
-              `${discussionTitle}: ${discussionContent}`
-            );
-            
-            console.log('AI judgement result:', judgement);
-            
-            if (judgement.pointsEarned > 0) {
-              // Create user point record
-              const pointData = {
-                userId: user.uid,
-                discussionId: discussionId,
-                discussionTitle: discussionTitle,
-                originalPoint: selectedPoint.text,
-                originalPointId: selectedPoint.id,
-                rebuttal: replyData.content,
-                pointsEarned: judgement.pointsEarned,
-                qualityScore: judgement.qualityScore,
-                judgeExplanation: judgement.explanation,
-                isFactual: judgement.isFactual,
-                isCoherent: judgement.isCoherent
-              };
+            try {
+              // Get AI judgement on the rebuttal
+              const judgement = await AIService.judgeRebuttal(
+                selectedPoint.text,
+                replyData.content,
+                parentFactCheck,
+                replyFactCheck,
+                `${discussionTitle}: ${discussionContent}`
+              );
               
-              await createUserPoint(pointData);
-              console.log('User point created successfully');
+              console.log('AI judgement result:', judgement);
               
-              // Refresh points data in parent component
-              if (onPointsEarned) {
-                onPointsEarned();
+              // Validate judgement object before using it
+              if (!judgement || typeof judgement !== 'object') {
+                throw new Error('Invalid judgement response from AI');
               }
               
-              // Show both animations and toast notification for immediate feedback
-              setPointsEarned(judgement.pointsEarned);
-              setQualityScore(judgement.qualityScore);
-              setShowPointsAnimation(true);
+              // Ensure required properties exist with defaults
+              const safeJudgement = {
+                pointsEarned: judgement.pointsEarned || 0,
+                qualityScore: judgement.qualityScore || 'none',
+                explanation: judgement.explanation || 'No explanation provided',
+                isFactual: judgement.isFactual || false,
+                isCoherent: judgement.isCoherent || false,
+                ...judgement
+              };
               
-              // Show immediate toast notification
-              showPointsToast(
-                judgement.pointsEarned, 
-                judgement.qualityScore, 
-                judgement.explanation
-              );
-            } else {
-              // Show feedback even when no points are earned
-              showSuccessToast('Reply submitted! Keep trying for better rebuttals to earn points.', 3000);
+              if (safeJudgement.pointsEarned > 0) {
+                console.log('Creating user point record...');
+                
+                // Create user point record
+                const pointData = {
+                  userId: user.uid,
+                  discussionId: discussionId,
+                  discussionTitle: discussionTitle,
+                  originalPoint: selectedPoint.text,
+                  originalPointId: selectedPoint.id,
+                  rebuttal: replyData.content,
+                  pointsEarned: safeJudgement.pointsEarned,
+                  qualityScore: safeJudgement.qualityScore,
+                  judgeExplanation: safeJudgement.explanation,
+                  isFactual: safeJudgement.isFactual,
+                  isCoherent: safeJudgement.isCoherent
+                };
+                
+                await createUserPoint(pointData);
+                console.log('User point created successfully');
+                
+                // Refresh points data in parent component
+                if (onPointsEarned && typeof onPointsEarned === 'function') {
+                  try {
+                    onPointsEarned();
+                  } catch (refreshError) {
+                    console.error('Error refreshing points data:', refreshError);
+                    // Don't crash if refresh fails
+                  }
+                }
+                
+                // Show both animations and toast notification for immediate feedback
+                setPointsEarned(safeJudgement.pointsEarned);
+                setQualityScore(safeJudgement.qualityScore);
+                setShowPointsAnimation(true);
+                
+                // Show immediate toast notification with safe error handling
+                try {
+                  if (showPointsToast && typeof showPointsToast === 'function') {
+                    showPointsToast(
+                      safeJudgement.pointsEarned, 
+                      safeJudgement.qualityScore, 
+                      safeJudgement.explanation
+                    );
+                  }
+                } catch (toastError) {
+                  console.error('Error showing points toast:', toastError);
+                  // Fallback to console log if toast fails
+                  console.log(`Points earned: ${safeJudgement.pointsEarned} (${safeJudgement.qualityScore})`);
+                }
+              } else {
+                // Show feedback even when no points are earned
+                try {
+                  if (showSuccessToast && typeof showSuccessToast === 'function') {
+                    showSuccessToast('Reply submitted! Keep trying for better rebuttals to earn points.', 3000);
+                  }
+                } catch (toastError) {
+                  console.error('Error showing success toast:', toastError);
+                }
+              }
+            } catch (judgementError) {
+              console.error('Error during AI judgement:', judgementError);
+              // Show user-friendly error message
+              try {
+                if (showErrorToast && typeof showErrorToast === 'function') {
+                  showErrorToast('Reply submitted successfully, but point evaluation failed. Please try again.');
+                }
+              } catch (toastError) {
+                console.error('Error showing error toast:', toastError);
+              }
             }
           } else {
             console.log('User has already earned points for this discussion');
+            // Show info toast for already earned points
+            try {
+              if (showSuccessToast && typeof showSuccessToast === 'function') {
+                showSuccessToast('Reply submitted! You can only earn points once per discussion.', 3000);
+              }
+            } catch (toastError) {
+              console.error('Error showing info toast:', toastError);
+            }
           }
         } catch (judgingError) {
           console.error('Error judging rebuttal:', judgingError);
