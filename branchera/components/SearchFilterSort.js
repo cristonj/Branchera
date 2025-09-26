@@ -82,7 +82,7 @@ export default function SearchFilterSort({
   };
 
   // Search function that searches through discussions and replies
-  const searchContent = (discussions, query, type) => {
+  const searchContent = useCallback((discussions, query, type) => {
     if (!query.trim()) return discussions;
 
     const normalizedQuery = query.toLowerCase().trim();
@@ -104,7 +104,8 @@ export default function SearchFilterSort({
         searchMatches: getSearchMatches(discussion, normalizedQuery, type)
       };
     });
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const searchInFactCheck = (factCheckResults, query) => {
     if (!factCheckResults || !Array.isArray(factCheckResults.claims)) return false;
@@ -241,7 +242,7 @@ export default function SearchFilterSort({
   }, []);
 
   // Sort function
-  const sortDiscussions = (discussions, sortBy, query = '') => {
+  const sortDiscussions = useCallback((discussions, sortBy, query = '') => {
     const sorted = [...discussions].sort((a, b) => {
       switch (sortBy) {
         case 'oldest':
@@ -262,7 +263,8 @@ export default function SearchFilterSort({
     });
 
     return sorted;
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const calculateRelevanceScore = (discussion, query) => {
     let score = 0;
