@@ -152,20 +152,23 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       if (shouldCreate) {
         console.log('Creating AI news post...');
         
-        // Create news post with timeout protection
-        const createNewsPromise = NewsService.createNewsDiscussion(createDiscussion);
+        // Create news post with timeout protection and immediate AI generation
+        const createNewsPromise = NewsService.createNewsDiscussion(
+          createDiscussion, 
+          updateAIPoints, 
+          updateFactCheckResults
+        );
         const newsDiscussion = await Promise.race([createNewsPromise, timeoutPromise]);
         
         if (newsDiscussion) {
           console.log('AI news post created successfully:', newsDiscussion.title);
+          console.log('News discussion includes AI points:', newsDiscussion.aiPoints?.length || 0);
+          console.log('News discussion includes fact-check:', !!newsDiscussion.factCheckResults);
           
-          // Add the new discussion to the current list
+          // Add the new discussion to the current list with all AI-generated content
           setDiscussions(prev => [newsDiscussion, ...prev]);
           
-          // Optional: refresh discussions after a delay (don't await this)
-          setTimeout(() => {
-            loadDiscussions().catch(err => console.error('Error refreshing after news post:', err));
-          }, 2000);
+          // No need to refresh since we already have the complete discussion with AI content
         }
       } else {
         console.log('No need to create AI news post at this time');
@@ -174,7 +177,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       console.error('Error in news post creation (non-blocking):', error);
       // This is intentionally non-blocking - errors here should never affect the main UI
     }
-  }, [user, createDiscussion, loadDiscussions]);
+  }, [user, createDiscussion, loadDiscussions, updateAIPoints, updateFactCheckResults]);
 
   useEffect(() => {
     loadDiscussions();
@@ -326,8 +329,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   // Generate AI points for a discussion
   const generateAIPointsForDiscussion = async (discussion) => {
     try {
-      if (discussion.aiPointsGenerated || (discussion.aiPoints && discussion.aiPoints.length > 0)) {
-        return; // Already has points
+      // Skip AI-generated discussions (they should already have points) and discussions that already have points
+      if (discussion.metadata?.isAIGenerated || discussion.aiPointsGenerated || (discussion.aiPoints && discussion.aiPoints.length > 0)) {
+        return; // Already has points or is AI-generated
       }
 
       console.log('Generating AI points for discussion:', discussion.id);
@@ -354,8 +358,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   // Generate fact-check results for a discussion based on its AI points
   const generateFactCheckForDiscussion = async (discussion) => {
     try {
-      if (discussion.factCheckGenerated || discussion.factCheckResults) {
-        return; // Already has fact-check results
+      // Skip AI-generated discussions (they should already have fact-check) and discussions that already have results
+      if (discussion.metadata?.isAIGenerated || discussion.factCheckGenerated || discussion.factCheckResults) {
+        return; // Already has fact-check results or is AI-generated
       }
 
       console.log('Generating fact-check results for discussion:', discussion.id);

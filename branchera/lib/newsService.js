@@ -258,7 +258,7 @@ Make it punchy, specific, and debate-worthy. Cut all unnecessary words.`;
   }
 
   // Create a news discussion post
-  static async createNewsDiscussion(createDiscussion) {
+  static async createNewsDiscussion(createDiscussion, updateAIPoints = null, updateFactCheckResults = null) {
     try {
       console.log('Creating AI news discussion...');
       
@@ -299,6 +299,44 @@ Make it punchy, specific, and debate-worthy. Cut all unnecessary words.`;
       
       const discussion = await createDiscussion(discussionData);
       console.log('AI news discussion created successfully:', discussion.id);
+      
+      // Import AIService to generate points and fact-check results immediately
+      const { AIService } = await import('./aiService');
+      
+      try {
+        // Generate AI points immediately for the news post
+        console.log('Generating AI points for news discussion...');
+        const aiPoints = await AIService.generatePoints(post.content, post.title);
+        
+        // Update the discussion with AI points in database
+        if (aiPoints && aiPoints.length > 0) {
+          if (updateAIPoints) {
+            await updateAIPoints(discussion.id, aiPoints);
+            console.log('AI points saved to database for news discussion');
+          }
+          discussion.aiPoints = aiPoints;
+          discussion.aiPointsGenerated = true;
+          console.log('AI points generated for news discussion:', aiPoints.length);
+        }
+        
+        // Generate fact-check results immediately
+        console.log('Generating fact-check results for news discussion...');
+        const factCheckResults = await AIService.factCheckPoints(aiPoints, post.title);
+        
+        if (factCheckResults) {
+          if (updateFactCheckResults) {
+            await updateFactCheckResults(discussion.id, factCheckResults);
+            console.log('Fact-check results saved to database for news discussion');
+          }
+          discussion.factCheckResults = factCheckResults;
+          discussion.factCheckGenerated = true;
+          console.log('Fact-check results generated for news discussion');
+        }
+        
+      } catch (aiError) {
+        console.error('Error generating AI content for news discussion:', aiError);
+        // Don't fail the news creation if AI generation fails
+      }
       
       return discussion;
     } catch (error) {
