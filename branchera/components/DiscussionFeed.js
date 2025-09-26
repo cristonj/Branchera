@@ -371,9 +371,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   // Generate AI points for a discussion
   const generateAIPointsForDiscussion = async (discussion) => {
     try {
-      // Skip AI-generated discussions (they should already have points) and discussions that already have points
-      if (discussion.metadata?.isAIGenerated || discussion.aiPointsGenerated || (discussion.aiPoints && discussion.aiPoints.length > 0)) {
-        return; // Already has points or is AI-generated
+      // Skip discussions that already have points
+      if (discussion.aiPointsGenerated || (discussion.aiPoints && discussion.aiPoints.length > 0)) {
+        return; // Already has points
       }
 
       console.log('Generating AI points for discussion:', discussion.id);
@@ -400,9 +400,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   // Generate fact-check results for a discussion based on its AI points
   const generateFactCheckForDiscussion = async (discussion) => {
     try {
-      // Skip AI-generated discussions (they should already have fact-check) and discussions that already have results
-      if (discussion.metadata?.isAIGenerated || discussion.factCheckGenerated || discussion.factCheckResults) {
-        return; // Already has fact-check results or is AI-generated
+      // Skip discussions that already have fact-check results
+      if (discussion.factCheckGenerated || discussion.factCheckResults) {
+        return; // Already has fact-check results
       }
 
       console.log('Generating fact-check results for discussion:', discussion.id);

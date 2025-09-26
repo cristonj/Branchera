@@ -547,15 +547,14 @@ Make it punchy, specific, and debate-worthy. The source information will be disp
         console.log('Generating fact-check results for news discussion...');
         const factCheckResults = await AIService.factCheckPoints(aiPoints, post.title);
         
-        if (factCheckResults) {
-          if (updateFactCheckResults) {
-            await updateFactCheckResults(discussion.id, factCheckResults);
-            console.log('Fact-check results saved to database for news discussion');
-          }
-          discussion.factCheckResults = factCheckResults;
-          discussion.factCheckGenerated = true;
-          console.log('Fact-check results generated for news discussion');
+        // Always save fact check results, even if empty, and mark as generated
+        if (updateFactCheckResults) {
+          await updateFactCheckResults(discussion.id, factCheckResults);
+          console.log('Fact-check results saved to database for news discussion');
         }
+        discussion.factCheckResults = factCheckResults;
+        discussion.factCheckGenerated = true;
+        console.log('Fact-check results generated for news discussion');
         
       } catch (aiError) {
         console.error('Error generating AI content for news discussion:', aiError);
