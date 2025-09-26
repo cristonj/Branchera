@@ -19,8 +19,7 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        
-        <div className="relative flex flex-col items-center justify-center min-h-screen p-4 pt-16">
+        <div className="relative flex flex-col items-center justify-center min-h-screen p-4 pt-8">
           <main className="text-center max-w-5xl w-full">
             {/* Brand Badge */}
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-black text-white text-sm font-medium mb-6">

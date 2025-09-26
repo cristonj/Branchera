@@ -14,9 +14,8 @@ export default function AboutPage() {
       
       {/* Main Content */}
       <div className="relative overflow-hidden">
-        <div className="relative flex flex-col items-center justify-center min-h-screen p-4 pt-20">
+        <div className="relative flex flex-col items-center justify-center min-h-screen p-4 pt-8">
           <main className="text-center max-w-6xl w-full">
-            
             {/* Hero Section */}
             <div className="mb-20">
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-black text-white text-sm font-medium mb-8">
