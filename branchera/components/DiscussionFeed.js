@@ -98,9 +98,6 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       });
       setDiscussions(discussionsData);
       
-      // Check if we should create an auto-news post
-      await checkAndCreateNewsPost(discussionsData);
-      
       // Generate AI points and fact-check results for older discussions that don't have them
       discussionsData.forEach(discussion => {
         if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
@@ -110,6 +107,12 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
           generateFactCheckForDiscussion(discussion);
         }
       });
+      
+      // Check if we should create an auto-news post (non-blocking, after page loads)
+      setTimeout(() => {
+        checkAndCreateNewsPost(discussionsData);
+      }, 100);
+      
     } catch (error) {
       console.error('Error loading discussions:', error);
       // Set empty array to prevent crashes
@@ -119,8 +122,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Check if we should create a news post and create one if needed
+  // Check if we should create a news post and create one if needed (non-blocking)
   const checkAndCreateNewsPost = useCallback(async (discussionsData) => {
+    // Wrap everything in a try-catch to ensure this never blocks the UI
     try {
       console.log('Checking if we should create an AI news post...');
       
@@ -130,37 +134,41 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         return;
       }
       
-      const shouldCreate = await NewsService.shouldCreateNewsPost(discussionsData);
+      // Add a timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('News post creation timeout')), 30000)
+      );
+      
+      const shouldCreatePromise = NewsService.shouldCreateNewsPost(discussionsData);
+      
+      const shouldCreate = await Promise.race([shouldCreatePromise, timeoutPromise]);
       
       if (shouldCreate) {
         console.log('Creating AI news post...');
         
-        try {
-          const newsDiscussion = await NewsService.createNewsDiscussion(createDiscussion);
+        // Create news post with timeout protection
+        const createNewsPromise = NewsService.createNewsDiscussion(createDiscussion);
+        const newsDiscussion = await Promise.race([createNewsPromise, timeoutPromise]);
+        
+        if (newsDiscussion) {
+          console.log('AI news post created successfully:', newsDiscussion.title);
           
-          if (newsDiscussion) {
-            console.log('AI news post created successfully:', newsDiscussion.title);
-            
-            // Add the new discussion to the current list
-            setDiscussions(prev => [newsDiscussion, ...prev]);
-            
-            // Refresh discussions to get the updated list
-            setTimeout(() => {
-              loadDiscussions();
-            }, 1000);
-          }
-        } catch (createError) {
-          console.error('Error creating AI news post:', createError);
-          // Don't throw, just log the error to avoid breaking the app
+          // Add the new discussion to the current list
+          setDiscussions(prev => [newsDiscussion, ...prev]);
+          
+          // Optional: refresh discussions after a delay (don't await this)
+          setTimeout(() => {
+            loadDiscussions().catch(err => console.error('Error refreshing after news post:', err));
+          }, 2000);
         }
       } else {
         console.log('No need to create AI news post at this time');
       }
     } catch (error) {
-      console.error('Error checking for news post creation:', error);
-      // Don't throw, just log the error to avoid breaking the app
+      console.error('Error in news post creation (non-blocking):', error);
+      // This is intentionally non-blocking - errors here should never affect the main UI
     }
-  }, [user, createDiscussion]);
+  }, [user, createDiscussion, loadDiscussions]);
 
   useEffect(() => {
     loadDiscussions();

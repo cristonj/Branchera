@@ -9,9 +9,15 @@ export class NewsService {
     try {
       console.log('Checking if we should create a news post...');
       
+      // Ensure discussions is an array
+      if (!Array.isArray(discussions)) {
+        console.log('No discussions provided, should create news post');
+        return true;
+      }
+      
       // Find the most recent AI-generated news post
       const aiNewsPosts = discussions.filter(d => 
-        d.tags && d.tags.includes('News') && d.authorId === 'ai-news-bot'
+        d && d.tags && Array.isArray(d.tags) && d.tags.includes('News') && d.authorId === 'ai-news-bot'
       );
       
       if (aiNewsPosts.length === 0) {
@@ -20,9 +26,16 @@ export class NewsService {
       }
       
       // Get the most recent AI news post
-      const lastPost = aiNewsPosts.sort((a, b) => 
-        new Date(b.createdAt) - new Date(a.createdAt)
-      )[0];
+      const lastPost = aiNewsPosts.sort((a, b) => {
+        const dateA = new Date(a.createdAt || 0);
+        const dateB = new Date(b.createdAt || 0);
+        return dateB - dateA;
+      })[0];
+      
+      if (!lastPost || !lastPost.createdAt) {
+        console.log('No valid last post found, should create one');
+        return true;
+      }
       
       const lastPostTime = new Date(lastPost.createdAt);
       const now = new Date();
@@ -34,6 +47,7 @@ export class NewsService {
       return minutesDiff >= 15;
     } catch (error) {
       console.error('Error checking if should create news post:', error);
+      // Return false on error to avoid creating posts when there's an issue
       return false;
     }
   }
