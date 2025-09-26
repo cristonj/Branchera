@@ -39,7 +39,7 @@ export default function Home() {
             <div className="max-w-4xl mx-auto mb-8">
               <div className="bg-gray-50 border-l-4 border-black p-6 rounded-r-lg">
                 <p className="text-lg md:text-xl text-gray-800 font-medium italic leading-relaxed">
-                  "What if social media was about maximizing constructive dialogue instead of engagement?"
+                  &ldquo;What if social media was about maximizing constructive dialogue instead of engagement?&rdquo;
                 </p>
                 <p className="text-sm text-gray-600 mt-2">— Our founding mission</p>
               </div>
@@ -48,7 +48,7 @@ export default function Home() {
             <div className="max-w-2xl mx-auto mb-8">
               <div className="bg-black text-white p-4 rounded-lg text-center">
                 <p className="text-lg font-semibold">
-                  "Attack arguments, not people."
+                  &ldquo;Attack arguments, not people.&rdquo;
                 </p>
                 <p className="text-sm text-gray-300 mt-1">The golden rule of constructive discourse</p>
               </div>
@@ -175,7 +175,7 @@ export default function Home() {
                   Coming Soon
                 </h2>
                 <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-                  We're constantly building new features to make constructive dialogue even more powerful and accessible.
+                  We&rsquo;re constantly building new features to make constructive dialogue even more powerful and accessible.
                 </p>
               </div>
               
@@ -351,7 +351,7 @@ export default function Home() {
                 &copy; 2025 Branchera. Building social media that respects your intelligence.
               </p>
               <p className="text-xs text-gray-400">
-                "What if social media was about maximizing constructive dialogue instead of engagement?"
+                &ldquo;What if social media was about maximizing constructive dialogue instead of engagement?&rdquo;
               </p>
             </div>
           </div>
