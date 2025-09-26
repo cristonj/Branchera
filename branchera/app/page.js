@@ -20,58 +20,64 @@ export default function Home() {
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         
-        <div className="relative flex flex-col items-center justify-center min-h-screen p-4 pt-20">
+        <div className="relative flex flex-col items-center justify-center min-h-screen p-4 pt-16">
           <main className="text-center max-w-5xl w-full">
             {/* Brand Badge */}
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-black text-white text-sm font-medium mb-8">
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-black text-white text-sm font-medium mb-6">
               <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
               Open Source • Ad-Free • Always
             </div>
             
-            <h1 className="text-6xl md:text-7xl lg:text-8xl font-bold mb-8 text-black leading-tight">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-black leading-tight">
               Branchera
             </h1>
             
-            <p className="text-xl md:text-2xl lg:text-3xl mb-6 text-gray-700 font-light max-w-4xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl lg:text-2xl mb-8 text-gray-700 font-light max-w-4xl mx-auto leading-relaxed">
               The social app that <span className="font-semibold text-black">gets out of your way</span> — built for constructive dialogue, not endless scrolling
             </p>
-            
-            <div className="max-w-4xl mx-auto mb-8">
-              <div className="bg-gray-50 border-l-4 border-black p-6 rounded-r-lg">
-                <p className="text-lg md:text-xl text-gray-800 font-medium italic leading-relaxed">
-                  &ldquo;What if social media was about maximizing constructive dialogue instead of engagement?&rdquo;
-                </p>
-                <p className="text-sm text-gray-600 mt-2">— Our founding mission</p>
-              </div>
-            </div>
-            
-            <div className="max-w-2xl mx-auto mb-8">
-              <div className="bg-black text-white p-4 rounded-lg text-center">
-                <p className="text-lg font-semibold">
-                  &ldquo;Attack arguments, not people.&rdquo;
-                </p>
-                <p className="text-sm text-gray-300 mt-1">The golden rule of constructive discourse</p>
-              </div>
-            </div>
-            
-            <p className="text-lg md:text-xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Experience AI-powered fact-checking, transparent discussions with smart point extraction, and a community where substance matters more than likes. Forever free, forever open source, forever ad-free.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-20 max-w-lg mx-auto">
+
+            {/* Early CTA */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8 max-w-md mx-auto">
               <Link
                 href="/login"
-                className="flex-1 py-4 px-8 text-center bg-black text-white border-0 hover:bg-black/80 rounded-full transition-all duration-300 font-semibold text-lg"
+                className="flex-1 py-3 px-6 text-center bg-black text-white border-0 hover:bg-black/80 rounded-full transition-all duration-300 font-semibold text-base shadow-lg hover:shadow-xl"
               >
-                Get Started
+                Start Discussion
               </Link>
               <Link
                 href="/login"
-                className="flex-1 py-4 px-8 text-center bg-white text-black border border-black hover:bg-black hover:text-white rounded-full transition-all duration-300 font-semibold text-lg"
+                className="flex-1 py-3 px-6 text-center bg-white text-black border border-black hover:bg-black hover:text-white rounded-full transition-all duration-300 font-semibold text-base"
               >
                 Sign In
               </Link>
             </div>
+
+            <p className="text-xs text-gray-500 mb-8">
+              Free forever • No ads • 
+              <span className="font-medium text-gray-700">Join our growing community</span>
+            </p>
+            
+            <div className="max-w-3xl mx-auto mb-6">
+              <div className="bg-gray-50 border-l-4 border-black p-4 rounded-r-lg">
+                <p className="text-base md:text-lg text-gray-800 font-medium italic leading-relaxed">
+                  &ldquo;What if social media was about maximizing constructive dialogue instead of engagement?&rdquo;
+                </p>
+                <p className="text-xs text-gray-600 mt-2">— Our founding mission</p>
+              </div>
+            </div>
+            
+            <div className="max-w-2xl mx-auto mb-8">
+              <div className="bg-black text-white p-3 rounded-lg text-center">
+                <p className="text-base font-semibold">
+                  &ldquo;Attack arguments, not people.&rdquo;
+                </p>
+                <p className="text-xs text-gray-300 mt-1">The golden rule of constructive discourse</p>
+              </div>
+            </div>
+            
+            <p className="text-base md:text-lg text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
+              Experience AI-powered fact-checking, transparent discussions with smart point extraction, and a community where substance matters more than likes.
+            </p>
 
             {/* Key Features */}
             <div className="mt-24">
@@ -294,7 +300,7 @@ export default function Home() {
                 
                 <p className="text-sm text-gray-500 mt-6">
                   Free account • No credit card required • 
-                  <span className="font-semibold text-gray-700">Be one of the first to</span> have better conversations
+                  <span className="font-semibold text-gray-700">Join our growing community</span> of thoughtful discussers
                 </p>
               </div>
             </div>
