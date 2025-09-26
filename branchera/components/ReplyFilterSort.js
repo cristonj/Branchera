@@ -39,7 +39,7 @@ export default function ReplyFilterSort({
   }, [initialFilters]);
 
   // Helper functions for searching
-  const searchInReply = (reply, query) => {
+  const searchInReply = useCallback((reply, query) => {
     const normalizedQuery = query.toLowerCase().trim();
     return (
       reply.content?.toLowerCase().includes(normalizedQuery) ||
@@ -47,7 +47,7 @@ export default function ReplyFilterSort({
       searchInFactCheck(reply.factCheckResults, normalizedQuery) ||
       searchInAIPoints(reply.aiPoints, normalizedQuery)
     );
-  };
+  }, []);
 
   const searchInFactCheck = (factCheckResults, query) => {
     if (!factCheckResults || !Array.isArray(factCheckResults.claims)) return false;
@@ -199,7 +199,7 @@ export default function ReplyFilterSort({
     return sortRecursively(replies);
   }, [searchQuery, calculateRelevanceScore]);
 
-  const calculateRelevanceScore = (reply, query) => {
+  const calculateRelevanceScore = useCallback((reply, query) => {
     let score = 0;
     const normalizedQuery = query.toLowerCase();
     
@@ -226,7 +226,7 @@ export default function ReplyFilterSort({
     score += Math.log(1 + (reply.views || 0)) * 0.5;
     
     return score;
-  };
+  }, []);
 
   // Memoize processed replies to avoid recalculation
   const processedReplies = useMemo(() => {

@@ -189,7 +189,7 @@ Make sure all stories are current, factual, and from reliable sources. Do not in
       });
 
       const prompt = `
-You are an AI discussion moderator creating an engaging post about this news story. Your goal is to spark thoughtful debate by taking a clear stance on one of the controversial aspects.
+You are an AI discussion moderator creating a CONCISE, focused post about this news story. Your goal is to spark debate with a clear, specific stance.
 
 News Story:
 Headline: ${story.headline}
@@ -198,31 +198,34 @@ Discussion Points: ${story.discussionPoints.join(', ')}
 Category: ${story.category}
 
 Your task:
-1. Pick ONE specific aspect or angle of this story to focus on
-2. Take a clear, defensible position on that aspect (not neutral)
-3. Present 2-3 strong arguments supporting your position
-4. Acknowledge the opposing viewpoint briefly but argue why your position is better
-5. Use facts and logic, but don't be afraid to have an opinion
-6. Write in an engaging, slightly provocative style that encourages discussion
-7. End with a question that invites others to challenge your view
+1. Pick ONE specific, debatable aspect of this story
+2. Take a clear position in 2-3 sentences
+3. Give ONE strong reason supporting your position
+4. End with a direct question that invites challenge
 
-Guidelines:
-- Be factual and cite real information when possible
-- Take a stance that reasonable people could disagree with
-- Don't be inflammatory or offensive
-- Make it clear this is your perspective, not absolute truth
-- Keep it concise but substantive (200-400 words)
-- Write in first person ("I believe", "In my view", etc.)
+STRICT REQUIREMENTS:
+- MAXIMUM 150 words total
+- Be DIRECT and SPECIFIC (no fluff or filler)
+- Focus on ONE precise claim, not multiple issues
+- Use active voice and short sentences
+- Write in first person ("I think", "I believe")
+- Make ONE clear argument, not several weak ones
+
+BAD example (too long, vague):
+"This complex issue has many facets and various stakeholders have different perspectives on the matter, which creates an interesting dynamic that we should all consider carefully..."
+
+GOOD example (concise, specific):
+"I think this policy will backfire. Small businesses can't absorb these costs without laying off workers - we saw this exact pattern in Seattle in 2019. Are supporters ignoring the employment data, or do they think this time will be different?"
 
 Return ONLY a valid JSON object in this format:
 {
-  "title": "Engaging title that hints at your stance",
-  "content": "Your full opinionated post content",
-  "stance": "Brief description of the position you're taking",
+  "title": "Direct title stating your position (under 60 characters)",
+  "content": "Your concise post (under 150 words, 2-4 short paragraphs max)",
+  "stance": "One sentence describing your position",
   "category": "${story.category}"
 }
 
-Make sure your post is engaging, well-reasoned, and likely to generate thoughtful replies.`;
+Make it punchy, specific, and debate-worthy. Cut all unnecessary words.`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
