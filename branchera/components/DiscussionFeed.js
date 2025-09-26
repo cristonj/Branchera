@@ -135,11 +135,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     try {
       console.log('Checking if we should create an AI news post...');
       
-      // Only check if we have user context (don't create posts for anonymous users)
-      if (!user) {
-        console.log('No user logged in, skipping news post check');
-        return;
-      }
+      // AI news bot should run independently of user authentication
+      // Removed user requirement to allow automated news posting
+      console.log('Proceeding with news post check (user-independent)...');
       
       // Add a timeout to prevent hanging
       const timeoutPromise = new Promise((_, reject) => 
@@ -175,10 +173,15 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         console.log('No need to create AI news post at this time');
       }
     } catch (error) {
-      console.error('Error in news post creation (non-blocking):', error);
+      console.error('❌ Error in news post creation (non-blocking):', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
       // This is intentionally non-blocking - errors here should never affect the main UI
     }
-  }, [user, createDiscussion, updateAIPoints, updateFactCheckResults]);
+  }, [createDiscussion, updateAIPoints, updateFactCheckResults]);
 
   useEffect(() => {
     loadDiscussions();
