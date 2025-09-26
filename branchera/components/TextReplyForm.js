@@ -6,6 +6,7 @@ import { useDatabase } from '@/hooks/useDatabase';
 import { AIService } from '@/lib/aiService';
 import FactCheckResults from './FactCheckResults';
 import PointsAnimation from './PointsAnimation';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function TextReplyForm({ 
   discussionId, 
@@ -31,6 +32,13 @@ export default function TextReplyForm({
   
   const { user } = useAuth();
   const { addReply, updateReplyFactCheckResults, createUserPoint, hasUserEarnedPointsForDiscussion } = useDatabase();
+  
+  // Safely get toast functions with fallbacks
+  const toastContext = useToast();
+  const showPointsToast = toastContext?.showPointsToast || (() => {});
+  const showSuccessToast = toastContext?.showSuccessToast || (() => {});
+  const showErrorToast = toastContext?.showErrorToast || (() => {});
+  const showNoPointsToast = toastContext?.showNoPointsToast || (() => {});
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -101,48 +109,113 @@ export default function TextReplyForm({
             setIsJudging(true);
             console.log('Judging rebuttal for points...');
             
-            // Get AI judgement on the rebuttal
-            const judgement = await AIService.judgeRebuttal(
-              selectedPoint.text,
-              replyData.content,
-              parentFactCheck,
-              replyFactCheck,
-              `${discussionTitle}: ${discussionContent}`
-            );
-            
-            console.log('AI judgement result:', judgement);
-            
-            if (judgement.pointsEarned > 0) {
-              // Create user point record
-              const pointData = {
-                userId: user.uid,
-                discussionId: discussionId,
-                discussionTitle: discussionTitle,
-                originalPoint: selectedPoint.text,
-                originalPointId: selectedPoint.id,
-                rebuttal: replyData.content,
-                pointsEarned: judgement.pointsEarned,
-                qualityScore: judgement.qualityScore,
-                judgeExplanation: judgement.explanation,
-                isFactual: judgement.isFactual,
-                isCoherent: judgement.isCoherent
-              };
+            try {
+              // Get AI judgement on the rebuttal
+              const judgement = await AIService.judgeRebuttal(
+                selectedPoint.text,
+                replyData.content,
+                parentFactCheck,
+                replyFactCheck,
+                `${discussionTitle}: ${discussionContent}`
+              );
               
-              await createUserPoint(pointData);
-              console.log('User point created successfully');
+              console.log('AI judgement result:', judgement);
               
-              // Refresh points data in parent component
-              if (onPointsEarned) {
-                onPointsEarned();
+              // Validate judgement object before using it
+              if (!judgement || typeof judgement !== 'object') {
+                throw new Error('Invalid judgement response from AI');
               }
               
-              // Show points animation
-              setPointsEarned(judgement.pointsEarned);
-              setQualityScore(judgement.qualityScore);
-              setShowPointsAnimation(true);
+              // Ensure required properties exist with defaults
+              const safeJudgement = {
+                pointsEarned: judgement.pointsEarned || 0,
+                qualityScore: judgement.qualityScore || 'none',
+                explanation: judgement.explanation || 'No explanation provided',
+                isFactual: judgement.isFactual || false,
+                isCoherent: judgement.isCoherent || false,
+                ...judgement
+              };
+              
+              if (safeJudgement.pointsEarned > 0) {
+                console.log('Creating user point record...');
+                
+                // Create user point record
+                const pointData = {
+                  userId: user.uid,
+                  discussionId: discussionId,
+                  discussionTitle: discussionTitle,
+                  originalPoint: selectedPoint.text,
+                  originalPointId: selectedPoint.id,
+                  rebuttal: replyData.content,
+                  pointsEarned: safeJudgement.pointsEarned,
+                  qualityScore: safeJudgement.qualityScore,
+                  judgeExplanation: safeJudgement.explanation,
+                  isFactual: safeJudgement.isFactual,
+                  isCoherent: safeJudgement.isCoherent
+                };
+                
+                await createUserPoint(pointData);
+                console.log('User point created successfully');
+                
+                // Refresh points data in parent component
+                if (onPointsEarned && typeof onPointsEarned === 'function') {
+                  try {
+                    onPointsEarned();
+                  } catch (refreshError) {
+                    console.error('Error refreshing points data:', refreshError);
+                    // Don't crash if refresh fails
+                  }
+                }
+                
+                // Show both animations and toast notification for immediate feedback
+                setPointsEarned(safeJudgement.pointsEarned);
+                setQualityScore(safeJudgement.qualityScore);
+                setShowPointsAnimation(true);
+                
+                // Show immediate toast notification with safe error handling
+                try {
+                  if (showPointsToast && typeof showPointsToast === 'function') {
+                    showPointsToast(
+                      safeJudgement.pointsEarned, 
+                      safeJudgement.qualityScore
+                    );
+                  }
+                } catch (toastError) {
+                  console.error('Error showing points toast:', toastError);
+                  // Fallback to console log if toast fails
+                  console.log(`Points earned: ${safeJudgement.pointsEarned} (${safeJudgement.qualityScore})`);
+                }
+              } else {
+                // Show feedback when no points are earned
+                try {
+                  if (showNoPointsToast && typeof showNoPointsToast === 'function') {
+                    showNoPointsToast();
+                  }
+                } catch (toastError) {
+                  console.error('Error showing no-points toast:', toastError);
+                }
+              }
+            } catch (judgementError) {
+              console.error('Error during AI judgement:', judgementError);
+              // Show user-friendly error message
+              try {
+                if (showErrorToast && typeof showErrorToast === 'function') {
+                  showErrorToast('Reply submitted successfully, but point evaluation failed. Please try again.');
+                }
+              } catch (toastError) {
+                console.error('Error showing error toast:', toastError);
+              }
             }
           } else {
             console.log('User has already earned points for this discussion');
+            // Show info toast for already earned points
+            try {
+              if (showSuccessToast && typeof showSuccessToast === 'function') {
+                showSuccessToast('Reply submitted! You can only earn points once per discussion.', 3000);
+              }
+            } catch (toastError) {
+              console.error('Error showing info toast:', toastError);
+            }
           }
         } catch (judgingError) {
           console.error('Error judging rebuttal:', judgingError);
@@ -164,7 +237,7 @@ export default function TextReplyForm({
       console.log('Reply creation process completed successfully');
     } catch (error) {
       console.error('Error adding reply:', error);
-      alert(`Failed to add reply: ${error.message}`);
+      showErrorToast(`Failed to add reply: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -269,7 +342,7 @@ export default function TextReplyForm({
       {selectedPoint && (
         <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded-lg">
           <div className="text-xs text-purple-800">
-            💡 <strong>Earn Points:</strong> Provide a factual and coherent rebuttal to this point to earn 1-5 points! 
+            💡 <strong>Earn Points:</strong> Provide a factual and coherent rebuttal to this point to earn 1-3 points! 
             (One collection per discussion)
           </div>
         </div>

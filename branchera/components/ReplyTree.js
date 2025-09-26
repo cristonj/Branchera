@@ -18,12 +18,22 @@ export default function ReplyTree({
   onReplyEdited,
   onReplyView,
   onPointClick,
-  maxLevel = 3 
+  maxLevel = 3,
+  showFilters = true
 }) {
   const { user } = useAuth();
   const { editReply } = useDatabase();
   const [expandedReplies, setExpandedReplies] = useState(new Set());
   const [editingReply, setEditingReply] = useState(null);
+  const [replySearchQuery, setReplySearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    author: '',
+    hasFactCheck: false,
+    hasPoints: false,
+    dateRange: 'all'
+  });
 
   const toggleReply = async (replyId) => {
     const wasExpanded = expandedReplies.has(replyId);
@@ -83,6 +93,92 @@ export default function ReplyTree({
 
   const handleEditCancel = () => {
     setEditingReply(null);
+  };
+
+  // Enhanced search function for replies
+  const searchReplies = (replies, query) => {
+    if (!query.trim()) return replies;
+    
+    const normalizedQuery = query.toLowerCase();
+    return replies.filter(reply => {
+      return (
+        reply.content?.toLowerCase().includes(normalizedQuery) ||
+        reply.authorName?.toLowerCase().includes(normalizedQuery) ||
+        // Search in fact check results
+        (reply.factCheckResults?.claims || []).some(claim =>
+          claim.text?.toLowerCase().includes(normalizedQuery) ||
+          claim.status?.toLowerCase().includes(normalizedQuery) ||
+          claim.explanation?.toLowerCase().includes(normalizedQuery)
+        ) ||
+        // Search in AI points
+        (reply.aiPoints || []).some(point =>
+          point.text?.toLowerCase().includes(normalizedQuery) ||
+          point.type?.toLowerCase().includes(normalizedQuery)
+        )
+      );
+    });
+  };
+
+  // Enhanced filter function
+  const applyFilters = (replies, filters) => {
+    return replies.filter(reply => {
+      // Author filter
+      if (filters.author && !reply.authorName?.toLowerCase().includes(filters.author.toLowerCase())) {
+        return false;
+      }
+
+      // Has fact check filter
+      if (filters.hasFactCheck && !reply.factCheckResults) {
+        return false;
+      }
+
+      // Has AI points filter
+      if (filters.hasPoints && (!reply.aiPoints || reply.aiPoints.length === 0)) {
+        return false;
+      }
+
+      // Date range filter
+      if (filters.dateRange !== 'all') {
+        const replyDate = new Date(reply.createdAt);
+        const now = new Date();
+        const diffInDays = (now - replyDate) / (1000 * 60 * 60 * 24);
+        
+        switch (filters.dateRange) {
+          case 'today':
+            if (diffInDays > 1) return false;
+            break;
+          case 'week':
+            if (diffInDays > 7) return false;
+            break;
+          case 'month':
+            if (diffInDays > 30) return false;
+            break;
+        }
+      }
+
+      return true;
+    });
+  };
+
+  // Enhanced sort function for replies
+  const sortReplies = (replies, sortBy) => {
+    return [...replies].sort((a, b) => {
+      switch (sortBy) {
+        case 'oldest':
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        case 'author':
+          return (a.authorName || '').localeCompare(b.authorName || '');
+        case 'views':
+          return (b.views || 0) - (a.views || 0);
+        case 'points':
+          const aPoints = (a.aiPoints || []).length;
+          const bPoints = (b.aiPoints || []).length;
+          return bPoints - aPoints;
+        case 'newest':
+        default:
+          return new Date(b.createdAt) - new Date(a.createdAt);
+      }
+    });
   };
 
   // Build reply tree structure
@@ -166,10 +262,19 @@ export default function ReplyTree({
             </div>
           )}
           <div className="flex-1">
-            <div className="text-xs text-gray-700">
-              <SearchHighlight text={reply.authorName} searchQuery={searchQuery} /> · {formatDate(reply.createdAt)}
+            <div className="text-xs text-gray-700 flex items-center gap-2">
+              <SearchHighlight text={reply.authorName} searchQuery={replySearchQuery || searchQuery} /> · {formatDate(reply.createdAt)}
               {reply.isEdited && reply.editedAt && (
                 <span className="text-gray-500 italic"> · edited {formatDate(reply.editedAt)}</span>
+              )}
+              {/* Visual indicator for points earned */}
+              {reply.pointsEarnedByUser && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] rounded-full bg-purple-100 text-purple-800 font-medium">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                  </svg>
+                  Points Earned
+                </span>
               )}
             </div>
           </div>
@@ -178,12 +283,12 @@ export default function ReplyTree({
               <button
                 onClick={() => toggleReply(reply.id)}
                 className="p-1 text-gray-800 hover:text-black"
-                title={`${isExpanded ? 'Hide' : 'Show'} ${reply.children.length} replies`}
+                title={`${isExpanded ? 'Hide' : 'Show'} ${reply.children?.length || 0} replies`}
               >
                 <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
-                <span className="text-xs ml-1">{reply.children.length}</span>
+                <span className="text-xs ml-1">{reply.children?.length || 0}</span>
               </button>
             )}
             <div className="flex items-center gap-1 text-xs text-gray-600">
@@ -193,7 +298,7 @@ export default function ReplyTree({
               </svg>
               {reply.views || 0}
             </div>
-            {canReply && (
+            {canReply && onReplyToReply && (
               <button
                 onClick={() => onReplyToReply(reply)}
                 className="p-1 text-gray-800 hover:text-black"
@@ -216,7 +321,7 @@ export default function ReplyTree({
                   </svg>
                 </button>
                 <button
-                  onClick={() => onDeleteReply(discussionId, reply.id)}
+                  onClick={() => onDeleteReply && onDeleteReply(discussionId, reply.id)}
                   className="p-1 text-gray-800 hover:text-black"
                   title="Delete reply"
                 >
@@ -230,7 +335,7 @@ export default function ReplyTree({
         </div>
         <div>
           <p className="text-gray-900 text-sm whitespace-pre-wrap leading-relaxed">
-            <SearchHighlight text={reply.content} searchQuery={searchQuery} />
+            <SearchHighlight text={reply.content} searchQuery={replySearchQuery || searchQuery} />
           </p>
         </div>
         
@@ -240,7 +345,7 @@ export default function ReplyTree({
             <FactCheckResults 
               factCheckResults={reply.factCheckResults} 
               isLoading={false}
-              searchQuery={searchQuery}
+              searchQuery={replySearchQuery || searchQuery}
             />
           </div>
         )}
@@ -259,11 +364,11 @@ export default function ReplyTree({
                     <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
                     <div className="flex-1 min-w-0">
                       <div className="text-xs text-gray-900">
-                        <SearchHighlight text={p.text} searchQuery={searchQuery} />
+                        <SearchHighlight text={p.text} searchQuery={replySearchQuery || searchQuery} />
                       </div>
                       {p.type && (
                         <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
-                          <SearchHighlight text={p.type} searchQuery={searchQuery} />
+                          <SearchHighlight text={p.type} searchQuery={replySearchQuery || searchQuery} />
                         </span>
                       )}
                       {user && onPointClick && (
@@ -292,11 +397,155 @@ export default function ReplyTree({
     );
   };
 
-  const rootReplies = buildReplyTree(replies);
+  // Apply search, filters, and sorting
+  const searchedReplies = searchReplies(replies, replySearchQuery);
+  const filteredReplies = applyFilters(searchedReplies, filters);
+  const sortedReplies = sortReplies(filteredReplies, sortBy);
+  const rootReplies = buildReplyTree(sortedReplies);
   const groupedReplies = groupRootRepliesByPoint(rootReplies);
 
   return (
     <div className="space-y-4">
+      {/* Reply Search and Filter Interface */}
+      {showFilters && replies.length > 1 && (
+        <div className="mb-3 border border-black/20 rounded-lg bg-white">
+          {/* Main search bar */}
+          <div className="p-3 border-b border-black/10">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Search replies, authors, claims..."
+                value={replySearchQuery}
+                onChange={(e) => setReplySearchQuery(e.target.value)}
+                className="flex-1 px-3 py-2 border border-black/20 rounded focus:outline-none focus:ring-2 focus:ring-black text-sm"
+              />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-3 py-2 border border-black/20 rounded focus:outline-none focus:ring-2 focus:ring-black text-sm"
+              >
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="author">By Author</option>
+                <option value="views">Most Viewed</option>
+                <option value="points">Most Points</option>
+              </select>
+              <button
+                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                className="px-3 py-2 border border-black/20 rounded hover:bg-gray-50 text-sm flex items-center gap-1"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                Filters
+              </button>
+            </div>
+          </div>
+
+          {/* Advanced filters */}
+          {showAdvancedFilters && (
+            <div className="p-3 bg-gray-50">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {/* Author filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Author</label>
+                  <input
+                    type="text"
+                    placeholder="Filter by author..."
+                    value={filters.author}
+                    onChange={(e) => setFilters(prev => ({ ...prev, author: e.target.value }))}
+                    className="w-full px-2 py-1 border border-black/20 rounded text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  />
+                </div>
+
+                {/* Date range filter */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Date Range</label>
+                  <select
+                    value={filters.dateRange}
+                    onChange={(e) => setFilters(prev => ({ ...prev, dateRange: e.target.value }))}
+                    className="w-full px-2 py-1 border border-black/20 rounded text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  >
+                    <option value="all">All Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">Past Week</option>
+                    <option value="month">Past Month</option>
+                  </select>
+                </div>
+
+                {/* Content filters */}
+                <div className="space-y-1">
+                  <label className="block text-xs font-medium text-gray-700">Content</label>
+                  <div className="space-y-1">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filters.hasFactCheck}
+                        onChange={(e) => setFilters(prev => ({ ...prev, hasFactCheck: e.target.checked }))}
+                        className="mr-2 rounded focus:ring-black"
+                      />
+                      <span className="text-xs">Has Fact Check</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={filters.hasPoints}
+                        onChange={(e) => setFilters(prev => ({ ...prev, hasPoints: e.target.checked }))}
+                        className="mr-2 rounded focus:ring-black"
+                      />
+                      <span className="text-xs">Has AI Points</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Clear filters button */}
+              {(replySearchQuery || sortBy !== 'newest' || filters.author || filters.hasFactCheck || filters.hasPoints || filters.dateRange !== 'all') && (
+                <div className="mt-3 pt-3 border-t border-black/10">
+                  <button
+                    onClick={() => {
+                      setReplySearchQuery('');
+                      setSortBy('newest');
+                      setFilters({
+                        author: '',
+                        hasFactCheck: false,
+                        hasPoints: false,
+                        dateRange: 'all'
+                      });
+                    }}
+                    className="px-3 py-1 text-xs bg-white border border-black/20 rounded hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Clear All Filters
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Results summary */}
+          {(replySearchQuery || filters.author || filters.hasFactCheck || filters.hasPoints || filters.dateRange !== 'all') && (
+            <div className="px-3 py-2 text-xs text-gray-600 bg-gray-50">
+              {replySearchQuery && (
+                <span>Search: &ldquo;<strong>{replySearchQuery}</strong>&rdquo; • </span>
+              )}
+              <span>Showing {sortedReplies.length} of {replies.length} replies</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* No results message */}
+      {showFilters && replies.length > 0 && sortedReplies.length === 0 && (
+        <div className="text-center py-6 border border-black/20 rounded-lg bg-gray-50">
+          <div className="text-3xl mb-2">🔍</div>
+          <h3 className="text-sm font-medium text-gray-900 mb-1">No replies found</h3>
+          <p className="text-xs text-gray-600">Try adjusting your search terms or filters.</p>
+        </div>
+      )}
+
       {Object.entries(groupedReplies.withPoints).map(([pointId, pointReplies]) => {
         const point = aiPoints?.find(p => p.id === pointId);
         return (
@@ -307,11 +556,11 @@ export default function ReplyTree({
                   <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
                   <div>
                     <div className="text-sm font-semibold text-gray-900">
-                      &ldquo;<SearchHighlight text={point.text} searchQuery={searchQuery} />&rdquo;
+                      &ldquo;<SearchHighlight text={point.text} searchQuery={replySearchQuery || searchQuery} />&rdquo;
                     </div>
                     {point.type && (
                       <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
-                        <SearchHighlight text={point.type} searchQuery={searchQuery} />
+                        <SearchHighlight text={point.type} searchQuery={replySearchQuery || searchQuery} />
                       </span>
                     )}
                   </div>

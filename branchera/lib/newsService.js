@@ -79,6 +79,7 @@ For each story, provide:
 - A brief summary (2-3 sentences)
 - The main controversy or discussion points
 - Key stakeholders or perspectives involved
+- CRITICAL: Source information including publication name and URL
 
 Return ONLY a valid JSON array in this format:
 [
@@ -87,11 +88,22 @@ Return ONLY a valid JSON array in this format:
     "summary": "Brief 2-3 sentence summary of the story",
     "discussionPoints": ["Point 1 that people debate", "Point 2 that creates discussion", "Point 3 with different perspectives"],
     "stakeholders": ["Group 1", "Group 2", "Group 3"],
-    "category": "politics|technology|science|economics|social|international|environment|other"
+    "category": "politics|technology|science|economics|social|international|environment|other",
+    "source": {
+      "name": "Publication Name (e.g., Reuters, BBC, Associated Press)",
+      "url": "https://example.com/full-article-url",
+      "publishedAt": "2024-01-15T10:30:00Z"
+    }
   }
 ]
 
-Make sure all stories are current, factual, and from reliable sources. Do not include speculation or unverified claims.`;
+CRITICAL REQUIREMENTS:
+- ALWAYS include complete source information with working URLs
+- Use only reputable, well-known news sources (Reuters, AP, BBC, CNN, NPR, etc.)
+- Ensure URLs are real and accessible
+- Include publication timestamp when available
+- Make sure all stories are current, factual, and from reliable sources
+- Do not include speculation or unverified claims`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -189,40 +201,48 @@ Make sure all stories are current, factual, and from reliable sources. Do not in
       });
 
       const prompt = `
-You are an AI discussion moderator creating an engaging post about this news story. Your goal is to spark thoughtful debate by taking a clear stance on one of the controversial aspects.
+You are an AI discussion moderator creating a CONCISE, focused post about this news story. Your goal is to spark debate with a clear, specific stance.
 
 News Story:
 Headline: ${story.headline}
 Summary: ${story.summary}
 Discussion Points: ${story.discussionPoints.join(', ')}
 Category: ${story.category}
+Source: ${story.source?.name || 'Unknown'} ${story.source?.url ? `(${story.source.url})` : ''}
 
 Your task:
-1. Pick ONE specific aspect or angle of this story to focus on
-2. Take a clear, defensible position on that aspect (not neutral)
-3. Present 2-3 strong arguments supporting your position
-4. Acknowledge the opposing viewpoint briefly but argue why your position is better
-5. Use facts and logic, but don't be afraid to have an opinion
-6. Write in an engaging, slightly provocative style that encourages discussion
-7. End with a question that invites others to challenge your view
+1. Pick ONE specific, debatable aspect of this story
+2. Take a clear position in 2-3 sentences
+3. Give ONE strong reason supporting your position
+4. End with a direct question that invites challenge
+5. ALWAYS include a source attribution at the end
 
-Guidelines:
-- Be factual and cite real information when possible
-- Take a stance that reasonable people could disagree with
-- Don't be inflammatory or offensive
-- Make it clear this is your perspective, not absolute truth
-- Keep it concise but substantive (200-400 words)
-- Write in first person ("I believe", "In my view", etc.)
+STRICT REQUIREMENTS:
+- MAXIMUM 150 words total (excluding source attribution)
+- Be DIRECT and SPECIFIC (no fluff or filler)
+- Focus on ONE precise claim, not multiple issues
+- Use active voice and short sentences
+- Write in first person ("I think", "I believe")
+- Make ONE clear argument, not several weak ones
+- MUST end with source attribution: "Source: [Publication] - [URL]"
+
+BAD example (too long, vague):
+"This complex issue has many facets and various stakeholders have different perspectives on the matter, which creates an interesting dynamic that we should all consider carefully..."
+
+GOOD example (concise, specific with source):
+"I think this policy will backfire. Small businesses can't absorb these costs without laying off workers - we saw this exact pattern in Seattle in 2019. Are supporters ignoring the employment data, or do they think this time will be different?
+
+Source: Reuters - https://reuters.com/business/policy-analysis-2024"
 
 Return ONLY a valid JSON object in this format:
 {
-  "title": "Engaging title that hints at your stance",
-  "content": "Your full opinionated post content",
-  "stance": "Brief description of the position you're taking",
+  "title": "Direct title stating your position (under 60 characters)",
+  "content": "Your concise post (under 150 words, 2-4 short paragraphs max) ending with 'Source: [Publication] - [URL]'",
+  "stance": "One sentence describing your position",
   "category": "${story.category}"
 }
 
-Make sure your post is engaging, well-reasoned, and likely to generate thoughtful replies.`;
+Make it punchy, specific, and debate-worthy. ALWAYS include the source attribution.`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -255,7 +275,7 @@ Make sure your post is engaging, well-reasoned, and likely to generate thoughtfu
   }
 
   // Create a news discussion post
-  static async createNewsDiscussion(createDiscussion) {
+  static async createNewsDiscussion(createDiscussion, updateAIPoints = null, updateFactCheckResults = null) {
     try {
       console.log('Creating AI news discussion...');
       
@@ -288,7 +308,12 @@ Make sure your post is engaging, well-reasoned, and likely to generate thoughtfu
             headline: randomStory.headline,
             summary: randomStory.summary,
             category: randomStory.category,
-            stance: post.stance
+            stance: post.stance,
+            source: randomStory.source || {
+              name: 'News Source',
+              url: null,
+              publishedAt: null
+            }
           },
           generatedAt: new Date().toISOString()
         }
@@ -296,6 +321,44 @@ Make sure your post is engaging, well-reasoned, and likely to generate thoughtfu
       
       const discussion = await createDiscussion(discussionData);
       console.log('AI news discussion created successfully:', discussion.id);
+      
+      // Import AIService to generate points and fact-check results immediately
+      const { AIService } = await import('./aiService');
+      
+      try {
+        // Generate AI points immediately for the news post
+        console.log('Generating AI points for news discussion...');
+        const aiPoints = await AIService.generatePoints(post.content, post.title);
+        
+        // Update the discussion with AI points in database
+        if (aiPoints && aiPoints.length > 0) {
+          if (updateAIPoints) {
+            await updateAIPoints(discussion.id, aiPoints);
+            console.log('AI points saved to database for news discussion');
+          }
+          discussion.aiPoints = aiPoints;
+          discussion.aiPointsGenerated = true;
+          console.log('AI points generated for news discussion:', aiPoints.length);
+        }
+        
+        // Generate fact-check results immediately
+        console.log('Generating fact-check results for news discussion...');
+        const factCheckResults = await AIService.factCheckPoints(aiPoints, post.title);
+        
+        if (factCheckResults) {
+          if (updateFactCheckResults) {
+            await updateFactCheckResults(discussion.id, factCheckResults);
+            console.log('Fact-check results saved to database for news discussion');
+          }
+          discussion.factCheckResults = factCheckResults;
+          discussion.factCheckGenerated = true;
+          console.log('Fact-check results generated for news discussion');
+        }
+        
+      } catch (aiError) {
+        console.error('Error generating AI content for news discussion:', aiError);
+        // Don't fail the news creation if AI generation fails
+      }
       
       return discussion;
     } catch (error) {

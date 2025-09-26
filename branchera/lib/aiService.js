@@ -45,25 +45,46 @@ export class AIService {
     const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
 
     const prompt = `
-Extract all discussion points from the following text that would be good anchor points for replies. Focus on the main claims, arguments, questions, or recommendations that people might want to respond to.
+Analyze this text and extract GRANULAR discussion points that people can respond to with specific rebuttals, evidence, or counterarguments. Break down complex statements into their component parts.
 
 Title: ${title}
 Content: ${content} 
 
+Create 6-12 specific, debatable points. For each point, identify:
+- The exact claim or assertion being made
+- Any underlying assumptions 
+- Specific data points or statistics mentioned
+- Causal relationships claimed
+- Value judgments expressed
+- Policy recommendations made
+
 Return ONLY a valid JSON array in this format:
 [
-  {"id": "p1", "text": "First key point or claim", "type": "claim"},
-  {"id": "p2", "text": "Supporting evidence or argument", "type": "evidence"},
-  {"id": "p3", "text": "Question or area needing clarification", "type": "question"}
+  {"id": "p1", "text": "Specific claim that can be challenged with evidence", "type": "claim"},
+  {"id": "p2", "text": "Statistical assertion or data point mentioned", "type": "statistic"},
+  {"id": "p3", "text": "Causal relationship claimed (X causes Y)", "type": "causation"},
+  {"id": "p4", "text": "Value judgment or opinion expressed", "type": "opinion"},
+  {"id": "p5", "text": "Underlying assumption being made", "type": "assumption"},
+  {"id": "p6", "text": "Policy or solution recommendation", "type": "recommendation"}
 ]
 
-Types should be one of: "claim", "evidence", "recommendation", "question", "topic"
+Types should be one of: "claim", "evidence", "statistic", "causation", "opinion", "assumption", "recommendation", "prediction", "comparison"
 
-Make the points:
-- Specific and actionable for replies
-- Clear and concise (under 100 characters each)
-- Focused on the most important aspects
-- Suitable for structured discussion
+Make each point:
+- HIGHLY SPECIFIC (focus on one precise assertion)
+- DEBATABLE (something reasonable people could disagree with)
+- FACT-CHECKABLE (can be verified or challenged with evidence)
+- CONCISE (under 80 characters)
+- GRANULAR (break complex ideas into component parts)
+
+Examples of GOOD granular points:
+- "Remote work increases productivity by 20%" (specific statistic)
+- "Social media causes depression in teenagers" (specific causal claim)
+- "Tax cuts always stimulate economic growth" (challengeable assumption)
+
+Examples of BAD vague points:
+- "The economy is important" (too vague)
+- "Technology has impacts" (not specific or debatable)
 
 Do not include any explanation or additional text, just the JSON array.`;
 
@@ -450,7 +471,31 @@ Do not include any explanation or additional text, just the JSON object.`;
       return judgement;
     } catch (error) {
       console.error('Error judging rebuttal:', error);
-      throw error;
+      
+      // Return a safe fallback judgement to prevent crashes
+      const fallbackJudgement = {
+        pointsEarned: 0,
+        qualityScore: 'none',
+        isFactual: false,
+        isCoherent: true, // Assume basic coherence if we got this far
+        isRelevant: true, // Assume relevance if replying to a point
+        hasEvidence: false,
+        isConstructive: true,
+        explanation: 'Unable to evaluate this rebuttal due to a technical issue. Your reply has been submitted successfully. Please try replying again to earn points.',
+        factualConcerns: ['Technical evaluation error - please try again'],
+        strengths: ['Your reply was submitted successfully'],
+        improvements: ['Try submitting your rebuttal again for point evaluation'],
+        grounding: {
+          searchPerformed: false,
+          searchQueries: [],
+          sources: [],
+          searchEntryPoint: null,
+          groundingSupports: []
+        }
+      };
+      
+      console.log('Returning fallback judgement due to error:', fallbackJudgement);
+      return fallbackJudgement;
     }
   }
 
@@ -509,11 +554,25 @@ Return ONLY a valid JSON object in this format:
   "isRelevant": true/false,
   "hasEvidence": true/false,
   "isConstructive": true/false,
-  "explanation": "Detailed explanation of why this score was given, including fact-check results if applicable",
-  "factualConcerns": ["List any factual inaccuracies found"],
-  "strengths": ["List the strongest aspects of this rebuttal"],
-  "improvements": ["Suggestions for improvement if score is low"]
+  "explanation": "CLEAR, SPECIFIC explanation starting with 'You earned [X] points because...' followed by exactly what the user did well or poorly. Be very specific about which facts were verified, what evidence was strong/weak, and what could be improved. Use simple language and be encouraging even when awarding low points.",
+  "factualConcerns": ["List any factual inaccuracies found with specific corrections"],
+  "strengths": ["List specific strong aspects: 'You provided solid evidence from X', 'Your logical reasoning about Y was clear', etc."],
+  "improvements": ["Specific actionable suggestions: 'Try citing authoritative sources like X', 'Consider addressing the counterargument about Y', etc."]
 }
+
+CRITICAL: Your explanation must be CRYSTAL CLEAR about why points were awarded. Users should immediately understand:
+- What they did well (be specific about evidence, reasoning, sources)
+- What they could improve (be specific about missing elements)
+- Why this particular score was given (reference the scoring criteria directly)
+
+Examples of GOOD explanations:
+- "You earned 2 points because you provided factually accurate data from the CDC about vaccination rates and clearly explained how this contradicts the original claim. Your reasoning was logical and well-structured. To earn 3 points, try including more diverse sources and addressing potential counterarguments."
+- "You earned 1 point because your rebuttal directly addresses the original point and shows basic reasoning. However, you didn't provide any sources to back up your claims about economic growth, and some of your assertions need fact-checking. Try including links to authoritative sources next time."
+
+Examples of BAD explanations:
+- "Good job" (not specific)
+- "Your argument needs work" (not actionable)
+- "This deserves points because it's well-written" (doesn't explain criteria)
 
 Be EXTREMELY STINGY with points. Award 3 points only for rebuttals that demonstrate exceptional research, expert-level knowledge, and comprehensive sourced evidence. Award 2 points only for rebuttals with solid research and strong factual backing. Award 1 point only for basic but adequate responses. Award 0 points if the rebuttal fails to properly address the original point or lacks sufficient evidence/research.
 
@@ -530,18 +589,72 @@ Do not include any explanation or additional text, just the JSON object.`;
       // Clean up the response to extract just the JSON
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
+        console.error('AI response did not contain JSON object:', text);
         throw new Error('No JSON object found in response');
       }
       
-      const judgement = JSON.parse(jsonMatch[0]);
+      let judgement;
+      try {
+        judgement = JSON.parse(jsonMatch[0]);
+      } catch (parseError) {
+        console.error('Failed to parse JSON from AI response:', jsonMatch[0]);
+        throw new Error(`JSON parsing failed: ${parseError.message}`);
+      }
       
-      // Validate the structure
-      if (typeof judgement.pointsEarned !== 'number' || !judgement.qualityScore) {
-        throw new Error('Invalid judgement structure');
+      // Validate and sanitize the structure with defaults
+      if (!judgement || typeof judgement !== 'object') {
+        console.error('Invalid judgement object:', judgement);
+        throw new Error('Invalid judgement structure - not an object');
+      }
+      
+      // Ensure all required properties exist with safe defaults
+      const safeJudgement = {
+        pointsEarned: 0,
+        qualityScore: 'none',
+        isFactual: false,
+        isCoherent: false,
+        isRelevant: false,
+        hasEvidence: false,
+        isConstructive: false,
+        explanation: 'No explanation provided',
+        factualConcerns: [],
+        strengths: [],
+        improvements: [],
+        ...judgement
+      };
+      
+      // Validate and fix pointsEarned
+      if (typeof safeJudgement.pointsEarned !== 'number' || isNaN(safeJudgement.pointsEarned)) {
+        console.warn('Invalid pointsEarned value, defaulting to 0:', safeJudgement.pointsEarned);
+        safeJudgement.pointsEarned = 0;
       }
       
       // Ensure points are within valid range
-      judgement.pointsEarned = Math.max(0, Math.min(3, judgement.pointsEarned));
+      safeJudgement.pointsEarned = Math.max(0, Math.min(3, Math.floor(safeJudgement.pointsEarned)));
+      
+      // Validate qualityScore
+      const validQualityScores = ['exceptional', 'good', 'basic', 'none'];
+      if (!validQualityScores.includes(safeJudgement.qualityScore)) {
+        console.warn('Invalid qualityScore, defaulting to none:', safeJudgement.qualityScore);
+        safeJudgement.qualityScore = 'none';
+      }
+      
+      // Ensure explanation is a string
+      if (typeof safeJudgement.explanation !== 'string') {
+        console.warn('Invalid explanation type, converting to string:', safeJudgement.explanation);
+        safeJudgement.explanation = String(safeJudgement.explanation || 'No explanation provided');
+      }
+      
+      // Ensure arrays are actually arrays
+      ['factualConcerns', 'strengths', 'improvements'].forEach(field => {
+        if (!Array.isArray(safeJudgement[field])) {
+          console.warn(`Invalid ${field} type, defaulting to empty array:`, safeJudgement[field]);
+          safeJudgement[field] = [];
+        }
+      });
+      
+      // Use the sanitized judgement
+      judgement = safeJudgement;
       
       // If we have grounding metadata, this judgement was made with Google Search
       if (groundingMetadata) {

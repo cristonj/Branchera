@@ -15,6 +15,7 @@ import { AIService } from '@/lib/aiService';
 import { usePolling } from '@/hooks/usePolling';
 import { REALTIME_CONFIG } from '@/lib/realtimeConfig';
 import { NewsService } from '@/lib/newsService';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const [discussions, setDiscussions] = useState([]);
@@ -50,6 +51,11 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const { updateDocument } = useFirestore();
   const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint, getUserPoints, getPointCounts, createDiscussion } = useDatabase();
   const { user } = useAuth();
+  
+  // Safely get toast functions with fallbacks
+  const toastContext = useToast();
+  const showSuccessToast = toastContext?.showSuccessToast || (() => {});
+  const showErrorToast = toastContext?.showErrorToast || (() => {});
 
   const loadCollectedPoints = useCallback(async () => {
     if (!user) return;
@@ -146,20 +152,23 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       if (shouldCreate) {
         console.log('Creating AI news post...');
         
-        // Create news post with timeout protection
-        const createNewsPromise = NewsService.createNewsDiscussion(createDiscussion);
+        // Create news post with timeout protection and immediate AI generation
+        const createNewsPromise = NewsService.createNewsDiscussion(
+          createDiscussion, 
+          updateAIPoints, 
+          updateFactCheckResults
+        );
         const newsDiscussion = await Promise.race([createNewsPromise, timeoutPromise]);
         
         if (newsDiscussion) {
           console.log('AI news post created successfully:', newsDiscussion.title);
+          console.log('News discussion includes AI points:', newsDiscussion.aiPoints?.length || 0);
+          console.log('News discussion includes fact-check:', !!newsDiscussion.factCheckResults);
           
-          // Add the new discussion to the current list
+          // Add the new discussion to the current list with all AI-generated content
           setDiscussions(prev => [newsDiscussion, ...prev]);
           
-          // Optional: refresh discussions after a delay (don't await this)
-          setTimeout(() => {
-            loadDiscussions().catch(err => console.error('Error refreshing after news post:', err));
-          }, 2000);
+          // No need to refresh since we already have the complete discussion with AI content
         }
       } else {
         console.log('No need to create AI news post at this time');
@@ -168,7 +177,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       console.error('Error in news post creation (non-blocking):', error);
       // This is intentionally non-blocking - errors here should never affect the main UI
     }
-  }, [user, createDiscussion, loadDiscussions]);
+  }, [user, createDiscussion, loadDiscussions, updateAIPoints, updateFactCheckResults]);
 
   useEffect(() => {
     loadDiscussions();
@@ -320,8 +329,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   // Generate AI points for a discussion
   const generateAIPointsForDiscussion = async (discussion) => {
     try {
-      if (discussion.aiPointsGenerated || (discussion.aiPoints && discussion.aiPoints.length > 0)) {
-        return; // Already has points
+      // Skip AI-generated discussions (they should already have points) and discussions that already have points
+      if (discussion.metadata?.isAIGenerated || discussion.aiPointsGenerated || (discussion.aiPoints && discussion.aiPoints.length > 0)) {
+        return; // Already has points or is AI-generated
       }
 
       console.log('Generating AI points for discussion:', discussion.id);
@@ -348,8 +358,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   // Generate fact-check results for a discussion based on its AI points
   const generateFactCheckForDiscussion = async (discussion) => {
     try {
-      if (discussion.factCheckGenerated || discussion.factCheckResults) {
-        return; // Already has fact-check results
+      // Skip AI-generated discussions (they should already have fact-check) and discussions that already have results
+      if (discussion.metadata?.isAIGenerated || discussion.factCheckGenerated || discussion.factCheckResults) {
+        return; // Already has fact-check results or is AI-generated
       }
 
       console.log('Generating fact-check results for discussion:', discussion.id);
@@ -532,10 +543,11 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       // Remove from local state
       setDiscussions(prev => prev.filter(d => d.id !== discussionId));
       
+      showSuccessToast('Discussion deleted successfully');
       console.log('Discussion deleted successfully');
     } catch (error) {
       console.error('Error deleting discussion:', error);
-      alert(error.message || 'Failed to delete discussion');
+      showErrorToast(error.message || 'Failed to delete discussion');
     }
   };
 
@@ -601,26 +613,32 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const handleReplyAdded = (discussionId, newReply) => {
     // Update the discussion with the new reply, but check for duplicates
     setDiscussions(prev =>
-      prev.map(d =>
-        d.id === discussionId
-          ? {
-              ...d,
-              replies: [
-                ...(d.replies || []).filter(r => r.id !== newReply.id), // Remove any existing reply with same ID
-                newReply // Add the new reply
-              ],
-              replyCount: Math.max((d.replyCount || 0), (d.replies || []).length + 1) // Ensure count is accurate
-            }
-          : d
-      )
+      prev.map(d => {
+        if (d.id === discussionId) {
+          const updatedReplies = [
+            ...(d.replies || []).filter(r => r.id !== newReply.id), // Remove any existing reply with same ID
+            newReply // Add the new reply
+          ];
+          return {
+            ...d,
+            replies: updatedReplies,
+            replyCount: updatedReplies.length // Fix: Use actual length of new replies array
+          };
+        }
+        return d;
+      })
     );
     
-    // Close the reply recorder and clear selections
-    setReplyingTo(null);
-    setSelectedPoint(null);
-    setSelectedReplyType('general');
-    setSelectedDiscussion(null);
-    setReplyingToReply(null);
+    // Delay closing the reply form to allow any pending async operations to complete
+    // This prevents crashes when refreshPointsData is still running
+    setTimeout(() => {
+      // Close the reply recorder and clear selections
+      setReplyingTo(null);
+      setSelectedPoint(null);
+      setSelectedReplyType('general');
+      setSelectedDiscussion(null);
+      setReplyingToReply(null);
+    }, 200); // Small delay to ensure async operations complete
     
     // Expand replies to show the new reply
     setExpandedReplies(prev => new Set([...prev, discussionId]));
@@ -648,10 +666,11 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         )
       );
       
+      showSuccessToast('Reply deleted successfully');
       console.log('Reply deleted successfully');
     } catch (error) {
       console.error('Error deleting reply:', error);
-      alert(error.message || 'Failed to delete reply');
+      showErrorToast(error.message || 'Failed to delete reply');
     }
   };
 
@@ -970,10 +989,10 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                   </div>
                 )}
 
-                {/* AI Generated Indicator */}
+                {/* AI Generated Indicator with Source */}
                 {discussion.metadata?.isAIGenerated && (
                   <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-sm mb-2">
                       <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                       </svg>
@@ -984,6 +1003,36 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                         </span>
                       )}
                     </div>
+                    
+                    {/* Source Information */}
+                    {discussion.metadata.newsStory?.source && (
+                      <div className="flex items-center gap-2 text-xs">
+                        <svg className="w-3 h-3 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        <span className="text-blue-700">
+                          Based on: <strong>{discussion.metadata.newsStory.source.name}</strong>
+                          {discussion.metadata.newsStory.source.url && (
+                            <>
+                              {' • '}
+                              <a 
+                                href={discussion.metadata.newsStory.source.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 underline"
+                              >
+                                Read Original Article
+                              </a>
+                            </>
+                          )}
+                          {discussion.metadata.newsStory.source.publishedAt && (
+                            <span className="text-blue-600 ml-2">
+                              • Published: {new Date(discussion.metadata.newsStory.source.publishedAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1209,6 +1258,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
                       }}
                       onPointClick={handleReplyPointClick}
                       maxLevel={3}
+                      showFilters={true}
                     />
                   </div>
                 )}
