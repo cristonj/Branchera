@@ -4,9 +4,9 @@ import { DatabaseProvider } from "@/components/DatabaseProvider";
 import { ToastProvider } from "@/contexts/ToastContext";
 
 export const metadata = {
-  title: "Branchera - Where Progress Happens",
-  description: "Branchera is the social platform where clarity and logic beat distraction and misinformation. Our mission is to provide the best and most accssible social experience for critical discussion.",
-  keywords: ["Branchera", "social", "platform", "critical", "discussion", "clarity", "logic", "debate", "misinformation", "distraction"],
+  title: "Branchera - Social Media That Gets Out of Your Way",
+  description: "The open source, ad-free social platform designed for constructive dialogue instead of endless engagement. AI-powered fact-checking, transparent discussions, and a community that respects your intelligence.",
+  keywords: ["Branchera", "open source", "social media", "ad-free", "constructive dialogue", "fact-checking", "transparent", "AI-powered", "meaningful conversations", "no ads"],
   authors: [{ name: "Branchera Team" }],
   creator: "Branchera",
   publisher: "Branchera",
@@ -17,8 +17,8 @@ export const metadata = {
   },
   metadataBase: new URL('https://branchera.org'), // Update this with your actual domain
   openGraph: {
-    title: "Branchera - Where Progress Happens",
-    description: "Branchera is the social platform where clarity and logic beat distraction and misinformation. Our mission is to provide the best and most accssible social experience for critical discussion.",
+    title: "Branchera - Social Media That Gets Out of Your Way",
+    description: "The open source, ad-free social platform designed for constructive dialogue instead of endless engagement. AI-powered fact-checking, transparent discussions, and a community that respects your intelligence.",
     url: 'https://branchera.org', // Update this with your actual domain
     siteName: 'Branchera',
     images: [
@@ -35,8 +35,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "Branchera - Where Progress Happens",
-    description: "Branchera is the social platform where clarity and logic beat distraction and misinformation. Our mission is to provide the best and most accssible social experience for critical discussion.",
+    title: "Branchera - Social Media That Gets Out of Your Way",
+    description: "The open source, ad-free social platform designed for constructive dialogue instead of endless engagement. AI-powered fact-checking, transparent discussions, and a community that respects your intelligence.",
     images: ['/og-image.svg'], // Twitter will use this image
     creator: '@branchera', // Update this with your actual Twitter handle
   },

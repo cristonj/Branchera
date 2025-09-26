@@ -99,6 +99,13 @@ export default function TopNav() {
                   >
                     Leaderboard
                   </Link>
+                  <Link
+                    href="/about"
+                    onClick={closeDropdown}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    About
+                  </Link>
                   
                   {/* Divider */}
                   <div className="border-t border-gray-100 my-2"></div>
