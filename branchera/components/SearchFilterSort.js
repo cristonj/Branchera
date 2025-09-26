@@ -82,7 +82,7 @@ export default function SearchFilterSort({
   };
 
   // Search function that searches through discussions and replies
-  const searchContent = useCallback((discussions, query, type) => {
+  const searchContent = (discussions, query, type) => {
     if (!query.trim()) return discussions;
 
     const normalizedQuery = query.toLowerCase().trim();
@@ -104,7 +104,7 @@ export default function SearchFilterSort({
         searchMatches: getSearchMatches(discussion, normalizedQuery, type)
       };
     });
-  }, [getSearchMatches]);
+  };
 
   const searchInFactCheck = (factCheckResults, query) => {
     if (!factCheckResults || !Array.isArray(factCheckResults.claims)) return false;
@@ -158,7 +158,7 @@ export default function SearchFilterSort({
     return getMatches(replies, query);
   };
 
-  const getSearchMatches = useCallback((discussion, query, type) => {
+  const getSearchMatches = (discussion, query, type) => {
     const matches = {
       title: false,
       content: false,
@@ -187,7 +187,7 @@ export default function SearchFilterSort({
     }
 
     return matches;
-  }, []);
+  };
 
   // Filter function
   const filterDiscussions = useCallback((discussions, filters) => {
@@ -241,7 +241,7 @@ export default function SearchFilterSort({
   }, []);
 
   // Sort function
-  const sortDiscussions = useCallback((discussions, sortBy, query = '') => {
+  const sortDiscussions = (discussions, sortBy, query = '') => {
     const sorted = [...discussions].sort((a, b) => {
       switch (sortBy) {
         case 'oldest':
@@ -262,9 +262,9 @@ export default function SearchFilterSort({
     });
 
     return sorted;
-  }, [calculateRelevanceScore]);
+  };
 
-  const calculateRelevanceScore = useCallback((discussion, query) => {
+  const calculateRelevanceScore = (discussion, query) => {
     let score = 0;
     const normalizedQuery = query.toLowerCase();
     
@@ -307,7 +307,7 @@ export default function SearchFilterSort({
     score += Math.log(1 + (discussion.replyCount || 0)) * 0.4;
     
     return score;
-  }, []);
+  };
 
   // Memoize processed discussions to avoid recalculation and infinite loops
   const processedDiscussions = useMemo(() => {

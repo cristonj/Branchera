@@ -16,30 +16,7 @@ export default function PointsPage() {
   const [achievements, setAchievements] = useState([]);
   const { getUserPoints } = useDatabase();
 
-  useEffect(() => {
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-    loadUserPoints();
-  }, [user, router, loadUserPoints]);
-
-  const loadUserPoints = useCallback(async () => {
-    if (!user?.uid) return;
-    try {
-      setLoading(true);
-      const points = await getUserPoints(user.uid);
-      setUserPoints(points);
-      setTotalPoints(points.reduce((sum, point) => sum + point.pointsEarned, 0));
-      calculateAchievements(points);
-    } catch (error) {
-      console.error('Error loading user points:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [user?.uid, getUserPoints]);
-
-  const calculateAchievements = (points) => {
+  const calculateAchievements = useCallback((points) => {
     const achievements = [];
     const totalEarned = points.reduce((sum, point) => sum + point.pointsEarned, 0);
     
@@ -62,7 +39,30 @@ export default function PointsPage() {
     if (perfectRebuttals >= 1) achievements.push({ name: 'Quality First', description: 'Made an excellent rebuttal', icon: '💎' });
 
     setAchievements(achievements);
-  };
+  }, []);
+
+  const loadUserPoints = useCallback(async () => {
+    if (!user?.uid) return;
+    try {
+      setLoading(true);
+      const points = await getUserPoints(user.uid);
+      setUserPoints(points);
+      setTotalPoints(points.reduce((sum, point) => sum + point.pointsEarned, 0));
+      calculateAchievements(points);
+    } catch (error) {
+      console.error('Error loading user points:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.uid, getUserPoints, calculateAchievements]);
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    loadUserPoints();
+  }, [user, router, loadUserPoints]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
