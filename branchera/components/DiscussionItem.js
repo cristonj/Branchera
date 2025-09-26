@@ -406,6 +406,15 @@ export default function DiscussionItem({
               <span>{formatDate(discussion.createdAt)}</span>
             </div>
           </div>
+          <button
+            onClick={() => toggleDiscussion(discussion.id)}
+            className="flex items-center gap-3 text-left flex-shrink-0"
+            title="Expand discussion"
+          >
+            <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       </div>
     );
