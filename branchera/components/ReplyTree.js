@@ -334,7 +334,7 @@ export default function ReplyTree({
           </div>
         </div>
         <div>
-          <p className="text-gray-900 text-sm whitespace-pre-wrap leading-relaxed break-words">
+          <p className="text-gray-900 text-sm whitespace-pre-wrap leading-relaxed break-ai-content">
             <SearchHighlight text={reply.content} searchQuery={replySearchQuery || searchQuery} />
           </p>
         </div>

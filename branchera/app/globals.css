@@ -35,3 +35,17 @@ a {
   overflow-wrap: break-word;
   hyphens: auto;
 }
+
+/* Aggressive word breaking for AI-generated content that may contain long URLs */
+.break-ai-content {
+  /* Break long words aggressively */
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  /* Allow breaking at any character for extremely long strings */
+  word-wrap: break-word;
+  /* Enable hyphenation where supported */
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  -moz-hyphens: auto;
+  -ms-hyphens: auto;
+}
