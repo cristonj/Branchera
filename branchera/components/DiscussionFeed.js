@@ -991,9 +991,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
 
                 {/* Content */}
                 <div className="mb-2">
-                  <p className={`text-gray-900 whitespace-pre-wrap leading-relaxed text-sm ${
-                    discussion.metadata?.isAIGenerated ? 'break-ai-content' : 'break-words'
-                  }`}>
+                  <p className="text-gray-900 whitespace-pre-wrap leading-relaxed text-sm break-words">
                     <SearchHighlight text={discussion.content} searchQuery={searchQuery} />
                   </p>
                 </div>
