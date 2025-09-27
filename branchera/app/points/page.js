@@ -8,7 +8,7 @@ import Link from 'next/link';
 import TopNav from '@/components/TopNav';
 
 export default function PointsPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, getDisplayName } = useAuth();
   const router = useRouter();
   const [leaderboard, setLeaderboard] = useState([]);
   const [userRank, setUserRank] = useState(null);
@@ -51,7 +51,7 @@ export default function PointsPage() {
 
         setUserStats({
           userId: user.uid,
-          userName: formatNameForLeaderboard(user.displayName) || 'You',
+          userName: formatNameForLeaderboard(getDisplayName()) || 'You',
           totalPoints: totalPoints,
           pointCount: userPoints.length
         });

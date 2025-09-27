@@ -21,5 +21,10 @@ service cloud.firestore {
       allow update: if request.auth != null && request.auth.uid == resource.data.userId;
       allow delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
+    
+    // User profiles collection - users can only access their own profile
+    match /userProfiles/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
   }
 }
