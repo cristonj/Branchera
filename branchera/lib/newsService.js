@@ -437,7 +437,7 @@ Make it punchy, specific, and debate-worthy. The source information will be disp
       
       // Create more specific tags based on category
       const generateTags = (category, story) => {
-        const baseTags = ['News'];
+        const baseTags = ['News', 'Bot'];
         
         // Add category-specific tags
         switch (category?.toLowerCase()) {
