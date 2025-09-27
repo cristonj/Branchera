@@ -116,7 +116,7 @@ export default function DashboardPage() {
       loadCollectedPoints();
     }
     loadPointCounts();
-  }, [user, loadCollectedPoints, loadPointCounts]);
+  }, [user?.uid]); // Only depend on user.uid
 
   useEffect(() => {
     if (!user) {
@@ -203,7 +203,7 @@ export default function DashboardPage() {
       loadCollectedPoints();
     }
     loadPointCounts();
-  }, [user?.uid, loadCollectedPoints, loadPointCounts]);
+  }, [user?.uid]); // Only depend on user.uid, not the functions
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);

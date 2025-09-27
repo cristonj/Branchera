@@ -536,8 +536,6 @@ export function useDatabase() {
 
   const getUserPoints = async (userId) => {
     try {
-      console.log('Getting points for user:', userId);
-      
       // Try with orderBy first
       try {
         const points = await getDocuments('userPoints', [
@@ -565,8 +563,6 @@ export function useDatabase() {
 
   const getUserPointsForDiscussion = async (userId, discussionId) => {
     try {
-      console.log('Getting points for user in discussion:', userId, discussionId);
-      
       const allPoints = await getUserPoints(userId);
       return allPoints.filter(point => point.discussionId === discussionId);
     } catch (error) {

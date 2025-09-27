@@ -273,7 +273,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       loadCollectedPoints();
     }
     loadPointCounts();
-  }, [user, loadCollectedPoints, loadPointCounts]);
+  }, [user?.uid]); // Only depend on user.uid
 
   // Handle discussion updates from DiscussionItem components
   const handleDiscussionUpdate = useCallback((discussionId, updatedData) => {
