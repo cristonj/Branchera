@@ -137,10 +137,10 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       
       // Generate AI points and fact-check results for older discussions that don't have them
       discussionsData.forEach(discussion => {
-        if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
+        if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0) && !discussion.processingAIPoints) {
           generateAIPointsForDiscussion(discussion);
         }
-        if (!discussion.factCheckGenerated && !discussion.factCheckResults) {
+        if (!discussion.factCheckGenerated && !discussion.factCheckResults && !discussion.processingFactCheck) {
           generateFactCheckForDiscussion(discussion);
         }
       });
@@ -195,10 +195,10 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       
       // Generate AI points and fact-check results for new discussions
       discussionsData.forEach(discussion => {
-        if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
+        if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0) && !discussion.processingAIPoints) {
           generateAIPointsForDiscussion(discussion);
         }
-        if (!discussion.factCheckGenerated && !discussion.factCheckResults) {
+        if (!discussion.factCheckGenerated && !discussion.factCheckResults && !discussion.processingFactCheck) {
           generateFactCheckForDiscussion(discussion);
         }
       });

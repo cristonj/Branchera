@@ -37,6 +37,8 @@ export default function DiscussionItem({
   const [selectedReplyForPoints, setSelectedReplyForPoints] = useState(null);
   const [editingDiscussion, setEditingDiscussion] = useState(null);
   const [enrichedReplies, setEnrichedReplies] = useState([]);
+  const [generatingAIPoints, setGeneratingAIPoints] = useState(false);
+  const [generatingFactCheck, setGeneratingFactCheck] = useState(false);
   const replyFormRef = useRef(null);
   
   const { updateDocument } = useFirestore();
@@ -49,6 +51,8 @@ export default function DiscussionItem({
     incrementReplyView, 
     updateFactCheckResults, 
     updateReplyFactCheckResults,
+    setProcessingAIPoints,
+    setProcessingFactCheck,
     enrichRepliesWithPoints
   } = useDatabase();
   const { user } = useAuth();
@@ -327,30 +331,55 @@ export default function DiscussionItem({
 
     // Generate AI points and fact-check results when expanding if they don't exist
     if (!wasExpanded && discussion) {
-      // Generate AI points if missing
-      if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
+      // Generate AI points if missing and not already generating
+      if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0) && !generatingAIPoints && !discussion.processingAIPoints) {
+        setGeneratingAIPoints(true);
         try {
+          // Set processing flag in database to prevent other instances from starting
+          await setProcessingAIPoints(discussion.id, true);
+          
           console.log('Generating AI points for discussion:', discussion.id);
           const aiPoints = await AIService.generatePoints(discussion.content, discussion.title);
           await updateAIPoints(discussion.id, aiPoints);
           
           // Update parent component
           if (onDiscussionUpdate) {
-            onDiscussionUpdate(discussion.id, { ...discussion, aiPoints, aiPointsGenerated: true });
+            onDiscussionUpdate(discussion.id, { ...discussion, aiPoints, aiPointsGenerated: true, processingAIPoints: false });
           }
         } catch (error) {
           console.error('Error generating AI points for discussion:', discussionId, error);
+          // Clear processing flag on error
+          try {
+            await setProcessingAIPoints(discussion.id, false);
+          } catch (clearError) {
+            console.error('Error clearing processing flag:', clearError);
+          }
+        } finally {
+          setGeneratingAIPoints(false);
         }
       }
       
-      // Generate fact-check results if missing
-      if (!discussion.factCheckGenerated && !discussion.factCheckResults) {
+      // Generate fact-check results if missing and not already generating
+      if (!discussion.factCheckGenerated && !discussion.factCheckResults && !generatingFactCheck && !discussion.processingFactCheck) {
+        setGeneratingFactCheck(true);
         try {
+          // Set processing flag in database to prevent other instances from starting
+          await setProcessingFactCheck(discussion.id, true);
+          
           console.log('Generating fact-check results for discussion:', discussion.id);
           let factCheckResults;
           
-          if (discussion.aiPoints && discussion.aiPoints.length > 0) {
-            factCheckResults = await AIService.factCheckPoints(discussion.aiPoints, discussion.title);
+          // Wait for AI points to be generated first if they're still being processed
+          let pointsToUse = discussion.aiPoints;
+          if (generatingAIPoints || discussion.processingAIPoints) {
+            // Wait a bit for AI points generation to complete
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Use the discussion data as it should be updated by now
+            pointsToUse = discussion.aiPoints;
+          }
+          
+          if (pointsToUse && pointsToUse.length > 0) {
+            factCheckResults = await AIService.factCheckPoints(pointsToUse, discussion.title);
           } else {
             factCheckResults = await AIService.factCheckContent(discussion.content, discussion.title);
           }
@@ -359,10 +388,18 @@ export default function DiscussionItem({
           
           // Update parent component
           if (onDiscussionUpdate) {
-            onDiscussionUpdate(discussion.id, { ...discussion, factCheckResults, factCheckGenerated: true });
+            onDiscussionUpdate(discussion.id, { ...discussion, factCheckResults, factCheckGenerated: true, processingFactCheck: false });
           }
         } catch (error) {
           console.error('Error generating fact-check results for discussion:', discussionId, error);
+          // Clear processing flag on error
+          try {
+            await setProcessingFactCheck(discussion.id, false);
+          } catch (clearError) {
+            console.error('Error clearing processing flag:', clearError);
+          }
+        } finally {
+          setGeneratingFactCheck(false);
         }
       }
     }
