@@ -597,9 +597,13 @@ export default function SearchFilterSort({
                           isSelected
                             ? tag === 'News'
                               ? 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200'
+                              : tag === 'Bot'
+                              ? 'bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200'
                               : 'bg-black text-white border-black hover:bg-black/80'
                             : tag === 'News'
                               ? 'bg-white text-red-600 border-red-200 hover:bg-red-50'
+                              : tag === 'Bot'
+                              ? 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50'
                               : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                         }`}
                       >
