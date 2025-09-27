@@ -4,14 +4,18 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDatabase } from '@/hooks/useDatabase';
+import { AIService } from '@/lib/aiService';
 import FactCheckResults from './FactCheckResults';
 import SearchHighlight from './SearchHighlight';
 import EditReplyForm from './EditReplyForm';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function ReplyTree({ 
   replies, 
   aiPoints, 
   discussionId, 
+  discussionTitle,
+  discussionContent,
   searchQuery,
   onReplyToReply, 
   onDeleteReply,
@@ -22,8 +26,10 @@ export default function ReplyTree({
   showFilters = true
 }) {
   const { user } = useAuth();
-  const { editReply } = useDatabase();
+  const { editReply, updateReplyKeyPoints } = useDatabase();
   const [expandedReplies, setExpandedReplies] = useState(new Set());
+  const [expandedReplyPoints, setExpandedReplyPoints] = useState(new Set());
+  const [generatingReplyPoints, setGeneratingReplyPoints] = useState(new Set());
   const [editingReply, setEditingReply] = useState(null);
   const [replySearchQuery, setReplySearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('newest');
@@ -34,6 +40,10 @@ export default function ReplyTree({
     hasPoints: false,
     dateRange: 'all'
   });
+  
+  // Safely get toast functions with fallbacks
+  const toastContext = useToast();
+  const showErrorToast = toastContext?.showErrorToast || (() => {});
 
   const toggleReply = async (replyId) => {
     const wasExpanded = expandedReplies.has(replyId);
@@ -93,6 +103,70 @@ export default function ReplyTree({
 
   const handleEditCancel = () => {
     setEditingReply(null);
+  };
+
+  const toggleReplyPoints = async (reply) => {
+    const wasExpanded = expandedReplyPoints.has(reply.id);
+    
+    setExpandedReplyPoints(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(reply.id)) {
+        newSet.delete(reply.id);
+      } else {
+        newSet.add(reply.id);
+      }
+      return newSet;
+    });
+
+    // Generate reply points if expanding and they don't exist yet
+    if (!wasExpanded && (!reply.replyPoints || reply.replyPoints.length === 0) && !generatingReplyPoints.has(reply.id)) {
+      setGeneratingReplyPoints(prev => new Set([...prev, reply.id]));
+      
+      try {
+        console.log('Generating reply points for:', reply.id);
+        
+        // Build discussion context from other replies
+        const discussionContext = replies.filter(r => r.id !== reply.id).slice(0, 5); // Limit context
+        
+        const replyPoints = await AIService.generateReplyKeyPoints(
+          reply.content,
+          discussionTitle,
+          discussionContent,
+          discussionContext
+        );
+        
+        console.log('Generated reply points:', replyPoints);
+        
+        // Update the reply with the generated points
+        await updateReplyKeyPoints(discussionId, reply.id, replyPoints);
+        
+        // Update the reply in the local state via parent component
+        if (onReplyEdited) {
+          onReplyEdited({
+            ...reply,
+            replyPoints: replyPoints,
+            replyPointsGenerated: true
+          });
+        }
+        
+      } catch (error) {
+        console.error('Error generating reply points:', error);
+        showErrorToast('Failed to generate key points for this reply');
+      } finally {
+        setGeneratingReplyPoints(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(reply.id);
+          return newSet;
+        });
+      }
+    }
+  };
+
+  const handleReplyPointClick = (reply, point) => {
+    if (!user || !onPointClick) return;
+    
+    // Call the point click handler with the reply and point
+    onPointClick(reply, point);
   };
 
   // Enhanced search function for replies
@@ -298,17 +372,6 @@ export default function ReplyTree({
               </svg>
               {reply.views || 0}
             </div>
-            {canReply && onReplyToReply && (
-              <button
-                onClick={() => onReplyToReply(reply)}
-                className="p-1 text-gray-800 hover:text-black"
-                title="Reply to this"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                </svg>
-              </button>
-            )}
             {user && reply.authorId === user.uid && (
               <>
                 <button
@@ -381,6 +444,80 @@ export default function ReplyTree({
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* Reply Key Points (collapsible and clickable) */}
+        {(reply.replyPoints && reply.replyPoints.length > 0) || generatingReplyPoints.has(reply.id) ? (
+          <div className="mt-2 rounded-lg border border-black/20">
+            <button
+              onClick={() => toggleReplyPoints(reply)}
+              className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-50"
+            >
+              <div className="flex items-center gap-2">
+                {generatingReplyPoints.has(reply.id) ? (
+                  <div className="w-4 h-4 border-2 border-gray-800 border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <svg className={`w-4 h-4 transition-transform ${expandedReplyPoints.has(reply.id) ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                )}
+                <span className="text-sm font-semibold text-gray-900">
+                  {generatingReplyPoints.has(reply.id) ? 'Generating Key Points...' : 'Key Reply Points'}
+                </span>
+              </div>
+              <div className="text-xs text-gray-600">
+                {generatingReplyPoints.has(reply.id) ? '' : `${reply.replyPoints?.length || 0} point${(reply.replyPoints?.length || 0) !== 1 ? 's' : ''}`}
+              </div>
+            </button>
+
+            {expandedReplyPoints.has(reply.id) && reply.replyPoints && reply.replyPoints.length > 0 && (
+              <div className="px-3 pb-3 border-t border-black/10">
+                <div className="mt-2 space-y-2">
+                  {reply.replyPoints.map((point) => (
+                    <button
+                      key={point.id}
+                      onClick={() => handleReplyPointClick(reply, point)}
+                      className="w-full flex items-start gap-3 p-3 text-left rounded-lg border transition-all hover:bg-gray-50 border-transparent hover:border-black/20"
+                      disabled={!user}
+                    >
+                      <div className="flex-shrink-0 mt-0.5">
+                        <div className="w-1 h-1 bg-black rounded-full mt-2"></div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900">
+                          <SearchHighlight text={point.text} searchQuery={replySearchQuery || searchQuery} />
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {point.type && (
+                            <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white uppercase tracking-wide">
+                              <SearchHighlight text={point.type} searchQuery={replySearchQuery || searchQuery} />
+                            </span>
+                          )}
+                        </div>
+                        {user && (
+                          <div className="text-xs mt-1 text-gray-600">
+                            Click to reply to this point
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="mt-2">
+            <button
+              onClick={() => toggleReplyPoints(reply)}
+              className="text-xs text-gray-600 hover:text-gray-800 flex items-center gap-1"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              Generate key points to reply to
+            </button>
           </div>
         )}
         

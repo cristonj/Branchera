@@ -878,6 +878,8 @@ export default function DiscussionItem({
                 replies={enrichedReplies}
                 aiPoints={discussion.aiPoints || []}
                 discussionId={discussion.id}
+                discussionTitle={discussion.title}
+                discussionContent={discussion.content}
                 searchQuery={searchQuery}
                 onReplyToReply={(reply) => {
                   setSelectedDiscussion(discussion);
