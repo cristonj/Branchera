@@ -147,6 +147,7 @@ export class UserProfileService {
       
       if (!existingProfile) {
         // Create initial profile with Google data
+        console.log('Creating new user profile for:', user.uid);
         return await this.createOrUpdateUserProfile(user.uid, {
           email: user.email,
           googleDisplayName: user.displayName,
@@ -156,17 +157,15 @@ export class UserProfileService {
         });
       } else {
         // Update Google-specific fields but preserve custom displayName
+        console.log('Updating existing profile for:', user.uid, { 
+          hasDisplayName: !!existingProfile.displayName,
+          displayName: existingProfile.displayName 
+        });
         const updatedProfile = await this.createOrUpdateUserProfile(user.uid, {
           email: user.email,
           googleDisplayName: user.displayName,
           photoURL: user.photoURL,
           hasSetDisplayName: !!existingProfile.displayName
-        });
-        
-        console.log('Updated existing profile:', {
-          existingProfile,
-          updatedProfile,
-          hasDisplayName: !!existingProfile.displayName
         });
         
         return updatedProfile;

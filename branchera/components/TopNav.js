@@ -119,11 +119,11 @@ export default function TopNav() {
                     About
                   </Link>
                   <Link
-                    href="/profile"
+                    href="/settings"
                     onClick={closeDropdown}
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                   >
-                    Profile Settings
+                    Settings
                   </Link>
                   
                   {/* Divider */}
@@ -135,15 +135,6 @@ export default function TopNav() {
                       <div className="px-4 py-2 text-xs text-gray-500 border-b border-gray-100">
                         {getDisplayName()}
                       </div>
-                      <button
-                        onClick={() => {
-                          closeDropdown();
-                          openDisplayNameModal();
-                        }}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      >
-                        Change Display Name
-                      </button>
                       <button
                         onClick={() => {
                           closeDropdown();

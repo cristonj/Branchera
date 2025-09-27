@@ -71,8 +71,6 @@ export default function DisplayNameModal({ isOpen, onSubmit, onClose, currentNam
     }
   };
 
-  console.log('DisplayNameModal render:', { isOpen, currentName });
-  
   if (!isOpen) return null;
 
   return (
@@ -92,7 +90,7 @@ export default function DisplayNameModal({ isOpen, onSubmit, onClose, currentNam
       }}
     >
       <div 
-        className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4"
+        className="bg-white rounded-lg border border-black/20 shadow-2xl max-w-md w-full mx-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">
@@ -105,7 +103,7 @@ export default function DisplayNameModal({ isOpen, onSubmit, onClose, currentNam
               <button
                 onClick={handleClose}
                 disabled={isSubmitting}
-                className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                className="text-gray-400 hover:text-gray-900 disabled:opacity-50 transition-colors"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -123,7 +121,7 @@ export default function DisplayNameModal({ isOpen, onSubmit, onClose, currentNam
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="displayName" className="block text-sm font-medium text-gray-900 mb-2">
                 Display Name *
               </label>
               <input
@@ -134,7 +132,7 @@ export default function DisplayNameModal({ isOpen, onSubmit, onClose, currentNam
                   setDisplayName(e.target.value);
                   setError(''); // Clear error when user types
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 placeholder="Enter your display name"
                 maxLength={50}
                 disabled={isSubmitting}
@@ -159,7 +157,7 @@ export default function DisplayNameModal({ isOpen, onSubmit, onClose, currentNam
                   type="button"
                   onClick={handleClose}
                   disabled={isSubmitting}
-                  className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex-1 px-4 py-2 text-gray-700 border border-black/20 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Cancel
                 </button>
@@ -167,7 +165,7 @@ export default function DisplayNameModal({ isOpen, onSubmit, onClose, currentNam
               <button
                 type="submit"
                 disabled={isSubmitting || !displayName.trim()}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                className="flex-1 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
               >
                 {isSubmitting ? (
                   <div className="flex items-center justify-center">
