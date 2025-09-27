@@ -49,11 +49,16 @@ export default function TopNav() {
     <nav className="border-b border-black/20 bg-white">
       <div className="max-w-4xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          {/* Site Name */}
+          {/* Site Name with Logo */}
           <Link 
             href="/dashboard" 
-            className="text-xl font-bold text-gray-900 hover:text-gray-600 transition-colors"
+            className="flex items-center text-xl font-bold text-gray-900 hover:text-gray-600 transition-colors"
           >
+            <img 
+              src="/logo.svg" 
+              alt="Branchera Logo" 
+              className="w-8 h-8 mr-2"
+            />
             Branchera
           </Link>
           

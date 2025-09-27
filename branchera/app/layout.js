@@ -43,21 +43,48 @@ export const metadata = {
   // Apple specific
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default',
+    statusBarStyle: 'black-translucent',
     title: 'Branchera',
+    startupImage: [
+      {
+        url: '/apple-splash-2048-2732.png',
+        media: '(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)',
+      },
+      {
+        url: '/apple-splash-1668-2388.png',
+        media: '(device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)',
+      },
+      {
+        url: '/apple-splash-1536-2048.png',
+        media: '(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)',
+      },
+      {
+        url: '/apple-splash-1125-2436.png',
+        media: '(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)',
+      },
+      {
+        url: '/apple-splash-1242-2688.png',
+        media: '(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)',
+      },
+      {
+        url: '/apple-splash-750-1334.png',
+        media: '(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)',
+      },
+      {
+        url: '/apple-splash-640-1136.png',
+        media: '(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)',
+      },
+    ],
   },
   // Icons for various platforms
   icons: {
     icon: [
-      { url: '/favicon.ico' },
-      { url: '/icon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/icon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/icon.svg', sizes: 'any', type: 'image/svg+xml' },
     ],
     apple: [
-      { url: '/apple-icon.png' },
-      { url: '/apple-icon-180x180.png', sizes: '180x180' },
+      { url: '/apple-touch-icon.svg', sizes: '180x180', type: 'image/svg+xml' },
+      { url: '/icon.svg', sizes: 'any', type: 'image/svg+xml' },
     ],
   },
   // For Discord and other apps that use these meta tags
@@ -65,7 +92,7 @@ export const metadata = {
     'discord:image': '/og-image.svg',
     'og:image:width': '1200',
     'og:image:height': '630',
-    'theme-color': '#667eea',
+    'theme-color': '#000000',
   },
   robots: {
     index: true,
@@ -91,6 +118,27 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        
+        {/* Apple PWA Meta Tags */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Branchera" />
+        <meta name="apple-touch-fullscreen" content="yes" />
+        
+        {/* Apple Touch Icons */}
+        <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.svg" />
+        
+        {/* Additional PWA Meta Tags */}
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="application-name" content="Branchera" />
+        <meta name="msapplication-TileColor" content="#000000" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
+        
+        {/* Theme Colors */}
+        <meta name="theme-color" content="#000000" />
+        <meta name="msapplication-navbutton-color" content="#000000" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body>
         <AuthProvider>
