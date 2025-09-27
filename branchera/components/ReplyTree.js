@@ -411,34 +411,36 @@ export default function ReplyTree({
         <div className="mb-3 border border-black/20 rounded-lg bg-white">
           {/* Main search bar */}
           <div className="p-3 border-b border-black/10">
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 placeholder="Search replies, authors, claims..."
                 value={replySearchQuery}
                 onChange={(e) => setReplySearchQuery(e.target.value)}
-                className="flex-1 px-3 py-2 border border-black/20 rounded focus:outline-none focus:ring-2 focus:ring-black text-sm"
+                className="flex-1 min-w-0 px-3 py-2 border border-black/20 rounded focus:outline-none focus:ring-2 focus:ring-black text-sm"
               />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-2 border border-black/20 rounded focus:outline-none focus:ring-2 focus:ring-black text-sm"
-              >
-                <option value="newest">Newest</option>
-                <option value="oldest">Oldest</option>
-                <option value="author">By Author</option>
-                <option value="views">Most Viewed</option>
-                <option value="points">Most Points</option>
-              </select>
-              <button
-                onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                className="px-3 py-2 border border-black/20 rounded hover:bg-gray-50 text-sm flex items-center gap-1"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                </svg>
-                Filters
-              </button>
+              <div className="flex gap-2">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-3 py-2 border border-black/20 rounded focus:outline-none focus:ring-2 focus:ring-black text-sm flex-shrink-0"
+                >
+                  <option value="newest">Newest</option>
+                  <option value="oldest">Oldest</option>
+                  <option value="author">By Author</option>
+                  <option value="views">Most Viewed</option>
+                  <option value="points">Most Points</option>
+                </select>
+                <button
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className="px-3 py-2 border border-black/20 rounded hover:bg-gray-50 text-sm flex items-center justify-center gap-1 whitespace-nowrap flex-shrink-0"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                  <span className="hidden sm:inline">Filters</span>
+                </button>
+              </div>
             </div>
           </div>
 

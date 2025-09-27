@@ -100,3 +100,35 @@ a {
   -moz-hyphens: auto;
   -ms-hyphens: auto;
 }
+
+/* Prevent horizontal overflow on small screens */
+@media screen and (max-width: 640px) {
+  /* Ensure flex containers don't cause horizontal overflow */
+  .flex {
+    min-width: 0;
+  }
+  
+  /* Make sure flex items with flex-1 don't shrink below usable size */
+  .flex-1 {
+    min-width: 0;
+    flex-basis: 0;
+  }
+  
+  /* Prevent buttons from being too small on mobile */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Ensure search inputs are always usable on mobile */
+  input[type="text"], 
+  input[type="search"] {
+    min-width: 200px;
+  }
+  
+  /* Override min-width for flex-1 inputs to allow proper shrinking */
+  .flex-1 input[type="text"],
+  .flex-1 input[type="search"] {
+    min-width: 0;
+  }
+}

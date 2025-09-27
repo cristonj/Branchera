@@ -423,8 +423,8 @@ export default function SearchFilterSort({
     <div className="mb-6 border border-black/20 rounded-lg bg-white">
       {/* Search Bar */}
       <div className="p-4 border-b border-black/10">
-        <div className="flex gap-2">
-          <div className="flex-1 relative">
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex-1 min-w-0 relative">
             <input
               key="search-input"
               type="text"
@@ -446,12 +446,12 @@ export default function SearchFilterSort({
           </div>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`px-4 py-2 border border-black/20 rounded-lg hover:bg-black-50 flex items-center gap-2`}
+            className={`px-4 py-2 border border-black/20 rounded-lg hover:bg-black-50 flex items-center justify-center gap-2 whitespace-nowrap flex-shrink-0`}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
             </svg>
-            Filters
+            <span className="hidden sm:inline">Filters</span>
             <svg className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
