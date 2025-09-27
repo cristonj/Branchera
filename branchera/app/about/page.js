@@ -23,9 +23,16 @@ export default function AboutPage() {
                 Our Story • Our Mission • Our Values
               </div>
               
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 text-black leading-tight">
-                About Branchera
-              </h1>
+              <div className="flex items-center justify-center mb-6">
+                <img 
+                  src="/logo.svg" 
+                  alt="Branchera Logo" 
+                  className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 mr-4"
+                />
+                <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-black leading-tight">
+                  About Branchera
+                </h1>
+              </div>
               
               <p className="text-xl md:text-2xl text-gray-700 font-light max-w-4xl mx-auto leading-relaxed mb-6">
                 We&rsquo;re building the social platform that puts <span className="font-semibold text-black">people before profit</span> and <span className="font-semibold text-black">dialogue before engagement</span>
@@ -241,7 +248,14 @@ export default function AboutPage() {
         <footer className="relative py-16 px-4 border-t border-black/20 bg-gray-50">
           <div className="max-w-6xl mx-auto text-center">
             <div className="mb-6">
-              <h3 className="text-2xl font-bold text-black mb-2">Branchera</h3>
+              <div className="flex items-center justify-center mb-2">
+                <img 
+                  src="/logo.svg" 
+                  alt="Branchera Logo" 
+                  className="w-8 h-8 mr-3"
+                />
+                <h3 className="text-2xl font-bold text-black">Branchera</h3>
+              </div>
               <p className="text-gray-600">Social media that gets out of your way</p>
             </div>
             <div className="flex justify-center space-x-8 mb-8">

@@ -27,9 +27,16 @@ export default function Home() {
               Open Source • Ad-Free • Always
             </div>
             
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-4 text-black leading-tight">
-              Branchera
-            </h1>
+            <div className="flex items-center justify-center mb-4">
+              <img 
+                src="/logo.svg" 
+                alt="Branchera Logo" 
+                className="w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 mr-4"
+              />
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-black leading-tight">
+                Branchera
+              </h1>
+            </div>
             
             <p className="text-lg md:text-xl lg:text-2xl mb-6 text-gray-700 font-light max-w-4xl mx-auto leading-relaxed">
               The social app that <span className="font-semibold text-black">gets out of your way</span> — built for constructive dialogue, not endless scrolling
@@ -311,7 +318,14 @@ export default function Home() {
             <div className="grid md:grid-cols-4 gap-8 mb-12">
               {/* Brand Column */}
               <div className="md:col-span-2">
-                <h3 className="text-2xl font-bold text-black mb-3">Branchera</h3>
+                <div className="flex items-center mb-3">
+                  <img 
+                    src="/logo.svg" 
+                    alt="Branchera Logo" 
+                    className="w-8 h-8 mr-3"
+                  />
+                  <h3 className="text-2xl font-bold text-black">Branchera</h3>
+                </div>
                 <p className="text-gray-600 mb-4 max-w-md">
                   The social app that gets out of your way. Open source, ad-free, and designed for constructive dialogue instead of endless engagement.
                 </p>

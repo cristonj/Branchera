@@ -26,11 +26,18 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            Branchera
-          </h1>
+          <div className="flex items-center justify-center mb-2">
+            <img 
+              src="/logo.svg" 
+              alt="Branchera Logo" 
+              className="w-8 h-8 mr-3"
+            />
+            <h1 className="text-3xl font-bold">
+              Branchera
+            </h1>
+          </div>
           <p className="text-sm text-gray-600">
-            Where Progress Happens
+            Social media that gets out of your way
           </p>
         </div>
 
