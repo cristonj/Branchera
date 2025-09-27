@@ -39,7 +39,9 @@ export default function Home() {
             </div>
             
             <p className="text-lg md:text-xl lg:text-2xl mb-6 text-gray-700 font-light max-w-4xl mx-auto leading-relaxed">
-              The social app that <span className="font-semibold text-black">gets out of your way</span> — built for constructive dialogue, not endless scrolling
+              The social app that <span className="font-semibold text-black">respects your intelligence</span>.
+              <br />
+              Built to maximize constructive dialogue, not engagement.
             </p>
 
             {/* Early CTA */}
