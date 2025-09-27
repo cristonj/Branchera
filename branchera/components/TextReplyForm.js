@@ -30,7 +30,7 @@ export default function TextReplyForm({
   const [showPointsAnimation, setShowPointsAnimation] = useState(false);
   const [isJudging, setIsJudging] = useState(false);
   
-  const { user } = useAuth();
+  const { user, getDisplayName } = useAuth();
   const { addReply, updateReplyFactCheckResults, createUserPoint, hasUserEarnedPointsForDiscussion } = useDatabase();
   
   // Safely get toast functions with fallbacks
@@ -56,7 +56,7 @@ export default function TextReplyForm({
       const replyData = {
         content: content.trim(),
         authorId: user.uid,
-        authorName: user.displayName || user.email,
+        authorName: getDisplayName(),
         authorPhoto: user.photoURL,
         replyToPointId: selectedPoint?.id || null,
         replyToReplyId: replyingToReply?.id || null,
@@ -142,7 +142,7 @@ export default function TextReplyForm({
                 // Create user point record
                 const pointData = {
                   userId: user.uid,
-                  userName: user.displayName || user.email,
+                  userName: getDisplayName(),
                   userPhoto: user.photoURL,
                   discussionId: discussionId,
                   discussionTitle: discussionTitle,

@@ -15,7 +15,7 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
   const [isFactChecking, setIsFactChecking] = useState(false);
   const [factCheckResults, setFactCheckResults] = useState(null);
   
-  const { user } = useAuth();
+  const { user, getDisplayName } = useAuth();
   const { createDiscussion, updateAIPoints, updateFactCheckResults } = useDatabase();
   
   const TITLE_CHAR_LIMIT = 100;
@@ -74,7 +74,7 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
         title: title.trim(),
         content: content.trim(),
         authorId: user.uid,
-        authorName: user.displayName || user.email,
+        authorName: getDisplayName(),
         authorPhoto: user.photoURL,
         tags: tags.length > 0 ? tags : []
       };
