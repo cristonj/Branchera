@@ -13,7 +13,7 @@ import DiscussionItem from '@/components/DiscussionItem';
 
 
 export default function DashboardPage() {
-  const { user, logout } = useAuth();
+  const { user, logout, getDisplayName } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState(null);
   const [hotDiscussions, setHotDiscussions] = useState([]);
@@ -239,7 +239,7 @@ export default function DashboardPage() {
         {/* Welcome Header */}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Welcome back, {user.displayName?.split(' ')[0] || 'there'}!
+            Welcome back, {getDisplayName().split(' ')[0] || 'there'}!
           </h1>
           <p className="text-gray-600 mb-6">Here&apos;s what&apos;s happening in your community</p>
         </div>

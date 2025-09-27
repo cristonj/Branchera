@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function TopNav() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
-  const { user, logout } = useAuth();
+  const { user, logout, getDisplayName, openDisplayNameModal } = useAuth();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -118,15 +118,22 @@ export default function TopNav() {
                   >
                     About
                   </Link>
+                  <Link
+                    href="/settings"
+                    onClick={closeDropdown}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                  >
+                    Settings
+                  </Link>
                   
                   {/* Divider */}
                   <div className="border-t border-gray-100 my-2"></div>
                   
-                  {/* User Info & Logout */}
+                  {/* User Info & Settings */}
                   {user && (
                     <>
                       <div className="px-4 py-2 text-xs text-gray-500 border-b border-gray-100">
-                        {user.displayName || user.email}
+                        {getDisplayName()}
                       </div>
                       <button
                         onClick={() => {

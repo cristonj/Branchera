@@ -508,7 +508,7 @@ export function useDatabase() {
 
       const completeData = {
         userId: pointData.userId,
-        userName: formatNameForLeaderboard(pointData.userName) || 'Anonymous User',
+        userName: formatNameForLeaderboard(pointData.userName || 'Anonymous User'),
         userPhoto: pointData.userPhoto || null,
         discussionId: pointData.discussionId,
         discussionTitle: pointData.discussionTitle || 'Unknown Discussion',
@@ -628,12 +628,9 @@ export function useDatabase() {
       allPoints.forEach(point => {
         const userId = point.userId;
         if (!userPointsMap.has(userId)) {
-          // For existing points that might not have userName, try to get it from the point data
-          // or fallback to Anonymous User
-          const displayName = point.userName || point.userDisplayName || 'Anonymous User';
           userPointsMap.set(userId, {
             userId: userId,
-            userName: formatNameForLeaderboard(displayName),
+            userName: 'Loading...', // Will be updated with actual display name
             userPhoto: point.userPhoto || null,
             totalPoints: 0,
             pointCount: 0,
@@ -648,6 +645,26 @@ export function useDatabase() {
         if (!userData.lastEarned || new Date(point.earnedAt) > new Date(userData.lastEarned)) {
           userData.lastEarned = point.earnedAt;
         }
+      });
+      
+      // Get all user profiles to fetch current display names
+      const userProfiles = await getDocuments('userProfiles', [limit(1000)]);
+      const profilesMap = new Map();
+      userProfiles.forEach(profile => {
+        profilesMap.set(profile.userId, profile);
+      });
+      
+      // Update user names with current display names from profiles
+      userPointsMap.forEach((userData, userId) => {
+        const profile = profilesMap.get(userId);
+        let displayName = 'Anonymous User'; // Default fallback
+        
+        if (profile && profile.displayName) {
+          // Use custom display name if set
+          displayName = profile.displayName;
+        }
+        
+        userData.userName = formatNameForLeaderboard(displayName);
       });
       
       // Convert to array and sort by total points
