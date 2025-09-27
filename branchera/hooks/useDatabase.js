@@ -266,6 +266,19 @@ export function useDatabase() {
     }
   };
 
+  // Set processing flag for AI points generation
+  const setProcessingAIPoints = async (discussionId, processing = true) => {
+    try {
+      await updateDocument('discussions', discussionId, {
+        processingAIPoints: processing
+      });
+      return true;
+    } catch (error) {
+      console.error('Error setting processing AI points flag:', error);
+      throw error;
+    }
+  };
+
   // Update AI points for a discussion
   const updateAIPoints = async (discussionId, aiPoints) => {
     try {
@@ -273,7 +286,8 @@ export function useDatabase() {
       
       await updateDocument('discussions', discussionId, {
         aiPoints: aiPoints,
-        aiPointsGenerated: true
+        aiPointsGenerated: true,
+        processingAIPoints: false // Clear processing flag
       });
 
       console.log('AI points updated successfully');
@@ -398,6 +412,19 @@ export function useDatabase() {
     }
   };
 
+  // Set processing flag for fact check generation
+  const setProcessingFactCheck = async (discussionId, processing = true) => {
+    try {
+      await updateDocument('discussions', discussionId, {
+        processingFactCheck: processing
+      });
+      return true;
+    } catch (error) {
+      console.error('Error setting processing fact check flag:', error);
+      throw error;
+    }
+  };
+
   // Update fact check results for a discussion
   const updateFactCheckResults = async (discussionId, factCheckResults) => {
     try {
@@ -405,7 +432,8 @@ export function useDatabase() {
       
       await updateDocument('discussions', discussionId, {
         factCheckResults: factCheckResults,
-        factCheckGenerated: true
+        factCheckGenerated: true,
+        processingFactCheck: false // Clear processing flag
       });
 
       console.log('Fact check results updated successfully');
@@ -750,6 +778,8 @@ export function useDatabase() {
     incrementReplyView,
     updateFactCheckResults,
     updateReplyFactCheckResults,
+    setProcessingAIPoints,
+    setProcessingFactCheck,
     createUserPoint,
     getUserPoints,
     getUserPointsForDiscussion,
