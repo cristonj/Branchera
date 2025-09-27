@@ -42,6 +42,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const searchTimeoutRef = useRef(null);
   const observerRef = useRef(null);
   const loadingTriggerRef = useRef(null);
+  const loadMoreRef = useRef(null);
   
   const { updateDocument } = useFirestore();
   const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint, getUserPoints, getPointCounts, createDiscussion } = useDatabase();
@@ -165,7 +166,54 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         setLoadingMore(false);
       }
     }
-  }, [lastDoc, getDiscussions]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // Remove dependencies to prevent refresh loops
+
+  // Separate function for loading more discussions (for infinite scroll)
+  const loadMoreDiscussions = useCallback(async () => {
+    if (loadingMore || !hasMore || isUserSearching) return;
+    
+    try {
+      setLoadingMore(true);
+      
+      const discussionsData = await getDiscussions({
+        limit: 10,
+        orderField: 'createdAt',
+        orderDirection: 'desc',
+        lastDoc: lastDoc
+      });
+      
+      // Append new discussions to existing ones
+      setDiscussions(prev => [...prev, ...discussionsData]);
+      
+      // Update pagination state
+      if (discussionsData.length > 0) {
+        setLastDoc(discussionsData[discussionsData.length - 1]);
+        setHasMore(discussionsData.length === 10);
+      } else {
+        setHasMore(false);
+      }
+      
+      // Generate AI points and fact-check results for new discussions
+      discussionsData.forEach(discussion => {
+        if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
+          generateAIPointsForDiscussion(discussion);
+        }
+        if (!discussion.factCheckGenerated && !discussion.factCheckResults) {
+          generateFactCheckForDiscussion(discussion);
+        }
+      });
+      
+    } catch (error) {
+      console.error('Error loading more discussions:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, []);
+
+  // Update the ref whenever the function changes
+  useEffect(() => {
+    loadMoreRef.current = loadMoreDiscussions;
+  }, [loadMoreDiscussions]);
 
   // Check if we should create a news post and create one if needed (non-blocking)
   const checkAndCreateNewsPost = useCallback(async (discussionsData) => {
@@ -220,7 +268,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
 
   useEffect(() => {
     loadDiscussions();
-  }, [loadDiscussions]); // Include loadDiscussions dependency
+  }, []); // Only run once on mount
 
   // Set up intersection observer for infinite scrolling
   useEffect(() => {
@@ -231,9 +279,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     const observer = new IntersectionObserver(
       (entries) => {
         const target = entries[0];
-        if (target.isIntersecting && hasMore && !loadingMore && !isUserSearching) {
+        if (target.isIntersecting && loadMoreRef.current) {
           console.log('Loading more discussions...');
-          loadDiscussions(true);
+          loadMoreRef.current();
         }
       },
       {
@@ -251,7 +299,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         observerRef.current.disconnect();
       }
     };
-  }, [hasMore, loadingMore, isUserSearching, loadDiscussions]);
+  }, [hasMore, loadingMore]);
 
   // Load collected points and point counts separately to avoid refresh loops
   useEffect(() => {
