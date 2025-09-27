@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
   <!-- White background -->
-  <rect width="180" height="180" fill="#ffffff"/>
+  <rect width="192" height="192" fill="#ffffff"/>
   
   <!-- Centered logo with proper padding -->
-  <g transform="translate(30, 30) scale(0.234)">
+  <g transform="translate(32, 32) scale(0.25)">
     <polygon fill="#000000" points="365.284,332.418 365.284,305.202 272.767,305.202 387.051,212.689 376.17,174.592 169.368,316.092 180.253,141.939 147.601,152.828 125.83,348.761 0.664,452.14 0.664,512 49.643,512 240.114,343.3"/>
     <path fill="#000000" d="M448.163,41.908c-67.94,15.609-85.271,84.366-46.608,131.48C435.48,175.564,496.759,99.05,448.163,41.908z"/>
     <path fill="#000000" d="M388.215,327.476c13.457,19.787,82.469,20.759,93.207-30.955C443.376,265.519,397.673,285.616,388.215,327.476z"/>

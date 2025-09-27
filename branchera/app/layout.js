@@ -80,11 +80,12 @@ export const metadata = {
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
-      { url: '/icon.svg', sizes: 'any', type: 'image/svg+xml' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: [
-      { url: '/apple-touch-icon.svg', sizes: '180x180', type: 'image/svg+xml' },
-      { url: '/icon.svg', sizes: 'any', type: 'image/svg+xml' },
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
     ],
   },
   // For Discord and other apps that use these meta tags
@@ -126,14 +127,17 @@ export default function RootLayout({ children }) {
         <meta name="apple-touch-fullscreen" content="yes" />
         
         {/* Apple Touch Icons */}
-        <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.svg" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         
         {/* Additional PWA Meta Tags */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="Branchera" />
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
+        
+        {/* PWA Manifest */}
+        <link rel="manifest" href="/manifest.json" />
         
         {/* Theme Colors */}
         <meta name="theme-color" content="#000000" />
@@ -148,6 +152,22 @@ export default function RootLayout({ children }) {
             </ToastProvider>
           </DatabaseProvider>
         </AuthProvider>
+        
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                  .then(function(registration) {
+                    console.log('SW registered: ', registration);
+                  })
+                  .catch(function(registrationError) {
+                    console.log('SW registration failed: ', registrationError);
+                  });
+              });
+            }
+          `
+        }} />
       </body>
     </html>
   );
