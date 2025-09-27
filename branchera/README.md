@@ -1,38 +1,181 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Branchera Development Setup
 
-## Getting Started
+This is the main application directory for Branchera, built with [Next.js](https://nextjs.org) and powered by Firebase and Google Gemini AI.
 
-First, run the development server:
+## 🚀 Quick Setup
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Firebase account
+- Google Cloud account (for Gemini AI)
+
+### Installation
+
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Configure Firebase**
+   - Follow the detailed setup in [`FIREBASE_SETUP.md`](./FIREBASE_SETUP.md)
+   - Set up Authentication, Firestore, and Functions
+
+3. **Configure AI Services**
+   - Follow the setup in [`GEMINI_SETUP.md`](./GEMINI_SETUP.md) 
+   - Configure Gemini AI integration
+
+4. **Set up Firestore Rules**
+   - **URGENT**: Follow [`SETUP_FIRESTORE_RULES_URGENT.md`](./SETUP_FIRESTORE_RULES_URGENT.md)
+   - This is critical for security and functionality
+
+5. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## 🛠️ Development Scripts
 
 ```bash
+# Start development server with Turbopack
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build for production with Turbopack
+npm run build
+
+# Start production server
+npm start
+
+# Run linting
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📁 Application Structure
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```
+app/
+├── dashboard/          # Main user dashboard
+├── feed/              # Discussion feed
+├── login/             # Authentication pages
+├── points/            # Points/rewards system
+├── about/             # About page
+├── privacy/           # Privacy policy
+├── terms/             # Terms of service
+└── api/
+    └── web-search/    # Web search API endpoint
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+components/
+├── DiscussionFeed.js     # Main discussion interface
+├── DiscussionItem.js     # Individual discussion posts
+├── FactCheckResults.js   # AI fact-checking display
+├── PointsAnimation.js    # Gamification animations
+├── ReplyTree.js          # Nested reply system
+├── SearchFilterSort.js   # Search and filtering
+├── TextDiscussionForm.js # Discussion creation
+├── TopNav.js             # Navigation component
+└── ToastNotification.js  # User notifications
 
-## Learn More
+contexts/
+├── AuthContext.js      # User authentication state
+└── ToastContext.js     # Toast notification system
 
-To learn more about Next.js, take a look at the following resources:
+hooks/
+├── useAuth.js          # Authentication logic
+├── useDatabase.js      # Database operations
+├── useFirestore.js     # Firestore integration
+├── usePolling.js       # Real-time updates
+└── useUrlState.js      # URL state management
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+lib/
+├── aiService.js        # AI/Gemini integration
+├── firebase.js         # Firebase configuration
+├── newsService.js      # News API integration
+└── realtimeConfig.js   # Real-time features
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+functions/
+├── index.js            # Firebase Functions
+└── package.json        # Functions dependencies
+```
 
-## Deploy on Vercel
+## 🔧 Key Features Implementation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### AI-Powered Discussions
+- **Point Extraction**: AI automatically identifies key discussion points
+- **Fact Checking**: Real-time verification with source citations
+- **Smart Replies**: AI-guided response categorization
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Real-time Features
+- **Live Updates**: Discussions update in real-time
+- **Polling System**: Efficient data synchronization
+- **Notifications**: Toast-based user feedback
 
-<!-- Build trigger: Fixed points system to require AI-judged replies that address specific points, visual indicators show earned points -->
+### Gamification
+- **Points System**: Rewards for quality contributions
+- **Visual Feedback**: Animations for user actions
+- **Progress Tracking**: User engagement metrics
+
+## 🔒 Security & Rules
+
+**CRITICAL**: Before deploying, ensure you've set up:
+1. **Firestore Security Rules** - See `firestore.rules`
+2. **Authentication Rules** - Configured in Firebase Console
+3. **API Key Security** - Environment variables for production
+
+## 🎨 Styling & UI
+
+- **Framework**: Tailwind CSS 4
+- **Design System**: Custom components with consistent styling
+- **Responsive**: Mobile-first design approach
+- **Accessibility**: WCAG compliant components
+
+## 🚀 Deployment
+
+### Netlify (Current)
+- Configured via `netlify.toml`
+- Automatic deploys from main branch
+- Environment variables set in Netlify dashboard
+
+### Alternative Deployments
+- **Vercel**: Next.js optimized hosting
+- **Firebase Hosting**: Integrated with Firebase services
+
+## 🧪 Testing & Development
+
+```bash
+# Run development server
+npm run dev
+
+# Build and test locally
+npm run build && npm start
+
+# Check for linting issues
+npm run lint
+```
+
+## 📚 Documentation
+
+- [`FIREBASE_SETUP.md`](./FIREBASE_SETUP.md) - Complete Firebase configuration
+- [`GEMINI_SETUP.md`](./GEMINI_SETUP.md) - AI services setup
+- [`FIREBASE_RULES.md`](./FIREBASE_RULES.md) - Security rules documentation
+- [`SETUP_FIRESTORE_RULES_URGENT.md`](./SETUP_FIRESTORE_RULES_URGENT.md) - Critical security setup
+
+## 🤝 Contributing
+
+1. **Follow the coding standards** - ESLint configuration provided
+2. **Test your changes** - Ensure all features work locally
+3. **Update documentation** - Keep setup guides current
+4. **Security first** - Never commit API keys or credentials
+
+## 🔗 Useful Links
+
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Firebase Documentation](https://firebase.google.com/docs)
+- [Tailwind CSS](https://tailwindcss.com/docs)
+- [Google Gemini AI](https://ai.google.dev/)
+
+---
+
+*Building social media that respects your intelligence* 🧠✨
