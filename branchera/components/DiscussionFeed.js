@@ -46,6 +46,19 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const { updateDocument } = useFirestore();
   const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint, getUserPoints, getPointCounts, createDiscussion } = useDatabase();
   const { user } = useAuth();
+
+  // Placeholder functions for AI generation (these might be implemented elsewhere)
+  const generateAIPointsForDiscussion = useCallback((discussion) => {
+    // This function should generate AI points for a discussion
+    // Implementation depends on your AI service setup
+    console.log('TODO: Generate AI points for discussion', discussion.id);
+  }, []);
+
+  const generateFactCheckForDiscussion = useCallback((discussion) => {
+    // This function should generate fact-check results for a discussion
+    // Implementation depends on your fact-checking service setup
+    console.log('TODO: Generate fact-check for discussion', discussion.id);
+  }, []);
   
   // Safely get toast functions with fallbacks
   const toastContext = useToast();
@@ -122,15 +135,14 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       }
       
       // Generate AI points and fact-check results for older discussions that don't have them
-      // TODO: Implement these functions if needed
-      // discussionsData.forEach(discussion => {
-      //   if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
-      //     generateAIPointsForDiscussion(discussion);
-      //   }
-      //   if (!discussion.factCheckGenerated && !discussion.factCheckResults) {
-      //     generateFactCheckForDiscussion(discussion);
-      //   }
-      // });
+      discussionsData.forEach(discussion => {
+        if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
+          generateAIPointsForDiscussion(discussion);
+        }
+        if (!discussion.factCheckGenerated && !discussion.factCheckResults) {
+          generateFactCheckForDiscussion(discussion);
+        }
+      });
       
       // Check if we should create an auto-news post (non-blocking, after page loads)
       if (!isLoadingMore) {
@@ -498,25 +510,50 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
           <p className="text-gray-500">Try adjusting your search terms or filters.</p>
         </div>
       ) : (
-        filteredDiscussions.map((discussion) => (
-          <DiscussionItem
-            key={discussion.id}
-            discussion={discussion}
-            searchQuery={searchQuery}
-            onDiscussionUpdate={handleDiscussionUpdate}
-            onReplyAdded={handleReplyAdded}
-            expandedDiscussions={expandedDiscussions}
-            setExpandedDiscussions={setExpandedDiscussions}
-            expandedReplies={expandedReplies}
-            setExpandedReplies={setExpandedReplies}
-            expandedAIPoints={expandedAIPoints}
-            setExpandedAIPoints={setExpandedAIPoints}
-            collectedPoints={collectedPoints}
-            pointCounts={pointCounts}
-            refreshPointsData={refreshPointsData}
-            showCompactView={false}
-          />
-        ))
+        <>
+          {filteredDiscussions.map((discussion) => (
+            <DiscussionItem
+              key={discussion.id}
+              discussion={discussion}
+              searchQuery={searchQuery}
+              onDiscussionUpdate={handleDiscussionUpdate}
+              onReplyAdded={handleReplyAdded}
+              expandedDiscussions={expandedDiscussions}
+              setExpandedDiscussions={setExpandedDiscussions}
+              expandedReplies={expandedReplies}
+              setExpandedReplies={setExpandedReplies}
+              expandedAIPoints={expandedAIPoints}
+              setExpandedAIPoints={setExpandedAIPoints}
+              collectedPoints={collectedPoints}
+              pointCounts={pointCounts}
+              refreshPointsData={refreshPointsData}
+              showCompactView={false}
+            />
+          ))}
+
+          {/* Infinite scroll loading trigger and indicator */}
+          {hasMore && !isUserSearching && (
+            <div ref={loadingTriggerRef} className="py-8">
+              {loadingMore ? (
+                <div className="flex items-center justify-center">
+                  <div className="flex items-center gap-3">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
+                    <span className="text-gray-600">Loading more discussions...</span>
+                  </div>
+                </div>
+              ) : (
+                // Invisible trigger element
+                <div className="h-4"></div>
+              )}
+            </div>
+          )}
+
+          {!hasMore && !isUserSearching && discussions.length > 0 && (
+            <div className="text-center py-8">
+              <p className="text-gray-500">You&apos;ve reached the end of the discussions</p>
+            </div>
+          )}
+        </>
       )}
 
     </div>
