@@ -23,11 +23,11 @@ export const metadata = {
     siteName: 'Branchera',
     images: [
       {
-        url: '/og-image.svg', // Will be served from public folder
+        url: '/og-image.webp', // Will be served from public folder
         width: 1200,
         height: 630,
         alt: 'Branchera - Where Progress Happens',
-        type: 'image/svg+xml',
+        type: 'image/webp',
       }
     ],
     locale: 'en_US',
@@ -37,7 +37,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: "Branchera - Social Media That Gets Out of Your Way",
     description: "The open source, ad-free social platform designed for constructive dialogue instead of endless engagement. AI-powered fact-checking, transparent discussions, and a community that respects your intelligence.",
-    images: ['/og-image.svg'], // Twitter will use this image
+    images: ['/og-image.webp'], // Twitter will use this image
     creator: '@branchera', // Update this with your actual Twitter handle
   },
   // Apple specific
@@ -90,7 +90,7 @@ export const metadata = {
   },
   // For Discord and other apps that use these meta tags
   other: {
-    'discord:image': '/og-image.svg',
+    'discord:image': '/og-image.webp',
     'og:image:width': '1200',
     'og:image:height': '630',
     'theme-color': '#000000',
