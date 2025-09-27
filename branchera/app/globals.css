@@ -19,6 +19,57 @@ button {
 
 input, textarea {
   font-family: inherit;
+  /* Prevent zoom on mobile devices */
+  font-size: 16px;
+}
+
+/* Ensure all input types have minimum 16px font size to prevent mobile zoom */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+input[type="url"],
+textarea,
+select {
+  font-size: 16px !important;
+}
+
+/* Prevent zoom on focus for iOS Safari */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* Additional mobile-specific styles */
+@media screen and (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important;
+    transform: scale(1);
+  }
+  
+  /* Prevent zoom when focusing on input fields */
+  input:focus, textarea:focus, select:focus {
+    transform: scale(1);
+    zoom: 1;
+  }
+}
+
+/* Override any Tailwind text size classes on form elements to prevent mobile zoom */
+input.text-xs, input.text-sm, 
+textarea.text-xs, textarea.text-sm,
+select.text-xs, select.text-sm {
+  font-size: 16px !important;
+}
+
+/* Ensure form elements maintain proper sizing on all mobile devices */
+@supports (-webkit-touch-callout: none) {
+  input, textarea, select {
+    font-size: 16px !important;
+    -webkit-text-size-adjust: 100%;
+  }
 }
 
 /* Prevent long URLs and text from causing horizontal overflow */
