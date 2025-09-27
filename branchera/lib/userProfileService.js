@@ -82,43 +82,47 @@ export class UserProfileService {
       throw new Error('Display name must be less than 50 characters');
     }
 
-    // Check if display name is already taken (optional - uncomment if you want unique names)
-    // const isUnique = await this.isDisplayNameUnique(displayName.trim(), userId);
-    // if (!isUnique) {
-    //   throw new Error('This display name is already taken');
-    // }
+    // Check if display name is already taken
+    const isUnique = await this.isDisplayNameUnique(displayName.trim(), userId);
+    if (!isUnique) {
+      throw new Error('That name is unavailable');
+    }
 
     return await this.createOrUpdateUserProfile(userId, {
       displayName: displayName.trim()
     });
   }
 
-  // Check if display name is unique (optional feature)
+  // Check if display name is unique (case-insensitive)
   static async isDisplayNameUnique(displayName, excludeUserId = null) {
     if (!db) {
       throw new Error('Database not initialized');
     }
 
     try {
-      const q = query(
-        collection(db, this.COLLECTION_NAME),
-        where('displayName', '==', displayName.trim())
-      );
-      
+      // Get all profiles to check case-insensitive uniqueness
+      // Note: Firestore doesn't support case-insensitive queries, so we need to fetch all and filter
+      const q = query(collection(db, this.COLLECTION_NAME));
       const querySnapshot = await getDocs(q);
       
-      // If no documents found, name is unique
-      if (querySnapshot.empty) {
-        return true;
-      }
-
-      // If excluding a user ID (for updates), check if the only match is that user
-      if (excludeUserId) {
-        const matches = querySnapshot.docs.filter(doc => doc.id !== excludeUserId);
-        return matches.length === 0;
-      }
-
-      return false;
+      const normalizedName = displayName.trim().toLowerCase();
+      
+      // Check for case-insensitive matches
+      const matches = querySnapshot.docs.filter(doc => {
+        const data = doc.data();
+        const existingName = data.displayName;
+        
+        // Skip if no display name set
+        if (!existingName) return false;
+        
+        // Skip if this is the user we're excluding (for updates)
+        if (excludeUserId && doc.id === excludeUserId) return false;
+        
+        // Check case-insensitive match
+        return existingName.toLowerCase() === normalizedName;
+      });
+      
+      return matches.length === 0;
     } catch (error) {
       console.error('Error checking display name uniqueness:', error);
       throw error;

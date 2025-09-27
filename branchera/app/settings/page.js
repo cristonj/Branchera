@@ -290,7 +290,7 @@ export default function SettingsPage() {
                 <div className="ml-3">
                   <h5 className="text-sm font-medium text-gray-900">About Your Display Name</h5>
                   <p className="text-sm text-gray-600 mt-1">
-                    Your custom display name replaces your Google account name throughout Branchera. 
+                    Your display name is how other users will see you throughout Branchera. 
                     This gives you control over your identity while participating in discussions and maintaining your privacy.
                   </p>
                 </div>

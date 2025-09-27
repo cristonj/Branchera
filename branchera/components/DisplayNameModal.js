@@ -115,7 +115,7 @@ export default function DisplayNameModal({ isOpen, onSubmit, onClose, currentNam
           <p className="text-gray-600 mb-6">
             {currentName 
               ? 'Update your display name that others will see in discussions.'
-              : 'Choose a display name that others will see when you participate in discussions. This will replace your Google account name throughout the platform.'
+              : 'Choose a display name that others will see when you participate in discussions.'
             }
           </p>
 
