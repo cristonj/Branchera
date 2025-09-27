@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDatabase } from '@/hooks/useDatabase';
 import { AIService } from '@/lib/aiService';
@@ -319,22 +318,7 @@ export default function ReplyTree({
   const renderReplyContent = (reply, level, hasChildren, isExpanded, canReply) => {
     return (
       <div className={`rounded-lg border border-black/20 bg-white p-3 ${getReplyTypeStyle(reply.type)}`}>
-        <div className="flex items-center gap-3 mb-2">
-          {reply.authorPhoto ? (
-            <Image
-              src={reply.authorPhoto}
-              alt={reply.authorName}
-              width={20}
-              height={20}
-              className="w-5 h-5 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-5 h-5 rounded-full border border-black/40 flex items-center justify-center">
-              <span className="text-[10px] text-gray-900 font-medium">
-                {reply.authorName?.charAt(0)?.toUpperCase() || '?'}
-              </span>
-            </div>
-          )}
+        <div className="flex items-center justify-between mb-2">
           <div className="flex-1">
             <div className="text-xs text-gray-700 flex items-center gap-2">
               <SearchHighlight text={reply.authorName} searchQuery={replySearchQuery || searchQuery} /> · {formatDate(reply.createdAt)}
