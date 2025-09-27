@@ -17,6 +17,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const [discussions, setDiscussions] = useState([]);
   const [filteredDiscussions, setFilteredDiscussions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [lastDoc, setLastDoc] = useState(null);
   const [expandedReplies, setExpandedReplies] = useState(new Set()); // Track which discussions have expanded replies
   const [expandedDiscussions, setExpandedDiscussions] = useState(new Set()); // Track expanded discussion cards
   const [expandedAIPoints, setExpandedAIPoints] = useState(new Set()); // Track expanded AI points sections
@@ -37,6 +40,8 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const [collectedPoints, setCollectedPoints] = useState(new Map()); // Track which points user has collected
   const [pointCounts, setPointCounts] = useState(new Map()); // Track how many points earned for each AI point
   const searchTimeoutRef = useRef(null);
+  const observerRef = useRef(null);
+  const loadingTriggerRef = useRef(null);
   
   const { updateDocument } = useFirestore();
   const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint, getUserPoints, getPointCounts, createDiscussion } = useDatabase();
@@ -83,40 +88,72 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Remove dependencies to prevent constant refreshes
 
-  const loadDiscussions = useCallback(async () => {
+  const loadDiscussions = useCallback(async (isLoadingMore = false) => {
     try {
-      setLoading(true);
+      if (!isLoadingMore) {
+        setLoading(true);
+        setLastDoc(null);
+        setHasMore(true);
+      } else {
+        setLoadingMore(true);
+      }
+      
       // Load discussions directly without setup
       const discussionsData = await getDiscussions({
-        limit: 20,
+        limit: 10, // Reduced limit for better pagination experience
         orderField: 'createdAt',
-        orderDirection: 'desc'
+        orderDirection: 'desc',
+        lastDoc: isLoadingMore ? lastDoc : null
       });
-      setDiscussions(discussionsData);
+      
+      if (!isLoadingMore) {
+        setDiscussions(discussionsData);
+      } else {
+        // Append new discussions to existing ones
+        setDiscussions(prev => [...prev, ...discussionsData]);
+      }
+      
+      // Update pagination state
+      if (discussionsData.length > 0) {
+        setLastDoc(discussionsData[discussionsData.length - 1]);
+        setHasMore(discussionsData.length === 10); // If we got fewer than requested, we've reached the end
+      } else {
+        setHasMore(false);
+      }
       
       // Generate AI points and fact-check results for older discussions that don't have them
-      discussionsData.forEach(discussion => {
-        if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
-          generateAIPointsForDiscussion(discussion);
-        }
-        if (!discussion.factCheckGenerated && !discussion.factCheckResults) {
-          generateFactCheckForDiscussion(discussion);
-        }
-      });
+      // TODO: Implement these functions if needed
+      // discussionsData.forEach(discussion => {
+      //   if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0)) {
+      //     generateAIPointsForDiscussion(discussion);
+      //   }
+      //   if (!discussion.factCheckGenerated && !discussion.factCheckResults) {
+      //     generateFactCheckForDiscussion(discussion);
+      //   }
+      // });
       
       // Check if we should create an auto-news post (non-blocking, after page loads)
-      setTimeout(() => {
-        checkAndCreateNewsPost(discussionsData);
-      }, 100);
+      if (!isLoadingMore) {
+        setTimeout(() => {
+          checkAndCreateNewsPost(discussionsData);
+        }, 100);
+      }
       
     } catch (error) {
       console.error('Error loading discussions:', error);
-      // Set empty array to prevent crashes
-      setDiscussions([]);
+      if (!isLoadingMore) {
+        // Set empty array to prevent crashes
+        setDiscussions([]);
+        setHasMore(false);
+      }
     } finally {
-      setLoading(false);
+      if (!isLoadingMore) {
+        setLoading(false);
+      } else {
+        setLoadingMore(false);
+      }
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [lastDoc, getDiscussions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Check if we should create a news post and create one if needed (non-blocking)
   const checkAndCreateNewsPost = useCallback(async (discussionsData) => {
@@ -172,6 +209,37 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   useEffect(() => {
     loadDiscussions();
   }, [loadDiscussions]); // Include loadDiscussions dependency
+
+  // Set up intersection observer for infinite scrolling
+  useEffect(() => {
+    const currentTriggerRef = loadingTriggerRef.current;
+    
+    if (!currentTriggerRef || !hasMore || loadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const target = entries[0];
+        if (target.isIntersecting && hasMore && !loadingMore && !isUserSearching) {
+          console.log('Loading more discussions...');
+          loadDiscussions(true);
+        }
+      },
+      {
+        root: null,
+        rootMargin: '100px', // Start loading 100px before the trigger element is visible
+        threshold: 0.1,
+      }
+    );
+
+    observer.observe(currentTriggerRef);
+    observerRef.current = observer;
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, loadingMore, isUserSearching, loadDiscussions]);
 
   // Load collected points and point counts separately to avoid refresh loops
   useEffect(() => {
