@@ -28,6 +28,7 @@ export default function ReplyTree({
   const { editReply, updateReplyKeyPoints } = useDatabase();
   const [expandedReplies, setExpandedReplies] = useState(new Set());
   const [expandedReplyPoints, setExpandedReplyPoints] = useState(new Set());
+  const [expandedPointSections, setExpandedPointSections] = useState(new Set());
   const [generatingReplyPoints, setGeneratingReplyPoints] = useState(new Set());
   const [editingReply, setEditingReply] = useState(null);
   const [replySearchQuery, setReplySearchQuery] = useState('');
@@ -39,6 +40,10 @@ export default function ReplyTree({
     hasPoints: false,
     dateRange: 'all'
   });
+  
+  // Pagination state for each point section
+  const [pointPagination, setPointPagination] = useState({});
+  const REPLIES_PER_PAGE = 5;
   
   // Safely get toast functions with fallbacks
   const toastContext = useToast();
@@ -166,6 +171,47 @@ export default function ReplyTree({
     
     // Call the point click handler with the reply and point
     onPointClick(reply, point);
+  };
+
+  const togglePointSection = (pointId) => {
+    setExpandedPointSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(pointId)) {
+        newSet.delete(pointId);
+      } else {
+        newSet.add(pointId);
+        // Initialize pagination for this point if not already set
+        if (!pointPagination[pointId]) {
+          setPointPagination(prevPagination => ({
+            ...prevPagination,
+            [pointId]: { currentPage: 1 }
+          }));
+        }
+      }
+      return newSet;
+    });
+  };
+
+  const loadMoreReplies = (pointId) => {
+    setPointPagination(prevPagination => ({
+      ...prevPagination,
+      [pointId]: {
+        ...prevPagination[pointId],
+        currentPage: (prevPagination[pointId]?.currentPage || 1) + 1
+      }
+    }));
+  };
+
+  const getPaginatedReplies = (replies, pointId) => {
+    const currentPage = pointPagination[pointId]?.currentPage || 1;
+    const startIndex = 0;
+    const endIndex = currentPage * REPLIES_PER_PAGE;
+    return replies.slice(startIndex, endIndex);
+  };
+
+  const hasMoreReplies = (replies, pointId) => {
+    const currentPage = pointPagination[pointId]?.currentPage || 1;
+    return replies.length > currentPage * REPLIES_PER_PAGE;
   };
 
   // Enhanced search function for replies
@@ -671,37 +717,114 @@ export default function ReplyTree({
 
       {Object.entries(groupedReplies.withPoints).map(([pointId, pointReplies]) => {
         const point = aiPoints?.find(p => p.id === pointId);
+        const isExpanded = expandedPointSections.has(pointId);
+        const paginatedReplies = getPaginatedReplies(pointReplies, pointId);
+        const hasMore = hasMoreReplies(pointReplies, pointId);
+        
         return (
-          <div key={pointId} className="space-y-2">
+          <div key={pointId} className="border border-black/20 rounded-lg bg-white">
             {point && (
-              <div className="border border-black/20 rounded-lg p-3 bg-white">
-                <div className="flex items-start gap-2">
-                  <div className="w-1 h-1 bg-black rounded-full mt-2 flex-shrink-0"></div>
-                  <div>
-                    <div className="text-sm font-semibold text-gray-900">
+              <button
+                onClick={() => togglePointSection(pointId)}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-start gap-3 flex-1">
+                  <svg className={`w-4 h-4 transition-transform flex-shrink-0 mt-0.5 ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-gray-900 mb-1">
                       &ldquo;<SearchHighlight text={point.text} searchQuery={replySearchQuery || searchQuery} />&rdquo;
                     </div>
-                    {point.type && (
-                      <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
-                        <SearchHighlight text={point.type} searchQuery={replySearchQuery || searchQuery} />
+                    <div className="flex items-center gap-2">
+                      {point.type && (
+                        <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white uppercase tracking-wide">
+                          <SearchHighlight text={point.type} searchQuery={replySearchQuery || searchQuery} />
+                        </span>
+                      )}
+                      <span className="text-xs text-gray-600">
+                        {pointReplies.length} {pointReplies.length === 1 ? 'reply' : 'replies'}
                       </span>
-                    )}
+                    </div>
                   </div>
+                </div>
+              </button>
+            )}
+            
+            {isExpanded && (
+              <div className="border-t border-black/10">
+                <div className="p-4 space-y-3">
+                  {paginatedReplies.map(reply => renderReply(reply, 0))}
+                  
+                  {hasMore && (
+                    <div className="pt-2 border-t border-black/5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          loadMoreReplies(pointId);
+                        }}
+                        className="w-full py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                        Load {Math.min(REPLIES_PER_PAGE, pointReplies.length - paginatedReplies.length)} more replies
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
-            <div className="space-y-2">
-              {pointReplies.map(reply => renderReply(reply, 0))}
-            </div>
           </div>
         );
       })}
       {groupedReplies.general.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-xs font-semibold text-gray-900 border-b border-black/20 pb-2">General discussion</div>
-          <div className="space-y-2">
-            {groupedReplies.general.map(reply => renderReply(reply, 0))}
-          </div>
+        <div className="border border-black/20 rounded-lg bg-white">
+          <button
+            onClick={() => togglePointSection('general')}
+            className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-start gap-3 flex-1">
+              <svg className={`w-4 h-4 transition-transform flex-shrink-0 mt-0.5 ${expandedPointSections.has('general') ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-gray-900 mb-1">
+                  General Discussion
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-600">
+                    {groupedReplies.general.length} {groupedReplies.general.length === 1 ? 'reply' : 'replies'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </button>
+          
+          {expandedPointSections.has('general') && (
+            <div className="border-t border-black/10">
+              <div className="p-4 space-y-3">
+                {getPaginatedReplies(groupedReplies.general, 'general').map(reply => renderReply(reply, 0))}
+                
+                {hasMoreReplies(groupedReplies.general, 'general') && (
+                  <div className="pt-2 border-t border-black/5">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        loadMoreReplies('general');
+                      }}
+                      className="w-full py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                      Load {Math.min(REPLIES_PER_PAGE, groupedReplies.general.length - getPaginatedReplies(groupedReplies.general, 'general').length)} more replies
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
