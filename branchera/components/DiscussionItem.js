@@ -36,6 +36,7 @@ export default function DiscussionItem({
   const [replyingToReply, setReplyingToReply] = useState(null);
   const [selectedReplyForPoints, setSelectedReplyForPoints] = useState(null);
   const [editingDiscussion, setEditingDiscussion] = useState(null);
+  const [enrichedReplies, setEnrichedReplies] = useState([]);
   const replyFormRef = useRef(null);
   
   const { updateDocument } = useFirestore();
@@ -47,7 +48,8 @@ export default function DiscussionItem({
     incrementDiscussionView, 
     incrementReplyView, 
     updateFactCheckResults, 
-    updateReplyFactCheckResults
+    updateReplyFactCheckResults,
+    enrichRepliesWithPoints
   } = useDatabase();
   const { user } = useAuth();
   
@@ -57,6 +59,21 @@ export default function DiscussionItem({
   const showErrorToast = toastContext?.showErrorToast || (() => {});
 
   const isExpanded = expandedDiscussions?.has(discussion.id) || false;
+
+  // Function to enrich replies with points data
+  const enrichReplies = async () => {
+    if (user && discussion.replies) {
+      const enriched = await enrichRepliesWithPoints(discussion.replies, user.uid);
+      setEnrichedReplies(enriched);
+    } else {
+      setEnrichedReplies(discussion.replies || []);
+    }
+  };
+
+  // Enrich replies with points data when discussion or user changes
+  useEffect(() => {
+    enrichReplies();
+  }, [discussion.replies, user?.uid, enrichRepliesWithPoints]);
 
   // Enhanced smooth scroll function with fallbacks
   const smoothScrollToReplyForm = () => {
@@ -796,7 +813,10 @@ export default function DiscussionItem({
                 discussionContent={discussion.content}
                 parentFactCheck={discussion.factCheckResults}
                 onReplyAdded={(reply) => handleReplyAddedLocal(discussion.id, reply)}
-                onPointsEarned={refreshPointsData}
+                onPointsEarned={() => {
+                  refreshPointsData();
+                  enrichReplies();
+                }}
                 onCancel={() => {
                   setReplyingTo(null);
                   setSelectedPoint(null);
@@ -812,7 +832,7 @@ export default function DiscussionItem({
           {expandedReplies?.has(discussion.id) && (discussion.replies || []).length > 0 && (
             <div className="mt-3 pt-3 border-t border-black/10">
               <ReplyTree
-                replies={discussion.replies}
+                replies={enrichedReplies}
                 aiPoints={discussion.aiPoints || []}
                 discussionId={discussion.id}
                 searchQuery={searchQuery}
