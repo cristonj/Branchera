@@ -1,11 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function DisplayNameModal({ isOpen, onSubmit, onClose, currentName = '' }) {
   const [displayName, setDisplayName] = useState(currentName);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Prevent body scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = '0px'; // Prevent layout shift
+    } else {
+      document.body.style.overflow = 'unset';
+      document.body.style.paddingRight = 'unset';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+      document.body.style.paddingRight = 'unset';
+    };
+  }, [isOpen]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,11 +71,30 @@ export default function DisplayNameModal({ isOpen, onSubmit, onClose, currentNam
     }
   };
 
+  console.log('DisplayNameModal render:', { isOpen, currentName });
+  
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-hidden"
+      style={{ 
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 9999
+      }}
+      onClick={(e) => {
+        // Prevent background clicks from closing modal when required
+        e.stopPropagation();
+      }}
+    >
+      <div 
+        className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900">

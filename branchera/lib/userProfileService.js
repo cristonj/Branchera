@@ -156,12 +156,20 @@ export class UserProfileService {
         });
       } else {
         // Update Google-specific fields but preserve custom displayName
-        return await this.createOrUpdateUserProfile(user.uid, {
+        const updatedProfile = await this.createOrUpdateUserProfile(user.uid, {
           email: user.email,
           googleDisplayName: user.displayName,
           photoURL: user.photoURL,
           hasSetDisplayName: !!existingProfile.displayName
         });
+        
+        console.log('Updated existing profile:', {
+          existingProfile,
+          updatedProfile,
+          hasDisplayName: !!existingProfile.displayName
+        });
+        
+        return updatedProfile;
       }
     } catch (error) {
       console.error('Error initializing user profile:', error);

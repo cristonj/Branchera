@@ -45,7 +45,15 @@ export function AuthProvider({ children }) {
           setUserProfile(profile);
           
           // Check if user needs to set display name
+          console.log('Profile check:', {
+            profile,
+            hasSetDisplayName: profile.hasSetDisplayName,
+            displayName: profile.displayName,
+            shouldShowModal: !profile.hasSetDisplayName || !profile.displayName
+          });
+          
           if (!profile.hasSetDisplayName || !profile.displayName) {
+            console.log('Setting showDisplayNameModal to true');
             setShowDisplayNameModal(true);
           }
         } catch (error) {
@@ -57,6 +65,10 @@ export function AuthProvider({ children }) {
             photoURL: user.photoURL
           });
           setUserProfile(null);
+          
+          // If profile creation failed, still show the modal for new users
+          console.log('Profile creation failed, forcing display name modal');
+          setShowDisplayNameModal(true);
         }
       } else {
         setUser(null);
