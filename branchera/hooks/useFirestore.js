@@ -13,6 +13,7 @@ import {
   where,
   orderBy,
   limit,
+  startAfter,
   onSnapshot
 } from 'firebase/firestore';
 
@@ -120,6 +121,7 @@ export function useFirestore() {
     // Export Firestore query helpers for use in components
     where,
     orderBy,
-    limit
+    limit,
+    startAfter
   };
 }

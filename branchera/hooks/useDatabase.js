@@ -3,7 +3,7 @@
 import { useFirestore } from './useFirestore';
 
 export function useDatabase() {
-  const { addDocument, getDocuments, getDocument, deleteDocument, updateDocument, orderBy, limit } = useFirestore();
+  const { addDocument, getDocuments, getDocument, deleteDocument, updateDocument, orderBy, limit, startAfter } = useFirestore();
 
   // Helper function to format names as "First Name Last Initial"
   const formatNameForLeaderboard = (fullName) => {
@@ -69,28 +69,62 @@ export function useDatabase() {
 
   // Get discussions with fallback strategies
   const getDiscussions = async (options = {}) => {
-    const { limit: maxResults = 20, orderField = 'createdAt', orderDirection = 'desc' } = options;
+    const { 
+      limit: maxResults = 20, 
+      orderField = 'createdAt', 
+      orderDirection = 'desc',
+      lastDoc = null // For pagination
+    } = options;
     
     try {
       // Try with orderBy first
       try {
-        const discussions = await getDocuments('discussions', [
+        const queryConstraints = [
           orderBy(orderField, orderDirection),
           limit(maxResults)
-        ]);
+        ];
+        
+        // Add startAfter for pagination if lastDoc is provided
+        if (lastDoc) {
+          queryConstraints.push(startAfter(lastDoc));
+        }
+        
+        const discussions = await getDocuments('discussions', queryConstraints);
         return discussions;
       } catch (orderError) {
         console.warn('OrderBy query failed, trying without ordering:', orderError.message);
         
         // Fallback: get without orderBy and sort client-side
-        const discussions = await getDocuments('discussions', [limit(maxResults)]);
-        const sorted = discussions.sort((a, b) => {
-          const dateA = new Date(a[orderField] || a.createdAt);
-          const dateB = new Date(b[orderField] || b.createdAt);
-          return orderDirection === 'desc' ? dateB - dateA : dateA - dateB;
-        });
+        const queryConstraints = [limit(maxResults)];
         
-        return sorted;
+        // Note: startAfter won't work without orderBy, so we'll skip pagination in fallback
+        if (!lastDoc) {
+          const discussions = await getDocuments('discussions', queryConstraints);
+          const sorted = discussions.sort((a, b) => {
+            const dateA = new Date(a[orderField] || a.createdAt);
+            const dateB = new Date(b[orderField] || b.createdAt);
+            return orderDirection === 'desc' ? dateB - dateA : dateA - dateB;
+          });
+          
+          return sorted;
+        } else {
+          // For pagination fallback, we'll need to get more docs and filter client-side
+          // This is less efficient but ensures pagination works
+          const discussions = await getDocuments('discussions', [limit(maxResults * 3)]);
+          const sorted = discussions.sort((a, b) => {
+            const dateA = new Date(a[orderField] || a.createdAt);
+            const dateB = new Date(b[orderField] || b.createdAt);
+            return orderDirection === 'desc' ? dateB - dateA : dateA - dateB;
+          });
+          
+          // Find the index of the lastDoc and return the next batch
+          const lastDocIndex = sorted.findIndex(doc => doc.id === lastDoc.id);
+          if (lastDocIndex >= 0) {
+            return sorted.slice(lastDocIndex + 1, lastDocIndex + 1 + maxResults);
+          }
+          
+          return [];
+        }
       }
     } catch (error) {
       console.error('Error fetching discussions:', error);
