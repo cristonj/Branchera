@@ -1,4 +1,4 @@
-# Robots.txt for Branchera
+# Robots.txt for Branches
 
 User-agent: *
 Allow: /
@@ -7,7 +7,7 @@ Disallow: /_next/
 Disallow: /404
 
 # Sitemap location
-Sitemap: https://branchera.com/sitemap.xml
+Sitemap: https://branches.live/sitemap.xml
 
 # Crawl-delay for bots that respect it
 Crawl-delay: 1

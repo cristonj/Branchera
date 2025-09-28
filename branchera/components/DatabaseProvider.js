@@ -78,7 +78,7 @@ export function DatabaseProvider({ children }) {
               </svg>
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 animate-pulse">Branchera</h1>
+          <h1 className="text-2xl font-bold text-gray-900 animate-pulse">Branches</h1>
         </div>
       </div>
     );

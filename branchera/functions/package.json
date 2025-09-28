@@ -1,5 +1,5 @@
 {
-  "name": "branchera-functions",
+  "name": "branches-functions",
   "version": "1.0.0",
   "description": "Firebase Functions for AI-Anchored Replies",
   "main": "index.js",

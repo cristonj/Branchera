@@ -25,10 +25,16 @@
   </g>
   
   <text x="600" y="1200" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="600" text-anchor="middle" fill="black" letter-spacing="-1">
-    Branchera
+    Branches
   </text>
   
-  <text x="600" y="1250" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="300" text-anchor="middle" fill="#666666" opacity="0.8">
-    Social media that gets out of your way
+  <text x="600" y="1240" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="300" text-anchor="middle" fill="#666666" opacity="0.8">
+    The app should be the product, not the users
+  </text>
+  <text x="600" y="1265" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="300" text-anchor="middle" fill="#666666" opacity="0.7">
+    Not owned by a billionaire
+  </text>
+  <text x="600" y="1285" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="300" text-anchor="middle" fill="#666666" opacity="0.7">
+    You are not the product
   </text>
 </svg>

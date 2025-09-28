@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Privacy Policy - Branchera",
-  description: "Privacy Policy for Branchera - Where Progress Happens",
+  title: "Privacy Policy - Branches",
+  description: "Privacy Policy for Branches - Grows With You",
 };
 
 export default function PrivacyPolicy() {
@@ -61,7 +61,7 @@ export default function PrivacyPolicy() {
                 <li>With your consent or at your direction</li>
                 <li>With service providers who need access to such information to carry out work on our behalf</li>
                 <li>In response to a request for information if we believe disclosure is required by law</li>
-                <li>To protect the rights, property, and safety of Branchera, our users, or others</li>
+                <li>To protect the rights, property, and safety of Branches, our users, or others</li>
                 <li>In connection with any merger, sale of assets, financing, or acquisition of our business</li>
               </ul>
               <p className="text-gray-700 mb-4">
@@ -141,8 +141,8 @@ export default function PrivacyPolicy() {
                 If you have any questions about this Privacy Policy, please contact us at:
               </p>
               <ul className="list-none text-gray-700 mb-4 space-y-2">
-                <li>Email: privacy@branchera.org</li>
-                <li>Website: branchera.org</li>
+                <li>Email: privacy@branches.live</li>
+                <li>Website: branches.live</li>
               </ul>
             </section>
           </div>

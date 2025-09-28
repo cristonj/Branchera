@@ -1,7 +1,7 @@
 {
-  "name": "Branchera",
-  "short_name": "Branchera",
-  "description": "Social media that gets out of your way",
+  "name": "Branches",
+  "short_name": "Branches",
+  "description": "The app should be the product, not the users.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
