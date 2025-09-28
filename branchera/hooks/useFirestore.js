@@ -21,8 +21,6 @@ export function useFirestore() {
   // Add a document
   const addDocument = async (collectionName, data) => {
     try {
-      console.log('Attempting to add document to:', collectionName);
-      console.log('Document data:', data);
       
       const docRef = await addDoc(collection(db, collectionName), {
         ...data,
@@ -30,12 +28,8 @@ export function useFirestore() {
         updatedAt: new Date().toISOString()
       });
       
-      console.log('Document added successfully with ID:', docRef.id);
       return docRef.id;
     } catch (error) {
-      console.error('Error adding document:', error);
-      console.error('Error code:', error.code);
-      console.error('Error message:', error.message);
       
       if (error.code === 'permission-denied') {
         throw new Error('Permission denied: Please check your Firebase Security Rules. Make sure authenticated users can write to the discussions collection.');
@@ -54,7 +48,6 @@ export function useFirestore() {
         updatedAt: new Date().toISOString()
       });
     } catch (error) {
-      console.error('Error updating document:', error);
       throw error;
     }
   };
@@ -64,7 +57,6 @@ export function useFirestore() {
     try {
       await deleteDoc(doc(db, collectionName, docId));
     } catch (error) {
-      console.error('Error deleting document:', error);
       throw error;
     }
   };
@@ -78,7 +70,6 @@ export function useFirestore() {
       }
       return null;
     } catch (error) {
-      console.error('Error getting document:', error);
       throw error;
     }
   };
@@ -94,7 +85,6 @@ export function useFirestore() {
       });
       return documents;
     } catch (error) {
-      console.error('Error getting documents:', error);
       throw error;
     }
   };

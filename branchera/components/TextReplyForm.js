@@ -49,7 +49,6 @@ export default function TextReplyForm({
     }
 
     setIsSubmitting(true);
-    console.log('Adding text reply...');
 
     try {
       // Create reply data for text-based reply
@@ -64,16 +63,13 @@ export default function TextReplyForm({
         level: replyingToReply ? (replyingToReply.level || 0) + 1 : 0
       };
 
-      console.log('Adding reply to discussion:', discussionId, 'with data:', replyData);
       const createdReply = await addReply(discussionId, replyData);
-      console.log('Reply added successfully:', createdReply);
 
       // Fact check the reply content directly with discussion context
       setIsFactChecking(true);
       let replyFactCheck = null;
 
       try {
-        console.log('Fact checking reply with discussion context...');
 
         // Build context for better fact checking
         const contextTitle = selectedPoint ?
@@ -86,18 +82,15 @@ export default function TextReplyForm({
 
         // Fact check the reply content directly with full context
         replyFactCheck = await AIService.factCheckContent(contextContent, contextTitle);
-        console.log('Reply fact check results with context:', replyFactCheck);
 
         // Update the reply with fact check results
         await updateReplyFactCheckResults(discussionId, createdReply.id, replyFactCheck);
-        console.log('Reply fact check results saved:', replyFactCheck);
 
         // Update the created reply object with fact check results
         createdReply.factCheckResults = replyFactCheck;
         createdReply.factCheckGenerated = true;
         setFactCheckResults(replyFactCheck);
       } catch (factCheckError) {
-        console.error('Error fact checking reply:', factCheckError);
         // Don't fail the reply creation if fact checking fails
       } finally {
         setIsFactChecking(false);
@@ -111,7 +104,6 @@ export default function TextReplyForm({
 
           if (!hasCollectedThisPoint) {
             setIsJudging(true);
-            console.log('Judging rebuttal for points...');
 
             try {
               // Get AI judgement on the rebuttal
@@ -123,7 +115,6 @@ export default function TextReplyForm({
                 `${discussionTitle}: ${discussionContent}`
               );
 
-              console.log('AI judgement result:', judgement);
 
               // Validate judgement object before using it
               if (!judgement || typeof judgement !== 'object') {
@@ -141,7 +132,6 @@ export default function TextReplyForm({
               };
 
               if (safeJudgement.pointsEarned > 0) {
-                console.log('Creating user point record...');
 
                 // Create user point record
                 const pointData = {
@@ -162,14 +152,12 @@ export default function TextReplyForm({
                 };
 
                 await createUserPoint(pointData);
-                console.log('User point created successfully');
 
                 // Refresh points data in parent component
                 if (onPointsEarned && typeof onPointsEarned === 'function') {
                   try {
                     onPointsEarned();
                   } catch (refreshError) {
-                    console.error('Error refreshing points data:', refreshError);
                     // Don't crash if refresh fails
                   }
                 }
@@ -188,9 +176,7 @@ export default function TextReplyForm({
                     );
                   }
                 } catch (toastError) {
-                  console.error('Error showing points toast:', toastError);
                   // Fallback to console log if toast fails
-                  console.log(`Points earned: ${safeJudgement.pointsEarned} (${safeJudgement.qualityScore})`);
                 }
               } else {
                 // Show feedback when no points are earned
@@ -199,33 +185,27 @@ export default function TextReplyForm({
                     showNoPointsToast();
                   }
                 } catch (toastError) {
-                  console.error('Error showing no-points toast:', toastError);
                 }
               }
             } catch (judgementError) {
-              console.error('Error during AI judgement:', judgementError);
               // Show user-friendly error message
               try {
                 if (showErrorToast && typeof showErrorToast === 'function') {
                   showErrorToast('Reply submitted successfully, but point evaluation failed. Please try again.');
                 }
               } catch (toastError) {
-                console.error('Error showing error toast:', toastError);
               }
             }
           } else {
-            console.log('User has already collected points for this specific point');
             // Show info toast for already collected point
             try {
               if (showSuccessToast && typeof showSuccessToast === 'function') {
                 showSuccessToast('Reply submitted! You\'ve already claimed points for this specific claim.', 4000);
               }
             } catch (toastError) {
-              console.error('Error showing info toast:', toastError);
             }
           }
         } catch (judgingError) {
-          console.error('Error judging rebuttal:', judgingError);
           // Don't fail the reply creation if judging fails
         } finally {
           setIsJudging(false);
@@ -241,9 +221,7 @@ export default function TextReplyForm({
         onReplyAdded(createdReply);
       }
 
-      console.log('Reply creation process completed successfully');
     } catch (error) {
-      console.error('Error adding reply:', error);
       showErrorToast(`Failed to add reply: ${error.message}`);
     } finally {
       setIsSubmitting(false);

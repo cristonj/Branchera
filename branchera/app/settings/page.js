@@ -65,7 +65,6 @@ export default function SettingsPage() {
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      console.error('Error updating display name:', error);
       setError(error.message || 'Failed to update display name. Please try again.');
     } finally {
       setIsSubmitting(false);

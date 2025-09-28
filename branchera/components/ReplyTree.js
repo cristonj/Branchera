@@ -8,6 +8,7 @@ import FactCheckResults from './FactCheckResults';
 import SearchHighlight from './SearchHighlight';
 import EditReplyForm from './EditReplyForm';
 import { useToast } from '@/contexts/ToastContext';
+import { formatDate } from '@/lib/dateUtils';
 
 export default function ReplyTree({ 
   replies, 
@@ -67,27 +68,11 @@ export default function ReplyTree({
       try {
         await onReplyView(replyId, user.uid);
       } catch (error) {
-        console.error('Error incrementing reply view:', error);
         // Don't show error to user, just log it
       }
     }
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = (now - date) / (1000 * 60 * 60);
-    
-    if (diffInHours < 1) {
-      const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-      return diffInMinutes <= 1 ? 'Just now' : `${diffInMinutes}m ago`;
-    } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}h ago`;
-    } else {
-      const diffInDays = Math.floor(diffInHours / 24);
-      return `${diffInDays}d ago`;
-    }
-  };
 
   const getReplyTypeStyle = () => 'bg-white';
 
@@ -127,7 +112,6 @@ export default function ReplyTree({
       setGeneratingReplyPoints(prev => new Set([...prev, reply.id]));
       
       try {
-        console.log('Generating reply points for:', reply.id);
         
         // Build discussion context from other replies
         const discussionContext = replies.filter(r => r.id !== reply.id).slice(0, 5); // Limit context
@@ -139,7 +123,6 @@ export default function ReplyTree({
           discussionContext
         );
         
-        console.log('Generated reply points:', replyPoints);
         
         // Update the reply with the generated points
         await updateReplyKeyPoints(discussionId, reply.id, replyPoints);
@@ -154,7 +137,6 @@ export default function ReplyTree({
         }
         
       } catch (error) {
-        console.error('Error generating reply points:', error);
         showErrorToast('Failed to generate key points for this reply');
       } finally {
         setGeneratingReplyPoints(prev => {

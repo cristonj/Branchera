@@ -16,7 +16,6 @@ export function useUrlState(key, defaultValue, options = {}) {
     try {
       return deserialize(urlValue);
     } catch (error) {
-      console.warn(`Failed to deserialize URL parameter ${key}:`, error);
       return defaultValue;
     }
   }, [key, defaultValue, searchParams, deserialize]);
@@ -33,7 +32,6 @@ export function useUrlState(key, defaultValue, options = {}) {
       try {
         params.set(key, serialize(newValue));
       } catch (error) {
-        console.warn(`Failed to serialize value for URL parameter ${key}:`, error);
         return;
       }
     }

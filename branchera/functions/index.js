@@ -15,11 +15,9 @@ exports.generateAIPointsOnCreate = functions.firestore
     const discussionId = context.params.discussionId;
 
     try {
-      console.log(`Generating AI points for discussion: ${discussionId}`);
 
       // Skip if AI points already exist
       if (discussionData.aiPointsGenerated || (discussionData.aiPoints && discussionData.aiPoints.length > 0)) {
-        console.log('AI points already exist, skipping generation');
         return null;
       }
 
@@ -33,11 +31,9 @@ exports.generateAIPointsOnCreate = functions.firestore
         updatedAt: admin.firestore.FieldValue.serverTimestamp()
       });
 
-      console.log(`AI points generated successfully for discussion: ${discussionId}`);
       return null;
 
     } catch (error) {
-      console.error(`Error generating AI points for discussion ${discussionId}:`, error);
       // Don't throw error to prevent function retry loops
       return null;
     }
@@ -49,8 +45,6 @@ async function generateAIPointsWithFirebaseAI(content, title = '') {
   // This is a placeholder for the server-side Firebase AI integration
   // The exact implementation may vary based on Firebase AI availability in Functions
   
-  console.log('Note: Server-side Firebase AI integration may require additional setup');
-  console.log('For now, this function serves as a placeholder for future Firebase AI Functions integration');
   
   // Fallback to a simple point extraction for server-side
   return generateSimplePoints(content, title);

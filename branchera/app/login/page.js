@@ -18,7 +18,6 @@ export default function LoginPage() {
     try {
       await signInWithGoogle();
     } catch (error) {
-      console.error('Failed to sign in:', error);
     }
   };
 

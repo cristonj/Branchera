@@ -6,11 +6,9 @@ export class NewsService {
   // Check if we should create a new news post (15 minutes since last AI post)
   static async shouldCreateNewsPost(discussions) {
     try {
-      console.log('Checking if we should create a news post...');
       
       // Ensure discussions is an array
       if (!Array.isArray(discussions)) {
-        console.log('No discussions provided, should create news post');
         return true;
       }
       
@@ -20,7 +18,6 @@ export class NewsService {
       );
       
       if (aiNewsPosts.length === 0) {
-        console.log('No previous AI news posts found, should create one');
         return true;
       }
       
@@ -32,7 +29,6 @@ export class NewsService {
       })[0];
       
       if (!lastPost || !lastPost.createdAt) {
-        console.log('No valid last post found, should create one');
         return true;
       }
       
@@ -41,11 +37,9 @@ export class NewsService {
       const timeDiff = now - lastPostTime;
       const minutesDiff = timeDiff / (1000 * 60);
       
-      console.log(`Last AI news post was ${minutesDiff.toFixed(1)} minutes ago`);
       
       return minutesDiff >= 15;
     } catch (error) {
-      console.error('Error checking if should create news post:', error);
       // Return false on error to avoid creating posts when there's an issue
       return false;
     }
@@ -128,7 +122,6 @@ export class NewsService {
       // Accept 2xx status codes and also 3xx redirects (which might be normal)
       return response.ok || (response.status >= 300 && response.status < 400);
     } catch (error) {
-      console.warn('URL validation failed for:', url, error.message);
       return false;
     }
   }
@@ -136,7 +129,6 @@ export class NewsService {
   // Fetch current news stories
   static async fetchNewsStories() {
     try {
-      console.log('Fetching current news stories...');
 
       // Get the generative model instance with Google Search grounding
       const model = await FirebaseAIService.getGenerativeModel("gemini-2.5-flash", {
@@ -198,14 +190,12 @@ CRITICAL REQUIREMENTS:
           throw new Error('Invalid news stories structure');
         }
         
-        console.log(`Fetched ${stories.length} news stories, extracting real URLs from grounding data...`);
         
         // Extract actual URLs from Google Search grounding data
         // groundingMetadata is now available from the generateContentWithGrounding call
         const groundingSources = [];
         
         if (groundingMetadata && groundingMetadata.groundingChunks) {
-          console.log(`Found ${groundingMetadata.groundingChunks.length} grounding sources`);
           groundingMetadata.groundingChunks.forEach(chunk => {
             if (chunk.web?.uri && chunk.web?.title) {
               groundingSources.push({
@@ -216,7 +206,6 @@ CRITICAL REQUIREMENTS:
           });
         }
         
-        console.log(`Extracted ${groundingSources.length} real URLs from search results`);
         
         // Match stories with actual URLs from grounding data
         const enhancedStories = stories.map((story, index) => {
@@ -248,27 +237,21 @@ CRITICAL REQUIREMENTS:
             story.source.url = matchedSource.url;
             story.source.urlValidated = true;
             story.source.groundingTitle = matchedSource.title;
-            console.log(`Matched story "${story.headline}" with real URL: ${matchedSource.url}`);
           } else {
             // Fallback to publication homepage if no grounding source found
             story.source = story.source || {};
             story.source.url = this.getFallbackUrl(story.source.name);
             story.source.urlValidated = false;
-            console.warn(`No grounding source found for "${story.headline}", using fallback URL`);
           }
           
           return story;
         });
         
-        console.log(`Enhanced ${enhancedStories.length} news stories with real URLs`);
         return enhancedStories;
       } catch (parseError) {
-        console.error('Error parsing news stories response:', parseError);
-        console.error('Raw response:', text);
         throw new Error('Failed to parse news stories response');
       }
     } catch (error) {
-      console.error('Error fetching news stories:', error);
       throw error;
     }
   }
@@ -276,7 +259,6 @@ CRITICAL REQUIREMENTS:
   // Filter out stories that match existing discussions
   static async filterUniqueStories(stories, existingDiscussions) {
     try {
-      console.log('Filtering unique stories from existing discussions...');
       
       // Get titles and content from existing discussions for comparison
       const existingContent = existingDiscussions.map(d => ({
@@ -316,10 +298,8 @@ CRITICAL REQUIREMENTS:
         return !isSimilar;
       });
       
-      console.log(`Filtered to ${uniqueStories.length} unique stories`);
       return uniqueStories;
     } catch (error) {
-      console.error('Error filtering unique stories:', error);
       return stories; // Return all stories if filtering fails
     }
   }
@@ -327,7 +307,6 @@ CRITICAL REQUIREMENTS:
   // Generate an opinionated discussion post about a news story
   static async generateOpinionatedPost(story) {
     try {
-      console.log('Generating opinionated post for story:', story.headline);
 
       // Get the generative model instance with Google Search grounding
       const model = await FirebaseAIService.getGenerativeModel("gemini-2.5-flash", {
@@ -391,15 +370,11 @@ Make it punchy, specific, and debate-worthy. The source information will be disp
           throw new Error('Invalid post structure');
         }
         
-        console.log('Generated opinionated post:', post.title);
         return post;
       } catch (parseError) {
-        console.error('Error parsing opinionated post response:', parseError);
-        console.error('Raw response:', text);
         throw new Error('Failed to parse opinionated post response');
       }
     } catch (error) {
-      console.error('Error generating opinionated post:', error);
       throw error;
     }
   }
@@ -407,19 +382,16 @@ Make it punchy, specific, and debate-worthy. The source information will be disp
   // Create a news discussion post
   static async createNewsDiscussion(createDiscussion, updateAIPoints = null, updateFactCheckResults = null) {
     try {
-      console.log('Creating AI news discussion...');
       
       // Fetch current news stories
       const stories = await this.fetchNewsStories();
       
       if (stories.length === 0) {
-        console.log('No news stories found');
         return null;
       }
       
       // Pick a random story for variety
       const randomStory = stories[Math.floor(Math.random() * stories.length)];
-      console.log('Selected story:', randomStory.headline);
       
       // Generate an opinionated post about the story
       const post = await this.generateOpinionatedPost(randomStory);
@@ -511,48 +483,39 @@ Make it punchy, specific, and debate-worthy. The source information will be disp
       };
       
       const discussion = await createDiscussion(discussionData);
-      console.log('AI news discussion created successfully:', discussion.id);
       
       // Import AIService to generate points and fact-check results immediately
       const { AIService } = await import('./aiService');
       
       try {
         // Generate AI points immediately for the news post
-        console.log('Generating AI points for news discussion...');
         const aiPoints = await AIService.generatePoints(post.content, post.title);
         
         // Update the discussion with AI points in database
         if (aiPoints && aiPoints.length > 0) {
           if (updateAIPoints) {
             await updateAIPoints(discussion.id, aiPoints);
-            console.log('AI points saved to database for news discussion');
           }
           discussion.aiPoints = aiPoints;
           discussion.aiPointsGenerated = true;
-          console.log('AI points generated for news discussion:', aiPoints.length);
         }
         
         // Generate fact-check results immediately
-        console.log('Generating fact-check results for news discussion...');
         const factCheckResults = await AIService.factCheckPoints(aiPoints, post.title);
         
         // Always save fact check results, even if empty, and mark as generated
         if (updateFactCheckResults) {
           await updateFactCheckResults(discussion.id, factCheckResults);
-          console.log('Fact-check results saved to database for news discussion');
         }
         discussion.factCheckResults = factCheckResults;
         discussion.factCheckGenerated = true;
-        console.log('Fact-check results generated for news discussion');
         
       } catch (aiError) {
-        console.error('Error generating AI content for news discussion:', aiError);
         // Don't fail the news creation if AI generation fails
       }
       
       return discussion;
     } catch (error) {
-      console.error('Error creating news discussion:', error);
       throw error;
     }
   }

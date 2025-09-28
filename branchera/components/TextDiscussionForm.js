@@ -66,7 +66,6 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
     }
 
     setIsSubmitting(true);
-    console.log('Creating text discussion...');
     
     try {
       // Create discussion data for text-based discussion
@@ -79,19 +78,15 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
         tags: tags.length > 0 ? tags : []
       };
       
-      console.log('Creating discussion with data:', discussionData);
       const createdDiscussion = await createDiscussion(discussionData);
-      console.log('Discussion created successfully:', createdDiscussion);
       
       // Generate AI points first, then fact check based on those points
       setIsFactChecking(true);
       
       try {
-        console.log('Generating AI points for new discussion...');
         
         // Step 1: Generate AI points
         const aiPoints = await AIService.generatePoints(discussionData.content, discussionData.title);
-        console.log('AI points generated:', aiPoints);
         
         // Save AI points
         await updateAIPoints(createdDiscussion.id, aiPoints);
@@ -99,9 +94,7 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
         createdDiscussion.aiPointsGenerated = true;
         
         // Step 2: Fact check based on the generated points
-        console.log('Fact checking based on generated points...');
         const factCheckResults = await AIService.factCheckPoints(aiPoints, discussionData.title);
-        console.log('Fact check results based on points:', factCheckResults);
         
         // Save fact check results
         await updateFactCheckResults(createdDiscussion.id, factCheckResults);
@@ -109,22 +102,17 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
         createdDiscussion.factCheckGenerated = true;
         setFactCheckResults(factCheckResults);
         
-        console.log('AI points and fact checking completed successfully');
       } catch (error) {
-        console.error('Error with AI processing:', error);
         
         // Try to generate AI points at minimum, even if fact checking fails
         try {
           if (!createdDiscussion.aiPointsGenerated) {
-            console.log('Attempting to generate AI points as fallback...');
             const aiPoints = await AIService.generatePoints(discussionData.content, discussionData.title);
             await updateAIPoints(createdDiscussion.id, aiPoints);
             createdDiscussion.aiPoints = aiPoints;
             createdDiscussion.aiPointsGenerated = true;
-            console.log('AI points generated successfully as fallback');
           }
         } catch (fallbackError) {
-          console.error('Error with fallback AI points generation:', fallbackError);
         }
         
         alert('Discussion created successfully, but AI processing had some issues.');
@@ -141,19 +129,10 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
       
       // Notify parent component
       if (onDiscussionCreated) {
-        console.log('Notifying parent component...');
         onDiscussionCreated(createdDiscussion);
       }
       
-      console.log('Discussion creation process completed successfully');
     } catch (error) {
-      console.error('Error creating discussion:', error);
-      console.error('Error details:', {
-        name: error.name,
-        message: error.message,
-        code: error.code,
-        stack: error.stack
-      });
       alert(`Failed to create discussion: ${error.message}`);
     } finally {
       setIsSubmitting(false);
