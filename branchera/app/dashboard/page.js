@@ -20,10 +20,13 @@ export default function DashboardPage() {
   const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // State for discussion components
-  const [expandedDiscussions, setExpandedDiscussions] = useState(new Set());
-  const [expandedReplies, setExpandedReplies] = useState(new Set());
-  const [expandedAIPoints, setExpandedAIPoints] = useState(new Set());
+  // State for discussion components - separate for hot and recent sections
+  const [expandedHotDiscussions, setExpandedHotDiscussions] = useState(new Set());
+  const [expandedRecentDiscussions, setExpandedRecentDiscussions] = useState(new Set());
+  const [expandedHotReplies, setExpandedHotReplies] = useState(new Set());
+  const [expandedRecentReplies, setExpandedRecentReplies] = useState(new Set());
+  const [expandedHotAIPoints, setExpandedHotAIPoints] = useState(new Set());
+  const [expandedRecentAIPoints, setExpandedRecentAIPoints] = useState(new Set());
   const [collectedPoints, setCollectedPoints] = useState(new Map());
   const [pointCounts, setPointCounts] = useState(new Map());
   
@@ -83,7 +86,7 @@ export default function DashboardPage() {
   }, []);
 
   // Handle reply additions
-  const handleReplyAdded = useCallback((discussionId, newReply) => {
+  const handleReplyAdded = useCallback((discussionId, newReply, section) => {
     const updateDiscussion = (discussions) =>
       discussions.map(d => {
         if (d.id === discussionId) {
@@ -99,15 +102,19 @@ export default function DashboardPage() {
         }
         return d;
       });
-    
+
     setHotDiscussions(prev => updateDiscussion(prev));
     setRecentActivity(prev => ({
       ...prev,
       discussions: prev.discussions ? updateDiscussion(prev.discussions) : []
     }));
-    
-    // Expand replies to show the new reply
-    setExpandedReplies(prev => new Set([...prev, discussionId]));
+
+    // Expand replies to show the new reply in the appropriate section
+    if (section === 'hot') {
+      setExpandedHotReplies(prev => new Set([...prev, discussionId]));
+    } else if (section === 'recent') {
+      setExpandedRecentReplies(prev => new Set([...prev, discussionId]));
+    }
   }, []);
 
   // Refresh points data
@@ -331,13 +338,13 @@ export default function DashboardPage() {
                         discussion={discussion}
                         searchQuery=""
                         onDiscussionUpdate={handleDiscussionUpdate}
-                        onReplyAdded={handleReplyAdded}
-                        expandedDiscussions={expandedDiscussions}
-                        setExpandedDiscussions={setExpandedDiscussions}
-                        expandedReplies={expandedReplies}
-                        setExpandedReplies={setExpandedReplies}
-                        expandedAIPoints={expandedAIPoints}
-                        setExpandedAIPoints={setExpandedAIPoints}
+                        onReplyAdded={(discussionId, newReply) => handleReplyAdded(discussionId, newReply, 'hot')}
+                        expandedDiscussions={expandedHotDiscussions}
+                        setExpandedDiscussions={setExpandedHotDiscussions}
+                        expandedReplies={expandedHotReplies}
+                        setExpandedReplies={setExpandedHotReplies}
+                        expandedAIPoints={expandedHotAIPoints}
+                        setExpandedAIPoints={setExpandedHotAIPoints}
                         collectedPoints={collectedPoints}
                         pointCounts={pointCounts}
                         refreshPointsData={refreshPointsData}
@@ -376,13 +383,13 @@ export default function DashboardPage() {
                           discussion={discussion}
                           searchQuery=""
                           onDiscussionUpdate={handleDiscussionUpdate}
-                          onReplyAdded={handleReplyAdded}
-                          expandedDiscussions={expandedDiscussions}
-                          setExpandedDiscussions={setExpandedDiscussions}
-                          expandedReplies={expandedReplies}
-                          setExpandedReplies={setExpandedReplies}
-                          expandedAIPoints={expandedAIPoints}
-                          setExpandedAIPoints={setExpandedAIPoints}
+                          onReplyAdded={(discussionId, newReply) => handleReplyAdded(discussionId, newReply, 'recent')}
+                          expandedDiscussions={expandedRecentDiscussions}
+                          setExpandedDiscussions={setExpandedRecentDiscussions}
+                          expandedReplies={expandedRecentReplies}
+                          setExpandedReplies={setExpandedRecentReplies}
+                          expandedAIPoints={expandedRecentAIPoints}
+                          setExpandedAIPoints={setExpandedRecentAIPoints}
                           collectedPoints={collectedPoints}
                           pointCounts={pointCounts}
                           refreshPointsData={refreshPointsData}
