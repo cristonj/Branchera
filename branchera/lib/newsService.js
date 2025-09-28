@@ -1,7 +1,6 @@
 'use client';
 
-import { getAI, getGenerativeModel, GoogleAIBackend } from "firebase/ai";
-import { app } from './firebase';
+import { FirebaseAIService } from './firebase-ai';
 
 export class NewsService {
   // Check if we should create a new news post (15 minutes since last AI post)
@@ -138,13 +137,9 @@ export class NewsService {
   static async fetchNewsStories() {
     try {
       console.log('Fetching current news stories...');
-      
-      // Initialize the Firebase AI backend service
-      const ai = getAI(app, { backend: new GoogleAIBackend() });
-      
-      // Create a GenerativeModel instance with Google Search grounding
-      const model = getGenerativeModel(ai, { 
-        model: "gemini-2.5-flash",
+
+      // Get the generative model instance with Google Search grounding
+      const model = await FirebaseAIService.getGenerativeModel("gemini-2.5-flash", {
         tools: [{ googleSearch: {} }]
       });
 
@@ -187,10 +182,9 @@ CRITICAL REQUIREMENTS:
 - Do not include speculation or unverified claims
 - Focus on stories that will generate meaningful discussion and debate`;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
+      const { response, groundingMetadata } = await FirebaseAIService.generateContentWithGrounding(model, prompt);
       const text = response.text();
-      
+
       try {
         // Clean up the response to extract just the JSON
         const jsonMatch = text.match(/\[[\s\S]*\]/);
@@ -207,7 +201,7 @@ CRITICAL REQUIREMENTS:
         console.log(`Fetched ${stories.length} news stories, extracting real URLs from grounding data...`);
         
         // Extract actual URLs from Google Search grounding data
-        const groundingMetadata = response.candidates?.[0]?.groundingMetadata;
+        // groundingMetadata is now available from the generateContentWithGrounding call
         const groundingSources = [];
         
         if (groundingMetadata && groundingMetadata.groundingChunks) {
@@ -334,13 +328,9 @@ CRITICAL REQUIREMENTS:
   static async generateOpinionatedPost(story) {
     try {
       console.log('Generating opinionated post for story:', story.headline);
-      
-      // Initialize the Firebase AI backend service
-      const ai = getAI(app, { backend: new GoogleAIBackend() });
-      
-      // Create a GenerativeModel instance with Google Search grounding
-      const model = getGenerativeModel(ai, { 
-        model: "gemini-2.5-flash",
+
+      // Get the generative model instance with Google Search grounding
+      const model = await FirebaseAIService.getGenerativeModel("gemini-2.5-flash", {
         tools: [{ googleSearch: {} }]
       });
 
@@ -385,8 +375,7 @@ Return ONLY a valid JSON object in this format:
 
 Make it punchy, specific, and debate-worthy. The source information will be displayed separately.`;
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
+      const { response, groundingMetadata } = await FirebaseAIService.generateContentWithGrounding(model, prompt);
       const text = response.text();
       
       try {
