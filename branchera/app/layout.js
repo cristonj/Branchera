@@ -6,8 +6,8 @@ import FloatingActionButton from "@/components/FloatingActionButton";
 import AppContent from "./AppContent";
 
 export const metadata = {
-  title: "Branches - Social Media That Gets Out of Your Way",
-  description: "The open source, ad-free social platform designed for constructive dialogue instead of endless engagement. AI-powered fact-checking, transparent discussions, and a community that respects your intelligence.",
+  title: "Branches - Grows With You",
+  description: "A social platform that evolves with your interests and grows your understanding. Thoughtful conversations, AI-powered insights, and a community that develops together.",
   keywords: ["Branches", "open source", "social media", "ad-free", "constructive dialogue", "fact-checking", "transparent", "AI-powered", "meaningful conversations", "no ads"],
   authors: [{ name: "Branchera Team" }],
   creator: "Branches",
@@ -19,8 +19,8 @@ export const metadata = {
   },
   metadataBase: new URL('https://branches.live'), // Update this with your actual domain
   openGraph: {
-    title: "Branches - Social Media That Gets Out of Your Way",
-    description: "The open source, ad-free social platform designed for constructive dialogue instead of endless engagement. AI-powered fact-checking, transparent discussions, and a community that respects your intelligence.",
+    title: "Branches - Grows With You",
+    description: "A social platform that evolves with your interests and grows your understanding. Thoughtful conversations, AI-powered insights, and a community that develops together.",
     url: 'https://branches.live', // Update this with your actual domain
     siteName: 'Branches',
     images: [
@@ -37,8 +37,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "Branches - Social Media That Gets Out of Your Way",
-    description: "The open source, ad-free social platform designed for constructive dialogue instead of endless engagement. AI-powered fact-checking, transparent discussions, and a community that respects your intelligence.",
+    title: "Branches - Grows With You",
+    description: "A social platform that evolves with your interests and grows your understanding. Thoughtful conversations, AI-powered insights, and a community that develops together.",
     images: ['/og-image.webp'], // Twitter will use this image
     creator: '@branches', // Update this with your actual Twitter handle
   },

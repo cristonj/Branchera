@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Privacy Policy - Branches",
-  description: "Privacy Policy for Branches - Where Progress Happens",
+  description: "Privacy Policy for Branches - Grows With You",
 };
 
 export default function PrivacyPolicy() {

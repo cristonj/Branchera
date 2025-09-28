@@ -1,6 +1,6 @@
 export const metadata = {
   title: "Terms of Service - Branches",
-  description: "Terms of Service for Branches - Where Progress Happens",
+  description: "Terms of Service for Branches - Grows With You",
 };
 
 export default function TermsOfService() {

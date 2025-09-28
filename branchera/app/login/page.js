@@ -36,7 +36,7 @@ export default function LoginPage() {
             </h1>
           </div>
           <p className="text-sm text-gray-600">
-            Social media that gets out of your way
+            Branches grows with you
           </p>
         </div>
 

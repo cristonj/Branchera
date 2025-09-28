@@ -59,7 +59,7 @@ export default function AboutPage() {
                   Our Core Principles
                 </h2>
                 <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-                  These aren&rsquo;t just marketing slogans — they&rsquo;re the foundational beliefs that guide every decision we make.
+                  These principles create an environment where meaningful conversations flourish and understanding deepens over time.
                 </p>
               </div>
               
@@ -98,9 +98,9 @@ export default function AboutPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold mb-3 text-black">Gets Out of Your Way</h3>
+                  <h3 className="text-xl font-bold mb-3 text-black">Grows With You</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    No infinite scroll. No notification spam. No dark patterns. Clean, focused interface that helps you engage meaningfully, then get back to your life.
+                    Adaptive conversations that evolve with your interests. AI that learns your thinking patterns. A community that develops deeper insights together over time.
                   </p>
                 </div>
 
@@ -256,7 +256,7 @@ export default function AboutPage() {
                 />
                 <h3 className="text-2xl font-bold text-black">Branches</h3>
               </div>
-              <p className="text-gray-600">Social media that gets out of your way</p>
+              <p className="text-gray-600">Branches grows with you</p>
             </div>
             <div className="flex justify-center space-x-8 mb-8">
               <Link href="/" className="text-gray-600 hover:text-black transition-colors">Home</Link>
@@ -265,7 +265,7 @@ export default function AboutPage() {
               <Link href="/terms" className="text-gray-600 hover:text-black transition-colors">Terms</Link>
             </div>
             <div className="text-sm text-gray-500">
-              <p>&copy; 2025 Branches. Building social media that respects your intelligence.</p>
+              <p>&copy; 2025 Branches. A platform that grows with you.</p>
               <p className="text-xs text-gray-400 mt-2">
                 &ldquo;What if social media was about maximizing constructive dialogue instead of engagement?&rdquo;
               </p>
