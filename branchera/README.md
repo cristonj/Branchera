@@ -26,8 +26,7 @@ This is the main application directory for Branchera, built with [Next.js](https
    - Configure Gemini AI integration
 
 4. **Set up Firestore Rules**
-   - **URGENT**: Follow [`SETUP_FIRESTORE_RULES_URGENT.md`](./SETUP_FIRESTORE_RULES_URGENT.md)
-   - This is critical for security and functionality
+   - Follow [`FIREBASE_RULES.md`](./FIREBASE_RULES.md) for security setup
 
 5. **Run the development server**
    ```bash
@@ -158,9 +157,8 @@ npm run lint
 ## 📚 Documentation
 
 - [`FIREBASE_SETUP.md`](./FIREBASE_SETUP.md) - Complete Firebase configuration
-- [`GEMINI_SETUP.md`](./GEMINI_SETUP.md) - AI services setup
+- [`GEMINI_SETUP.md`](./GEMINI_SETUP.md) - AI services setup  
 - [`FIREBASE_RULES.md`](./FIREBASE_RULES.md) - Security rules documentation
-- [`SETUP_FIRESTORE_RULES_URGENT.md`](./SETUP_FIRESTORE_RULES_URGENT.md) - Critical security setup
 
 ## 🤝 Contributing
 
