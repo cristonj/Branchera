@@ -56,10 +56,10 @@ export default function TopNav() {
           >
             <img 
               src="/logo.svg" 
-              alt="Branchera Logo" 
+              alt="Branches Logo" 
               className="w-8 h-8 mr-2"
             />
-            Branchera
+            Branches
           </Link>
           
           {/* Hamburger Menu */}

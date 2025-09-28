@@ -6,23 +6,23 @@ import FloatingActionButton from "@/components/FloatingActionButton";
 import AppContent from "./AppContent";
 
 export const metadata = {
-  title: "Branchera - Social Media That Gets Out of Your Way",
+  title: "Branches - Social Media That Gets Out of Your Way",
   description: "The open source, ad-free social platform designed for constructive dialogue instead of endless engagement. AI-powered fact-checking, transparent discussions, and a community that respects your intelligence.",
-  keywords: ["Branchera", "open source", "social media", "ad-free", "constructive dialogue", "fact-checking", "transparent", "AI-powered", "meaningful conversations", "no ads"],
+  keywords: ["Branches", "open source", "social media", "ad-free", "constructive dialogue", "fact-checking", "transparent", "AI-powered", "meaningful conversations", "no ads"],
   authors: [{ name: "Branchera Team" }],
-  creator: "Branchera",
-  publisher: "Branchera",
+  creator: "Branches",
+  publisher: "Branches",
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://branchera.org'), // Update this with your actual domain
+  metadataBase: new URL('https://branches.live'), // Update this with your actual domain
   openGraph: {
-    title: "Branchera - Social Media That Gets Out of Your Way",
+    title: "Branches - Social Media That Gets Out of Your Way",
     description: "The open source, ad-free social platform designed for constructive dialogue instead of endless engagement. AI-powered fact-checking, transparent discussions, and a community that respects your intelligence.",
-    url: 'https://branchera.org', // Update this with your actual domain
-    siteName: 'Branchera',
+    url: 'https://branches.live', // Update this with your actual domain
+    siteName: 'Branches',
     images: [
       {
         url: '/og-image.webp', // Will be served from public folder
@@ -37,16 +37,16 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "Branchera - Social Media That Gets Out of Your Way",
+    title: "Branches - Social Media That Gets Out of Your Way",
     description: "The open source, ad-free social platform designed for constructive dialogue instead of endless engagement. AI-powered fact-checking, transparent discussions, and a community that respects your intelligence.",
     images: ['/og-image.webp'], // Twitter will use this image
-    creator: '@branchera', // Update this with your actual Twitter handle
+    creator: '@branches', // Update this with your actual Twitter handle
   },
   // Apple specific
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Branchera',
+    title: 'Branches',
     startupImage: [
       {
         url: '/apple-splash-2048-2732.png',
@@ -125,7 +125,7 @@ export default function RootLayout({ children }) {
         {/* Apple PWA Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Branchera" />
+        <meta name="apple-mobile-web-app-title" content="Branches" />
         <meta name="apple-touch-fullscreen" content="yes" />
 
         {/* Apple Touch Icons */}
@@ -134,7 +134,7 @@ export default function RootLayout({ children }) {
 
         {/* Additional PWA Meta Tags */}
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="application-name" content="Branchera" />
+        <meta name="application-name" content="Branches" />
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
 

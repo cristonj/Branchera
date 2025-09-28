@@ -1,4 +1,4 @@
-const CACHE_NAME = 'branchera-v1';
+const CACHE_NAME = 'branches-v1';
 const urlsToCache = [
   '/',
   '/manifest.json',

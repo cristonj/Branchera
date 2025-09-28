@@ -1,4 +1,4 @@
-# Firebase Setup for Branchera
+# Firebase Setup for Branches
 
 ## Overview
 This project is configured to use Firebase for:
@@ -10,7 +10,7 @@ This project is configured to use Firebase for:
 ## Project Structure
 
 ```
-branchera/
+branches/
 ├── lib/
 │   ├── firebase.js         # Firebase initialization
 │   └── firebase-config.js  # Firebase configuration

@@ -461,7 +461,7 @@ export default function DashboardPage() {
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-900">Learn More</h3>
-                    <p className="text-sm text-gray-500">About Branchera</p>
+                    <p className="text-sm text-gray-500">About Branches</p>
                   </div>
                 </Link>
               </div>

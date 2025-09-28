@@ -111,7 +111,7 @@ export class NewsService {
       const fetchPromise = fetch(url, {
         method: 'HEAD',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0; +https://branchera.com)',
+          'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0; +https://branches.live)',
           'Accept': '*/*',
           'Cache-Control': 'no-cache'
         }

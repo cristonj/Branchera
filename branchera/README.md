@@ -1,6 +1,6 @@
-# Branchera Development Setup
+# Branches Development Setup
 
-This is the main application directory for Branchera, built with [Next.js](https://nextjs.org) and powered by Firebase and Google Gemini AI.
+This is the main application directory for Branches, built with [Next.js](https://nextjs.org) and powered by Firebase and Google Gemini AI.
 
 ## 🚀 Quick Setup
 

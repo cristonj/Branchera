@@ -180,7 +180,7 @@ export default function DisplayNameModal({ isOpen, onSubmit, onClose, currentNam
 
           {!currentName && (
             <p className="text-xs text-gray-500 mt-4 text-center">
-              You need to set a display name to continue using Branchera
+              You need to set a display name to continue using Branches
             </p>
           )}
         </div>

@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Terms of Service - Branchera",
-  description: "Terms of Service for Branchera - Where Progress Happens",
+  title: "Terms of Service - Branches",
+  description: "Terms of Service for Branches - Where Progress Happens",
 };
 
 export default function TermsOfService() {
@@ -21,14 +21,14 @@ export default function TermsOfService() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Acceptance of Terms</h2>
               <p className="text-gray-700 mb-4">
-                By accessing and using Branchera (&quot;the Service&quot;), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+                By accessing and using Branches (&quot;the Service&quot;), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Description of Service</h2>
               <p className="text-gray-700 mb-4">
-                Branchera is a social platform designed to facilitate critical discussion where clarity and logic prevail over distraction and misinformation. Our mission is to provide the best and most accessible social experience for meaningful discourse.
+                Branches is a social platform designed to facilitate critical discussion where clarity and logic prevail over distraction and misinformation. Our mission is to provide the best and most accessible social experience for meaningful discourse.
               </p>
             </section>
 
@@ -49,10 +49,10 @@ export default function TermsOfService() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Content and Intellectual Property</h2>
               <p className="text-gray-700 mb-4">
-                You retain ownership of content you post on Branchera. However, by posting content, you grant Branchera a non-exclusive, royalty-free, worldwide license to use, display, and distribute your content in connection with the Service.
+                You retain ownership of content you post on Branchera. However, by posting content, you grant Branches a non-exclusive, royalty-free, worldwide license to use, display, and distribute your content in connection with the Service.
               </p>
               <p className="text-gray-700 mb-4">
-                The Service and its original content, features, and functionality are owned by Branchera and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.
+                The Service and its original content, features, and functionality are owned by Branches and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws.
               </p>
             </section>
 
@@ -73,14 +73,14 @@ export default function TermsOfService() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Disclaimer</h2>
               <p className="text-gray-700 mb-4">
-                The information on this Service is provided on an &quot;as is&quot; basis. To the fullest extent permitted by law, Branchera excludes all representations, warranties, conditions and terms whether express or implied.
+                The information on this Service is provided on an &quot;as is&quot; basis. To the fullest extent permitted by law, Branches excludes all representations, warranties, conditions and terms whether express or implied.
               </p>
             </section>
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Limitation of Liability</h2>
               <p className="text-gray-700 mb-4">
-                Branchera shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the Service.
+                Branches shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the Service.
               </p>
             </section>
 
@@ -94,7 +94,7 @@ export default function TermsOfService() {
             <section className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Contact Information</h2>
               <p className="text-gray-700 mb-4">
-                If you have any questions about these Terms of Service, please contact us at legal@branchera.org.
+                If you have any questions about these Terms of Service, please contact us at legal@branches.live.
               </p>
             </section>
           </div>

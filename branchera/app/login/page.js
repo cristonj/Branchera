@@ -28,11 +28,11 @@ export default function LoginPage() {
           <div className="flex items-center justify-center mb-2">
             <img 
               src="/logo.svg" 
-              alt="Branchera Logo" 
+              alt="Branches Logo" 
               className="w-8 h-8 mr-3"
             />
             <h1 className="text-3xl font-bold">
-              Branchera
+              Branches
             </h1>
           </div>
           <p className="text-sm text-gray-600">
