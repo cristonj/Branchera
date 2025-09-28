@@ -31,7 +31,7 @@ export default function TextReplyForm({
   const [isJudging, setIsJudging] = useState(false);
 
   const { user, getDisplayName } = useAuth();
-  const { addReply, updateReplyFactCheckResults, createUserPoint, hasUserEarnedPointsForDiscussion } = useDatabase();
+  const { addReply, updateReplyFactCheckResults, createUserPoint, hasUserCollectedPoint } = useDatabase();
 
   // Safely get toast functions with fallbacks
   const toastContext = useToast();
@@ -106,10 +106,10 @@ export default function TextReplyForm({
       // Check if this is a rebuttal to a specific point and if user can earn points
       if (selectedPoint && selectedPoint.text) {
         try {
-          // Check if user has already earned points for this discussion
-          const hasEarnedPoints = await hasUserEarnedPointsForDiscussion(user.uid, discussionId);
+          // Check if user has already collected points for this specific point
+          const hasCollectedThisPoint = await hasUserCollectedPoint(user.uid, discussionId, selectedPoint.id);
 
-          if (!hasEarnedPoints) {
+          if (!hasCollectedThisPoint) {
             setIsJudging(true);
             console.log('Judging rebuttal for points...');
 
@@ -214,11 +214,11 @@ export default function TextReplyForm({
               }
             }
           } else {
-            console.log('User has already earned points for this discussion');
-            // Show info toast for already earned points
+            console.log('User has already collected points for this specific point');
+            // Show info toast for already collected point
             try {
               if (showSuccessToast && typeof showSuccessToast === 'function') {
-                showSuccessToast('Reply submitted!', 3000);
+                showSuccessToast('Reply submitted! You\'ve already claimed points for this specific claim.', 4000);
               }
             } catch (toastError) {
               console.error('Error showing info toast:', toastError);
