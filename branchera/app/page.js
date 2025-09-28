@@ -368,7 +368,7 @@ export default function Home() {
             {/* Bottom Bar */}
             <div className="border-t border-black/10 pt-8 text-center">
               <p className="text-sm text-gray-500 mb-2">
-                &copy; 2025 Branches. A platform that grows with you.
+                &copy; 2025 Branches. A platform that grows with you. Not owned by a billionaire.
               </p>
               <p className="text-xs text-gray-400">
                 &ldquo;What if social media was about maximizing constructive dialogue instead of engagement?&rdquo;

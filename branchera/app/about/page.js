@@ -111,9 +111,9 @@ export default function AboutPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold mb-3 text-black">Forever Free & Ad-Free</h3>
+                  <h3 className="text-xl font-bold mb-3 text-black">Forever Free & Independent</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Built as a public good, not a profit center. No ads, no premium tiers, no paywalls. Funded by community support, not by harvesting your attention or data.
+                    Built as a public good, not a profit center. No ads, no premium tiers, no paywalls. Not owned by a billionaire. Funded by community support, not by harvesting your attention or data.
                   </p>
                 </div>
               </div>
@@ -265,7 +265,7 @@ export default function AboutPage() {
               <Link href="/terms" className="text-gray-600 hover:text-black transition-colors">Terms</Link>
             </div>
             <div className="text-sm text-gray-500">
-              <p>&copy; 2025 Branches. A platform that grows with you.</p>
+              <p>&copy; 2025 Branches. A platform that grows with you. Not owned by a billionaire.</p>
               <p className="text-xs text-gray-400 mt-2">
                 &ldquo;What if social media was about maximizing constructive dialogue instead of engagement?&rdquo;
               </p>

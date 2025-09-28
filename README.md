@@ -1,11 +1,11 @@
 # Branches
-**Where Progress Happens**
+**Grows With You • Not Owned by a Billionaire**
 
 [![Netlify Status](https://api.netlify.com/api/v1/badges/eee5ae77-ff80-46b7-8a37-b38af43fde8e/deploy-status)](https://app.netlify.com/projects/branches/deploys)
 
 > *"What if social media was about maximizing constructive dialogue instead of engagement?"*
 
-Branches is an open-source social platform designed for thoughtful discourse, not endless scrolling. Built with transparency, powered by AI, and committed to being forever free and ad-free.
+Branches is an open-source social platform designed for thoughtful discourse, not endless scrolling. Built with transparency, powered by AI, and committed to being forever free and ad-free. Not owned by a billionaire.
 
 ## ✨ Core Features
 
@@ -29,9 +29,10 @@ Branches is an open-source social platform designed for thoughtful discourse, no
 - No black boxes, no secret algorithms
 - Community-driven development
 
-### 🚫 **Forever Free & Ad-Free**
+### 🚫 **Forever Free & Independent**
 - No ads, no premium tiers, no paywalls
-- Built as a public good, not a profit center
+- Built as a public good, not a profit center  
+- Not owned by a billionaire
 - Funded by community support, not data harvesting
 
 ## 🛠️ Technology Stack
@@ -117,6 +118,7 @@ The golden rule of constructive discourse. Branches is built around this princip
 
 ### **Community-Driven**
 - Built by the community, for the community
+- Not owned by a billionaire
 - Feature requests and roadmap decided collectively
 - Sustainable through community support
 

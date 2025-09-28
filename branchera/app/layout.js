@@ -7,7 +7,7 @@ import AppContent from "./AppContent";
 
 export const metadata = {
   title: "Branches - Grows With You",
-  description: "A social platform that evolves with your interests and grows your understanding. Thoughtful conversations, AI-powered insights, and a community that develops together.",
+  description: "A social platform that evolves with your interests and grows your understanding. Thoughtful conversations, AI-powered insights, and a community that develops together. Not owned by a billionaire.",
   keywords: ["Branches", "open source", "social media", "ad-free", "constructive dialogue", "fact-checking", "transparent", "AI-powered", "meaningful conversations", "no ads"],
   authors: [{ name: "Branchera Team" }],
   creator: "Branches",
@@ -20,7 +20,7 @@ export const metadata = {
   metadataBase: new URL('https://branches.live'), // Update this with your actual domain
   openGraph: {
     title: "Branches - Grows With You",
-    description: "A social platform that evolves with your interests and grows your understanding. Thoughtful conversations, AI-powered insights, and a community that develops together.",
+    description: "A social platform that evolves with your interests and grows your understanding. Thoughtful conversations, AI-powered insights, and a community that develops together. Not owned by a billionaire.",
     url: 'https://branches.live', // Update this with your actual domain
     siteName: 'Branches',
     images: [
@@ -38,7 +38,7 @@ export const metadata = {
   twitter: {
     card: 'summary_large_image',
     title: "Branches - Grows With You",
-    description: "A social platform that evolves with your interests and grows your understanding. Thoughtful conversations, AI-powered insights, and a community that develops together.",
+    description: "A social platform that evolves with your interests and grows your understanding. Thoughtful conversations, AI-powered insights, and a community that develops together. Not owned by a billionaire.",
     images: ['/og-image.webp'], // Twitter will use this image
     creator: '@branches', // Update this with your actual Twitter handle
   },
