@@ -39,6 +39,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const [isUserSearching, setIsUserSearching] = useState(false);
   const [collectedPoints, setCollectedPoints] = useState(new Map()); // Track which points user has collected
   const [pointCounts, setPointCounts] = useState(new Map()); // Track how many points earned for each AI point
+  const [isCreatingNewsPost, setIsCreatingNewsPost] = useState(false); // Track news post creation progress
   const searchTimeoutRef = useRef(null);
   const observerRef = useRef(null);
   const loadingTriggerRef = useRef(null);
@@ -227,44 +228,67 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         return;
       }
       
-      // Add a timeout to prevent hanging
+      // Add a timeout to prevent hanging (increased to 60 seconds for AI processing)
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('News post creation timeout')), 30000)
+        setTimeout(() => reject(new Error('News post creation timeout after 60 seconds')), 60000)
       );
       
+      console.log('Checking if should create news post...');
       const shouldCreatePromise = NewsService.shouldCreateNewsPost(discussionsData);
       
       const shouldCreate = await Promise.race([shouldCreatePromise, timeoutPromise]);
       
       if (shouldCreate) {
         console.log('Creating AI news post...');
+        setIsCreatingNewsPost(true);
         
-        // Create news post with timeout protection and immediate AI generation
-        const createNewsPromise = NewsService.createNewsDiscussion(
-          createDiscussion, 
-          updateAIPoints, 
-          updateFactCheckResults
-        );
-        const newsDiscussion = await Promise.race([createNewsPromise, timeoutPromise]);
-        
-        if (newsDiscussion) {
-          console.log('AI news post created successfully:', newsDiscussion.title);
-          console.log('News discussion includes AI points:', newsDiscussion.aiPoints?.length || 0);
-          console.log('News discussion includes fact-check:', !!newsDiscussion.factCheckResults);
+        try {
+          // Create news post with timeout protection and immediate AI generation
+          const createNewsPromise = NewsService.createNewsDiscussion(
+            createDiscussion, 
+            updateAIPoints, 
+            updateFactCheckResults
+          );
           
-          // Add the new discussion to the current list with all AI-generated content
-          setDiscussions(prev => [newsDiscussion, ...prev]);
+          console.log('Starting news post creation with 60-second timeout...');
+          const newsDiscussion = await Promise.race([createNewsPromise, timeoutPromise]);
           
-          // No need to refresh since we already have the complete discussion with AI content
+          if (newsDiscussion) {
+            console.log('AI news post created successfully:', newsDiscussion.title);
+            console.log('News discussion includes AI points:', newsDiscussion.aiPoints?.length || 0);
+            console.log('News discussion includes fact-check:', !!newsDiscussion.factCheckResults);
+            
+            // Add the new discussion to the current list with all AI-generated content
+            setDiscussions(prev => [newsDiscussion, ...prev]);
+            
+            // Show success toast
+            if (showSuccessToast) {
+              showSuccessToast('New AI news post created successfully!');
+            }
+            
+            // No need to refresh since we already have the complete discussion with AI content
+          }
+        } finally {
+          setIsCreatingNewsPost(false);
         }
       } else {
         console.log('No need to create AI news post at this time');
       }
     } catch (error) {
-      console.error('Error in news post creation (non-blocking):', error);
+      setIsCreatingNewsPost(false); // Reset progress indicator on error
+      
+      if (error.message.includes('timeout')) {
+        console.warn('News post creation timed out after 60 seconds - this is normal for complex AI processing');
+        // Show a subtle toast to inform user that news creation is taking longer than expected
+        if (showErrorToast) {
+          showErrorToast('AI news post creation is taking longer than expected. It will appear when ready.');
+        }
+      } else {
+        console.error('Error in news post creation (non-blocking):', error);
+      }
       // This is intentionally non-blocking - errors here should never affect the main UI
     }
-  }, [user, createDiscussion, updateAIPoints, updateFactCheckResults]);
+  }, [user, createDiscussion, updateAIPoints, updateFactCheckResults, showErrorToast]);
 
   useEffect(() => {
     loadDiscussions();
@@ -523,7 +547,15 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold text-gray-900">Discussions</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-bold text-gray-900">Discussions</h2>
+          {isCreatingNewsPost && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
+              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+              <span>Creating AI news post...</span>
+            </div>
+          )}
+        </div>
         {onStartDiscussion && (
           <button
             onClick={onStartDiscussion}

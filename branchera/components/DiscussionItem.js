@@ -79,7 +79,7 @@ export default function DiscussionItem({
     enrichReplies();
   }, [discussion.replies, user?.uid, enrichRepliesWithPoints]);
 
-  // Enhanced smooth scroll function with fallbacks
+  // Enhanced smooth scroll function with fallbacks and top spacing
   const smoothScrollToReplyForm = () => {
     if (replyFormRef.current) {
       if ('scrollBehavior' in document.documentElement.style) {
@@ -88,8 +88,26 @@ export default function DiscussionItem({
           block: 'start',
           inline: 'nearest'
         });
+
+        // Add additional space at the top by scrolling up a bit more
+        setTimeout(() => {
+          const elementTop = replyFormRef.current.getBoundingClientRect().top + window.pageYOffset;
+          const offset = 80; // Adjust this value to control how much space to leave at the top
+          window.scrollTo({
+            top: elementTop - offset,
+            behavior: 'smooth'
+          });
+
+        }, 100);
       } else {
         replyFormRef.current.scrollIntoView();
+        // Fallback for older browsers - scroll up a bit more
+        setTimeout(() => {
+          const elementTop = replyFormRef.current.getBoundingClientRect().top + window.pageYOffset;
+          const offset = 80; // Adjust this value to control how much space to leave at the top
+          window.scrollTo(0, elementTop - offset);
+
+        }, 100);
       }
     }
   };
@@ -582,7 +600,7 @@ export default function DiscussionItem({
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="px-4 pb-4 pt-1 -mt-8 mr-6">
+        <div className="px-4 pb-4 pt-1 -mt-8">
           {/* Title and author info */}
           <div className="pb-2">
             <h3 className="text-lg font-semibold text-gray-900 mb-3">

@@ -2,6 +2,7 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DatabaseProvider } from "@/components/DatabaseProvider";
 import { ToastProvider } from "@/contexts/ToastContext";
+import FloatingActionButton from "@/components/FloatingActionButton";
 
 export const metadata = {
   title: "Branchera - Social Media That Gets Out of Your Way",
@@ -149,6 +150,7 @@ export default function RootLayout({ children }) {
           <DatabaseProvider>
             <ToastProvider>
               {children}
+              <FloatingActionButton />
             </ToastProvider>
           </DatabaseProvider>
         </AuthProvider>
