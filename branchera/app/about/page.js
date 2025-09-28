@@ -87,7 +87,7 @@ export default function AboutPage() {
                   </div>
                   <h3 className="text-xl font-bold mb-3 text-black">Radical Transparency</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Every line of our code is open source. Every AI decision is explainable. Every fact-check shows its sources. No black boxes, no hidden algorithms, no secret sauce.
+                    Every line of our code is open source. Every AI decision is explainable. Every fact-check shows its sources. No black boxes, no hidden algorithms, no secret sauce. You are not the product being sold to advertisers.
                   </p>
                 </div>
 
@@ -113,7 +113,7 @@ export default function AboutPage() {
                   </div>
                   <h3 className="text-xl font-bold mb-3 text-black">Forever Free & Independent</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Built as a public good, not a profit center. No ads, no premium tiers, no paywalls. Not owned by a billionaire. Funded by community support, not by harvesting your attention or data.
+                    Built as a public good, not a profit center. No ads, no premium tiers, no paywalls. Not owned by a billionaire. You are not the product. Funded by community support, not by harvesting your attention or data.
                   </p>
                 </div>
               </div>
@@ -265,7 +265,7 @@ export default function AboutPage() {
               <Link href="/terms" className="text-gray-600 hover:text-black transition-colors">Terms</Link>
             </div>
             <div className="text-sm text-gray-500">
-              <p>&copy; 2025 Branches. A platform that grows with you. Not owned by a billionaire.</p>
+              <p>&copy; 2025 Branches. A platform that grows with you. Not owned by a billionaire. You are not the product.</p>
               <p className="text-xs text-gray-400 mt-2">
                 &ldquo;What if social media was about maximizing constructive dialogue instead of engagement?&rdquo;
               </p>

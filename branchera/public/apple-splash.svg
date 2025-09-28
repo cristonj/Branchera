@@ -31,7 +31,10 @@
   <text x="600" y="1240" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="300" text-anchor="middle" fill="#666666" opacity="0.8">
     Branches grows with you
   </text>
-  <text x="600" y="1270" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="300" text-anchor="middle" fill="#666666" opacity="0.7">
+  <text x="600" y="1265" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="300" text-anchor="middle" fill="#666666" opacity="0.7">
     Not owned by a billionaire
+  </text>
+  <text x="600" y="1285" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="300" text-anchor="middle" fill="#666666" opacity="0.7">
+    You are not the product
   </text>
 </svg>
