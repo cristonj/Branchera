@@ -11,6 +11,8 @@ import SearchHighlight from './SearchHighlight';
 import EditDiscussionForm from './EditDiscussionForm';
 import { AIService } from '@/lib/aiService';
 import { useToast } from '@/contexts/ToastContext';
+import { formatDate } from '@/lib/dateUtils';
+import Tag from './Tag';
 
 export default function DiscussionItem({ 
   discussion, 
@@ -141,21 +143,6 @@ export default function DiscussionItem({
     }
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = (now - date) / (1000 * 60 * 60);
-    
-    if (diffInHours < 1) {
-      const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-      return diffInMinutes <= 1 ? 'Just now' : `${diffInMinutes}m ago`;
-    } else if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)}h ago`;
-    } else {
-      const diffInDays = Math.floor(diffInHours / 24);
-      return `${diffInDays}d ago`;
-    }
-  };
 
   const handleDelete = async (discussionId) => {
     if (!user) return;
@@ -460,9 +447,9 @@ export default function DiscussionItem({
                   </span>
                 ))}
                 {discussion.tags.length > 3 && (
-                  <span className="inline-block px-2 py-0.5 text-xs rounded-full font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                  <Tag>
                     +{discussion.tags.length - 3}
-                  </span>
+                  </Tag>
                 )}
               </div>
             )}
@@ -544,9 +531,9 @@ export default function DiscussionItem({
                   </span>
                 ))}
                 {discussion.tags.length > 3 && (
-                  <span className="inline-block px-2 py-0.5 text-xs rounded-full font-medium bg-gray-50 text-gray-500 border border-gray-200">
+                  <Tag>
                     +{discussion.tags.length - 3}
-                  </span>
+                  </Tag>
                 )}
               </div>
             )}
