@@ -479,30 +479,32 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     if (query === searchQuery) {
       return;
     }
-    
+
     setSearchQuery(query);
-    
-    // Clear any existing timeout since we're removing the timeout mechanism
+
+    // Clear any existing timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
       searchTimeoutRef.current = null;
     }
-    
+
     if (query.trim()) {
       // User is searching - pause polling until search is cleared
       console.log('User started searching:', query, '- polling paused');
       setIsUserSearching(true);
     } else {
-      // Search cleared - resume polling
-      console.log('Search cleared, resuming polling');
-      setIsUserSearching(false);
+      // Search cleared - resume polling after a short delay to prevent rapid toggling
+      console.log('Search cleared, resuming polling after delay');
+      searchTimeoutRef.current = setTimeout(() => {
+        setIsUserSearching(false);
+      }, 500); // 500ms delay before resuming polling
     }
   }, [searchQuery]);
 
   // Clean up timeout on unmount
   useEffect(() => {
     const currentSearchTimeout = searchTimeoutRef.current;
-    
+
     return () => {
       if (currentSearchTimeout) {
         clearTimeout(currentSearchTimeout);
