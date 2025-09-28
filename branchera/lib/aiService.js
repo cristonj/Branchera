@@ -1,7 +1,6 @@
 'use client';
 
-import { getAI, getGenerativeModel, GoogleAIBackend } from "firebase/ai";
-import { app } from './firebase';
+import { FirebaseAIService } from './firebase-ai';
 
 // AI service for generating points from discussion content using Firebase AI
 export class AIService {
@@ -62,11 +61,8 @@ export class AIService {
 
   // Firebase AI point generation using Gemini
   static async generatePointsWithFirebaseAI(content, title = '') {
-    // Initialize the Firebase AI backend service
-    const ai = getAI(app, { backend: new GoogleAIBackend() });
-    
-    // Create a GenerativeModel instance
-    const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+    // Get the generative model instance
+    const model = await FirebaseAIService.getGenerativeModel();
 
     const prompt = `
 Analyze this text and extract GRANULAR discussion points that people can respond to with specific rebuttals, evidence, or counterarguments. Break down complex statements into their component parts.
@@ -112,8 +108,7 @@ Examples of BAD vague points:
 
 Do not include any explanation or additional text, just the JSON array.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const response = await FirebaseAIService.generateContent(model, prompt);
     const text = response.text();
     
     try {
@@ -148,11 +143,8 @@ Do not include any explanation or additional text, just the JSON array.`;
 
   // Firebase AI key points generation for replies with discussion context using Gemini
   static async generateReplyKeyPointsWithFirebaseAI(replyContent, discussionTitle = '', discussionContent = '', discussionContext = []) {
-    // Initialize the Firebase AI backend service
-    const ai = getAI(app, { backend: new GoogleAIBackend() });
-    
-    // Create a GenerativeModel instance
-    const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+    // Get the generative model instance
+    const model = await FirebaseAIService.getGenerativeModel();
 
     // Build context from discussion and previous replies
     const contextText = discussionContext.length > 0 
@@ -212,8 +204,7 @@ Examples of BAD reply points:
 
 Do not include any explanation or additional text, just the JSON array.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const response = await FirebaseAIService.generateContent(model, prompt);
     const text = response.text();
     
     try {
@@ -294,12 +285,8 @@ Do not include any explanation or additional text, just the JSON array.`;
 
   // Firebase AI fact checking using Gemini with Google Search grounding
   static async performFactCheckWithFirebaseAI(content, title = '') {
-    // Initialize the Firebase AI backend service
-    const ai = getAI(app, { backend: new GoogleAIBackend() });
-    
-    // Create a GenerativeModel instance with Google Search grounding
-    const model = getGenerativeModel(ai, { 
-      model: "gemini-2.5-flash",
+    // Get the generative model instance with Google Search grounding
+    const model = await FirebaseAIService.getGenerativeModel("gemini-2.5-flash", {
       // Provide Google Search as a tool that the model can use to generate its response
       tools: [{ googleSearch: {} }]
     });
@@ -344,12 +331,11 @@ Guidelines:
 
 Do not include any explanation or additional text, just the JSON object.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const response = await FirebaseAIService.generateContent(model, prompt);
     const text = response.text();
     
     // Get the grounding metadata from the response
-    const groundingMetadata = result.response.candidates?.[0]?.groundingMetadata;
+    const groundingMetadata = result.groundingMetadata;
     
     try {
       // Clean up the response to extract just the JSON
@@ -408,12 +394,8 @@ Do not include any explanation or additional text, just the JSON object.`;
 
   // Firebase AI fact checking for points using Gemini with Google Search grounding
   static async performPointsFactCheckWithFirebaseAI(claimPoints, title = '') {
-    // Initialize the Firebase AI backend service
-    const ai = getAI(app, { backend: new GoogleAIBackend() });
-    
-    // Create a GenerativeModel instance with Google Search grounding
-    const model = getGenerativeModel(ai, { 
-      model: "gemini-2.5-flash",
+    // Get the generative model instance with Google Search grounding
+    const model = await FirebaseAIService.getGenerativeModel("gemini-2.5-flash", {
       // Provide Google Search as a tool that the model can use to generate its response
       tools: [{ googleSearch: {} }]
     });
@@ -464,12 +446,8 @@ Guidelines:
 
 Do not include any explanation or additional text, just the JSON object.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const { response, groundingMetadata } = await FirebaseAIService.generateContentWithGrounding(model, prompt);
     const text = response.text();
-    
-    // Get the grounding metadata from the response
-    const groundingMetadata = result.response.candidates?.[0]?.groundingMetadata;
     
     try {
       // Clean up the response to extract just the JSON
@@ -625,12 +603,8 @@ Do not include any explanation or additional text, just the JSON object.`;
 
   // Firebase AI response judgement using Gemini with Google Search grounding
   static async performRebuttalJudgementWithFirebaseAI(originalPoint, rebuttal, parentFactCheck, childFactCheck, discussionContext) {
-    // Initialize the Firebase AI backend service
-    const ai = getAI(app, { backend: new GoogleAIBackend() });
-    
-    // Create a GenerativeModel instance with Google Search grounding
-    const model = getGenerativeModel(ai, { 
-      model: "gemini-2.5-flash",
+    // Get the generative model instance with Google Search grounding
+    const model = await FirebaseAIService.getGenerativeModel("gemini-2.5-flash", {
       // Provide Google Search as a tool that the model can use to generate its response
       tools: [{ googleSearch: {} }]
     });
@@ -701,12 +675,8 @@ Be STINGY with higher points but always award at least 1 point for any coherent,
 
 Do not include any explanation or additional text, just the JSON object.`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+    const { response, groundingMetadata } = await FirebaseAIService.generateContentWithGrounding(model, prompt);
     const text = response.text();
-    
-    // Get the grounding metadata from the response
-    const groundingMetadata = result.response.candidates?.[0]?.groundingMetadata;
     
     try {
       // Clean up the response to extract just the JSON

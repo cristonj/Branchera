@@ -42,6 +42,25 @@ export default function SearchFilterSort({
     return Array.from(tagSet).sort();
   }, [discussions]);
 
+  // Debounced filter handler to prevent excessive updates
+  const handleFilterChange = useCallback((key, value) => {
+    // Clear existing timeout
+    if (filterTimeoutRef.current) {
+      clearTimeout(filterTimeoutRef.current);
+    }
+
+    // Update filters immediately for responsive UI, but debounce parent notifications
+    setFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
+
+    // Debounce the parent notification to prevent rapid polling changes
+    filterTimeoutRef.current = setTimeout(() => {
+      // This will trigger the useEffect that notifies parent components
+    }, 300); // 300ms debounce delay for filter changes
+  }, []);
+
   // Handle tag selection (uses the debounced filter handler)
   const handleTagSelection = useCallback((tag) => {
     const currentSelectedTags = filters.selectedTags || [];
@@ -422,25 +441,6 @@ export default function SearchFilterSort({
     onFilterChange?.(filters);
     onSortChange?.(sortBy);
   }, [processedDiscussions, searchQuery, searchType, filters, sortBy]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Debounced filter handler to prevent excessive updates
-  const handleFilterChange = useCallback((key, value) => {
-    // Clear existing timeout
-    if (filterTimeoutRef.current) {
-      clearTimeout(filterTimeoutRef.current);
-    }
-
-    // Update filters immediately for responsive UI, but debounce parent notifications
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }));
-
-    // Debounce the parent notification to prevent rapid polling changes
-    filterTimeoutRef.current = setTimeout(() => {
-      // This will trigger the useEffect that notifies parent components
-    }, 300); // 300ms debounce delay for filter changes
-  }, []);
 
   const clearFilters = () => {
     handleSearchChange('');
