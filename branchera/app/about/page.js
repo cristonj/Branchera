@@ -28,7 +28,7 @@ export default function AboutPage() {
           <div className="max-w-3xl mx-auto mb-12">
             <div className="bg-gray-50 border-l-4 border-black p-6 rounded-r-lg mb-8">
               <p className="text-xl text-gray-800 font-medium italic">
-                "At Branches, we think the app should be the product, not the users."
+                &ldquo;At Branches, we think the app should be the product, not the users.&rdquo;
               </p>
             </div>
             

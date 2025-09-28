@@ -74,7 +74,7 @@ export default function Home() {
 
           <div className="bg-gray-50 rounded-2xl p-8 max-w-2xl mx-auto">
             <p className="text-lg text-gray-800 italic mb-2">
-              "When you're not paying for the product, you are the product."
+              &ldquo;When you&rsquo;re not paying for the product, you are the product.&rdquo;
             </p>
             <p className="text-sm text-gray-600">Not at Branches.</p>
           </div>
