@@ -6,13 +6,10 @@ import { FirebaseAIService } from './firebase-ai';
 export class AIService {
   static async generatePoints(content, title = '') {
     try {
-      console.log('Generating AI points for content:', { title, content });
       
       const points = await this.generatePointsWithFirebaseAI(content, title);
-      console.log('Generated AI points with Firebase AI:', points);
       return points;
     } catch (error) {
-      console.error('Error generating AI points:', error);
       throw error;
     }
   }
@@ -20,17 +17,14 @@ export class AIService {
   // Generate AI points for a reply's content
   static async generateReplyPoints(replyContent, context = '') {
     try {
-      console.log('Generating AI points for reply:', { context, replyContent });
 
       // Reuse the same underlying generator with a reply-focused prompt wrapper
       const points = await this.generatePointsWithFirebaseAI(
         `Reply Context: ${context}\n\n${replyContent}`,
         `Reply: ${context}`
       );
-      console.log('Generated AI points for reply with Firebase AI:', points);
       return points;
     } catch (error) {
-      console.error('Error generating AI points for reply:', error);
       throw error;
     }
   }
@@ -38,7 +32,6 @@ export class AIService {
   // Generate key points for replying to a specific reply, taking discussion context into account
   static async generateReplyKeyPoints(replyContent, discussionTitle = '', discussionContent = '', discussionContext = []) {
     try {
-      console.log('Generating key points for reply with discussion context:', { 
         replyContent, 
         discussionTitle, 
         discussionContent,
@@ -51,10 +44,8 @@ export class AIService {
         discussionContent,
         discussionContext
       );
-      console.log('Generated key points for reply with Firebase AI:', points);
       return points;
     } catch (error) {
-      console.error('Error generating key points for reply:', error);
       throw error;
     }
   }
@@ -135,8 +126,6 @@ Do not include any explanation or additional text, just the JSON array.`;
       
       return validatedPoints;
     } catch (parseError) {
-      console.error('Error parsing Gemini response:', parseError);
-      console.error('Raw response:', text);
       throw new Error('Failed to parse AI response');
     }
   }
@@ -231,8 +220,6 @@ Do not include any explanation or additional text, just the JSON array.`;
       
       return validatedPoints;
     } catch (parseError) {
-      console.error('Error parsing Gemini response:', parseError);
-      console.error('Raw response:', text);
       throw new Error('Failed to parse AI response');
     }
   }
@@ -240,13 +227,10 @@ Do not include any explanation or additional text, just the JSON array.`;
   // Fact check content using web search
   static async factCheckContent(content, title = '') {
     try {
-      console.log('Fact checking content:', { title, content });
       
       const factCheckResults = await this.performFactCheckWithFirebaseAI(content, title);
-      console.log('Generated fact check results:', factCheckResults);
       return factCheckResults;
     } catch (error) {
-      console.error('Error fact checking content:', error);
       throw error;
     }
   }
@@ -254,7 +238,6 @@ Do not include any explanation or additional text, just the JSON array.`;
   // Fact check points-based claims using web search
   static async factCheckPoints(points, title = '') {
     try {
-      console.log('Fact checking points:', { title, points });
       
       // Filter points that are likely to contain factual claims
       const claimPoints = points.filter(point => 
@@ -275,10 +258,8 @@ Do not include any explanation or additional text, just the JSON array.`;
       }
       
       const factCheckResults = await this.performPointsFactCheckWithFirebaseAI(claimPoints, title);
-      console.log('Generated points-based fact check results:', factCheckResults);
       return factCheckResults;
     } catch (error) {
-      console.error('Error fact checking points:', error);
       throw error;
     }
   }
@@ -331,11 +312,8 @@ Guidelines:
 
 Do not include any explanation or additional text, just the JSON object.`;
 
-    const response = await FirebaseAIService.generateContent(model, prompt);
+    const { response, groundingMetadata } = await FirebaseAIService.generateContentWithGrounding(model, prompt);
     const text = response.text();
-    
-    // Get the grounding metadata from the response
-    const groundingMetadata = result.groundingMetadata;
     
     try {
       // Clean up the response to extract just the JSON
@@ -353,7 +331,6 @@ Do not include any explanation or additional text, just the JSON object.`;
       
       // If we have grounding metadata, this is a grounded result with real Google Search
       if (groundingMetadata) {
-        console.log('Fact check was grounded with Google Search');
         
         // Add grounding information to the result
         factCheckResult.grounding = {
@@ -372,7 +349,6 @@ Do not include any explanation or additional text, just the JSON object.`;
         factCheckResult.summary.sourcesFound = factCheckResult.grounding.sources.length;
       } else {
         // No grounding metadata means the model didn't use Google Search
-        console.log('Fact check completed without Google Search grounding');
         factCheckResult.grounding = {
           searchPerformed: false,
           searchQueries: [],
@@ -386,8 +362,6 @@ Do not include any explanation or additional text, just the JSON object.`;
       
       return factCheckResult;
     } catch (parseError) {
-      console.error('Error parsing fact check response:', parseError);
-      console.error('Raw response:', text);
       throw new Error('Failed to parse fact check response');
     }
   }
@@ -465,7 +439,6 @@ Do not include any explanation or additional text, just the JSON object.`;
       
       // If we have grounding metadata, this is a grounded result with real Google Search
       if (groundingMetadata) {
-        console.log('Points fact check was grounded with Google Search');
         
         // Add grounding information to the result
         factCheckResult.grounding = {
@@ -484,7 +457,6 @@ Do not include any explanation or additional text, just the JSON object.`;
         factCheckResult.summary.sourcesFound = factCheckResult.grounding.sources.length;
       } else {
         // No grounding metadata means the model didn't use Google Search
-        console.log('Points fact check completed without Google Search grounding');
         factCheckResult.grounding = {
           searchPerformed: false,
           searchQueries: [],
@@ -498,8 +470,6 @@ Do not include any explanation or additional text, just the JSON object.`;
       
       return factCheckResult;
     } catch (parseError) {
-      console.error('Error parsing points fact check response:', parseError);
-      console.error('Raw response:', text);
       throw new Error('Failed to parse points fact check response');
     }
   }
@@ -507,7 +477,6 @@ Do not include any explanation or additional text, just the JSON object.`;
   // Perform web search for fact verification
   static async performWebSearch(searchTerm) {
     try {
-      console.log('Performing web search for:', searchTerm);
       
       // In a server environment, you would make the web search call here
       // For client-side, we need to make a request to a backend endpoint
@@ -534,7 +503,6 @@ Do not include any explanation or additional text, just the JSON object.`;
           status: 'success'
         };
       } catch (fetchError) {
-        console.warn('Web search API not available, using placeholder:', fetchError.message);
         
         // Fallback to placeholder when API is not available
         return {
@@ -552,7 +520,6 @@ Do not include any explanation or additional text, just the JSON object.`;
         };
       }
     } catch (error) {
-      console.error('Error performing web search:', error);
       throw error;
     }
   }
@@ -560,7 +527,6 @@ Do not include any explanation or additional text, just the JSON object.`;
   // Judge response quality for points system
   static async judgeRebuttal(originalPoint, rebuttal, parentFactCheck = null, childFactCheck = null, discussionContext = '') {
     try {
-      console.log('Judging response quality:', { originalPoint, rebuttal });
       
       const judgement = await this.performRebuttalJudgementWithFirebaseAI(
         originalPoint, 
@@ -569,10 +535,8 @@ Do not include any explanation or additional text, just the JSON object.`;
         childFactCheck, 
         discussionContext
       );
-      console.log('Generated rebuttal judgement:', judgement);
       return judgement;
     } catch (error) {
-      console.error('Error judging rebuttal:', error);
       
       // Return a safe fallback judgement to prevent crashes
       const fallbackJudgement = {
@@ -596,7 +560,6 @@ Do not include any explanation or additional text, just the JSON object.`;
         }
       };
       
-      console.log('Returning fallback judgement due to error:', fallbackJudgement);
       return fallbackJudgement;
     }
   }
@@ -682,7 +645,6 @@ Do not include any explanation or additional text, just the JSON object.`;
       // Clean up the response to extract just the JSON
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        console.error('AI response did not contain JSON object:', text);
         throw new Error('No JSON object found in response');
       }
       
@@ -690,13 +652,11 @@ Do not include any explanation or additional text, just the JSON object.`;
       try {
         judgement = JSON.parse(jsonMatch[0]);
       } catch (parseError) {
-        console.error('Failed to parse JSON from AI response:', jsonMatch[0]);
         throw new Error(`JSON parsing failed: ${parseError.message}`);
       }
       
       // Validate and sanitize the structure with defaults
       if (!judgement || typeof judgement !== 'object') {
-        console.error('Invalid judgement object:', judgement);
         throw new Error('Invalid judgement structure - not an object');
       }
       
@@ -718,7 +678,6 @@ Do not include any explanation or additional text, just the JSON object.`;
       
       // Validate and fix pointsEarned
       if (typeof safeJudgement.pointsEarned !== 'number' || isNaN(safeJudgement.pointsEarned)) {
-        console.warn('Invalid pointsEarned value, defaulting to 1:', safeJudgement.pointsEarned);
         safeJudgement.pointsEarned = 1;
       }
       
@@ -728,20 +687,17 @@ Do not include any explanation or additional text, just the JSON object.`;
       // Validate qualityScore
       const validQualityScores = ['exceptional', 'good', 'basic', 'none'];
       if (!validQualityScores.includes(safeJudgement.qualityScore)) {
-        console.warn('Invalid qualityScore, defaulting to none:', safeJudgement.qualityScore);
         safeJudgement.qualityScore = 'none';
       }
       
       // Ensure explanation is a string
       if (typeof safeJudgement.explanation !== 'string') {
-        console.warn('Invalid explanation type, converting to string:', safeJudgement.explanation);
         safeJudgement.explanation = String(safeJudgement.explanation || 'No explanation provided');
       }
       
       // Ensure arrays are actually arrays
       ['factualConcerns', 'strengths', 'improvements'].forEach(field => {
         if (!Array.isArray(safeJudgement[field])) {
-          console.warn(`Invalid ${field} type, defaulting to empty array:`, safeJudgement[field]);
           safeJudgement[field] = [];
         }
       });
@@ -751,7 +707,6 @@ Do not include any explanation or additional text, just the JSON object.`;
       
       // If we have grounding metadata, this judgement was made with Google Search
       if (groundingMetadata) {
-        console.log('Rebuttal judgement was grounded with Google Search');
         
         // Add grounding information to the result
         judgement.grounding = {
@@ -766,7 +721,6 @@ Do not include any explanation or additional text, just the JSON object.`;
         };
       } else {
         // No grounding metadata means the model didn't use Google Search
-        console.log('Rebuttal judgement completed without Google Search grounding');
         judgement.grounding = {
           searchPerformed: false,
           searchQueries: [],
@@ -778,8 +732,6 @@ Do not include any explanation or additional text, just the JSON object.`;
       
       return judgement;
     } catch (parseError) {
-      console.error('Error parsing rebuttal judgement response:', parseError);
-      console.error('Raw response:', text);
       throw new Error('Failed to parse rebuttal judgement response');
     }
   }

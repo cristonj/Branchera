@@ -49,7 +49,6 @@ export default function DashboardPage() {
       
       setCollectedPoints(collected);
     } catch (error) {
-      console.error('Error loading collected points:', error);
     }
   }, [user, getUserPoints]);
 
@@ -59,7 +58,6 @@ export default function DashboardPage() {
       const counts = await getPointCounts();
       setPointCounts(counts);
     } catch (error) {
-      console.error('Error loading point counts:', error);
     }
   }, [getPointCounts]);
 
@@ -195,7 +193,6 @@ export default function DashboardPage() {
         });
 
       } catch (error) {
-        console.error('Error loading dashboard data:', error);
       } finally {
         setLoading(false);
       }

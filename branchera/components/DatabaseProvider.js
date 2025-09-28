@@ -35,7 +35,6 @@ export function DatabaseProvider({ children }) {
       setIsInitialized(true);
       setInitializationError(null);
     } catch (error) {
-      console.error('Database initialization error:', error);
       setInitializationError(error.message);
       setIsInitialized(false);
     } finally {

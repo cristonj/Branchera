@@ -45,20 +45,16 @@ export function AuthProvider({ children }) {
           setUserProfile(profile);
           
           // Check if user needs to set display name
-          console.log('Profile loaded:', { 
             hasSetDisplayName: profile.hasSetDisplayName, 
             displayName: profile.displayName,
             shouldShow: !profile.hasSetDisplayName || !profile.displayName
           });
           
           if (!profile.hasSetDisplayName || !profile.displayName) {
-            console.log('Showing display name modal');
             setShowDisplayNameModal(true);
           } else {
-            console.log('Not showing display name modal');
           }
         } catch (error) {
-          console.error('Error initializing user profile:', error);
           setUser({
             uid: user.uid,
             email: user.email,
@@ -91,7 +87,6 @@ export function AuthProvider({ children }) {
       router.push('/dashboard');
       return result.user;
     } catch (error) {
-      console.error('Error signing in with Google:', error);
       throw error;
     }
   };
@@ -104,7 +99,6 @@ export function AuthProvider({ children }) {
       await signOut(auth);
       router.push('/login');
     } catch (error) {
-      console.error('Error signing out:', error);
       throw error;
     }
   };
@@ -123,7 +117,6 @@ export function AuthProvider({ children }) {
       
       return updatedProfile;
     } catch (error) {
-      console.error('Error updating display name:', error);
       throw error;
     }
   };

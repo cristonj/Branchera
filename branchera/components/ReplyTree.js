@@ -67,7 +67,6 @@ export default function ReplyTree({
       try {
         await onReplyView(replyId, user.uid);
       } catch (error) {
-        console.error('Error incrementing reply view:', error);
         // Don't show error to user, just log it
       }
     }
@@ -127,7 +126,6 @@ export default function ReplyTree({
       setGeneratingReplyPoints(prev => new Set([...prev, reply.id]));
       
       try {
-        console.log('Generating reply points for:', reply.id);
         
         // Build discussion context from other replies
         const discussionContext = replies.filter(r => r.id !== reply.id).slice(0, 5); // Limit context
@@ -139,7 +137,6 @@ export default function ReplyTree({
           discussionContext
         );
         
-        console.log('Generated reply points:', replyPoints);
         
         // Update the reply with the generated points
         await updateReplyKeyPoints(discussionId, reply.id, replyPoints);
@@ -154,7 +151,6 @@ export default function ReplyTree({
         }
         
       } catch (error) {
-        console.error('Error generating reply points:', error);
         showErrorToast('Failed to generate key points for this reply');
       } finally {
         setGeneratingReplyPoints(prev => {

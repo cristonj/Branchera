@@ -58,7 +58,6 @@ export default function DisplayNameModal({ isOpen, onSubmit, onClose, currentNam
     try {
       await onSubmit(trimmedName);
     } catch (error) {
-      console.error('Error setting display name:', error);
       setError(error.message || 'Failed to set display name. Please try again.');
     } finally {
       setIsSubmitting(false);

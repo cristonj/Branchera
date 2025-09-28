@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
-import { useFirestore } from '@/hooks/useFirestore';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useAuth } from '@/contexts/AuthContext';
 import DiscussionItem from './DiscussionItem';
@@ -45,21 +44,18 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const loadingTriggerRef = useRef(null);
   const loadMoreRef = useRef(null);
   
-  const { updateDocument } = useFirestore();
-  const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint, getUserPoints, getPointCounts, createDiscussion } = useDatabase();
+  const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint, getUserPoints, getPointCounts, createDiscussion, updateDocument } = useDatabase();
   const { user } = useAuth();
 
   // Placeholder functions for AI generation (these might be implemented elsewhere)
   const generateAIPointsForDiscussion = useCallback((discussion) => {
     // This function should generate AI points for a discussion
     // Implementation depends on your AI service setup
-    console.log('TODO: Generate AI points for discussion', discussion.id);
   }, []);
 
   const generateFactCheckForDiscussion = useCallback((discussion) => {
     // This function should generate fact-check results for a discussion
     // Implementation depends on your fact-checking service setup
-    console.log('TODO: Generate fact-check for discussion', discussion.id);
   }, []);
   
   // Safely get toast functions with fallbacks
@@ -84,9 +80,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       });
       
       setCollectedPoints(collected);
-      console.log('Loaded collected points:', collected.size);
     } catch (error) {
-      console.error('Error loading collected points:', error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Remove dependencies to prevent constant refreshes
@@ -96,9 +90,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       // Load point counts for all AI points
       const counts = await getPointCounts();
       setPointCounts(counts);
-      console.log('Loaded point counts:', counts.size);
     } catch (error) {
-      console.error('Error loading point counts:', error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Remove dependencies to prevent constant refreshes
@@ -154,7 +146,6 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       }
       
     } catch (error) {
-      console.error('Error loading discussions:', error);
       if (!isLoadingMore) {
         // Set empty array to prevent crashes
         setDiscussions([]);
@@ -205,7 +196,6 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       });
       
     } catch (error) {
-      console.error('Error loading more discussions:', error);
     } finally {
       setLoadingMore(false);
     }
@@ -220,11 +210,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const checkAndCreateNewsPost = useCallback(async (discussionsData) => {
     // Wrap everything in a try-catch to ensure this never blocks the UI
     try {
-      console.log('Checking if we should create an AI news post...');
       
       // Only check if we have user context (don't create posts for anonymous users)
       if (!user) {
-        console.log('No user logged in, skipping news post check');
         return;
       }
       
@@ -233,13 +221,11 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         setTimeout(() => reject(new Error('News post creation timeout after 60 seconds')), 60000)
       );
       
-      console.log('Checking if should create news post...');
       const shouldCreatePromise = NewsService.shouldCreateNewsPost(discussionsData);
       
       const shouldCreate = await Promise.race([shouldCreatePromise, timeoutPromise]);
       
       if (shouldCreate) {
-        console.log('Creating AI news post...');
         setIsCreatingNewsPost(true);
         
         try {
@@ -250,13 +236,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
             updateFactCheckResults
           );
           
-          console.log('Starting news post creation with 60-second timeout...');
           const newsDiscussion = await Promise.race([createNewsPromise, timeoutPromise]);
           
           if (newsDiscussion) {
-            console.log('AI news post created successfully:', newsDiscussion.title);
-            console.log('News discussion includes AI points:', newsDiscussion.aiPoints?.length || 0);
-            console.log('News discussion includes fact-check:', !!newsDiscussion.factCheckResults);
             
             // Add the new discussion to the current list with all AI-generated content
             setDiscussions(prev => [newsDiscussion, ...prev]);
@@ -272,19 +254,16 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
           setIsCreatingNewsPost(false);
         }
       } else {
-        console.log('No need to create AI news post at this time');
       }
     } catch (error) {
       setIsCreatingNewsPost(false); // Reset progress indicator on error
       
       if (error.message.includes('timeout')) {
-        console.warn('News post creation timed out after 60 seconds - this is normal for complex AI processing');
         // Show a subtle toast to inform user that news creation is taking longer than expected
         if (showErrorToast) {
           showErrorToast('AI news post creation is taking longer than expected. It will appear when ready.');
         }
       } else {
-        console.error('Error in news post creation (non-blocking):', error);
       }
       // This is intentionally non-blocking - errors here should never affect the main UI
     }
@@ -304,7 +283,6 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       (entries) => {
         const target = entries[0];
         if (target.isIntersecting && loadMoreRef.current) {
-          console.log('Loading more discussions...');
           loadMoreRef.current();
         }
       },
@@ -338,7 +316,6 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const refreshDiscussions = useCallback(async () => {
     // Don't refresh if user is actively searching
     if (isUserSearching) {
-      console.log('Skipping refresh - user is searching');
       return;
     }
     
@@ -387,7 +364,6 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         return [...updatedDiscussions, ...localOnlyDiscussions];
       });
     } catch (error) {
-      console.error('Background refresh failed:', error);
     }
   }, [isUserSearching, getDiscussions]);
 
@@ -490,11 +466,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
 
     if (query.trim()) {
       // User is searching - pause polling until search is cleared
-      console.log('User started searching:', query, '- polling paused');
       setIsUserSearching(true);
     } else {
       // Search cleared - resume polling after a short delay to prevent rapid toggling
-      console.log('Search cleared, resuming polling after delay');
       searchTimeoutRef.current = setTimeout(() => {
         setIsUserSearching(false);
       }, 500); // 500ms delay before resuming polling

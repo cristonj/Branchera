@@ -25,7 +25,6 @@ export function useDatabase() {
   // Create a discussion with proper validation
   const createDiscussion = async (discussionData) => {
     try {
-      console.log('Creating discussion with data:', discussionData);
       
       // Validate required fields
       if (!discussionData.title || !discussionData.content || !discussionData.authorId) {
@@ -58,11 +57,9 @@ export function useDatabase() {
       };
 
       const discussionId = await addDocument('discussions', completeData);
-      console.log('Discussion created successfully with ID:', discussionId);
       
       return { id: discussionId, ...completeData };
     } catch (error) {
-      console.error('Error creating discussion:', error);
       throw error;
     }
   };
@@ -92,7 +89,6 @@ export function useDatabase() {
         const discussions = await getDocuments('discussions', queryConstraints);
         return discussions;
       } catch (orderError) {
-        console.warn('OrderBy query failed, trying without ordering:', orderError.message);
         
         // Fallback: get without orderBy and sort client-side
         const queryConstraints = [limit(maxResults)];
@@ -127,7 +123,6 @@ export function useDatabase() {
         }
       }
     } catch (error) {
-      console.error('Error fetching discussions:', error);
       // Return empty array instead of throwing to prevent app crashes
       return [];
     }
@@ -136,7 +131,6 @@ export function useDatabase() {
   // Delete a discussion (only by author)
   const deleteDiscussion = async (discussionId, userId) => {
     try {
-      console.log('Deleting discussion:', discussionId, 'by user:', userId);
       
       // First check if the user is the author
       const discussion = await getDocument('discussions', discussionId);
@@ -150,11 +144,9 @@ export function useDatabase() {
       }
       
       await deleteDocument('discussions', discussionId);
-      console.log('Discussion deleted successfully');
       
       return true;
     } catch (error) {
-      console.error('Error deleting discussion:', error);
       throw error;
     }
   };
@@ -170,7 +162,6 @@ export function useDatabase() {
         documentsFound: testDocs.length
       };
     } catch (error) {
-      console.warn('Database setup had issues but continuing:', error.message);
       return {
         initialized: true, // Allow app to continue
         accessible: true,
@@ -182,7 +173,6 @@ export function useDatabase() {
   // Add a reply to a discussion
   const addReply = async (discussionId, replyData) => {
     try {
-      console.log('Adding reply to discussion:', discussionId, 'with data:', replyData);
       
       // Validate required fields
       if (!replyData.content || !replyData.authorId) {
@@ -221,10 +211,8 @@ export function useDatabase() {
         replyCount: updatedReplies.length
       });
 
-      console.log('Reply added successfully');
       return reply;
     } catch (error) {
-      console.error('Error adding reply:', error);
       throw error;
     }
   };
@@ -232,7 +220,6 @@ export function useDatabase() {
   // Delete a reply from a discussion
   const deleteReply = async (discussionId, replyId, userId) => {
     try {
-      console.log('Deleting reply:', replyId, 'from discussion:', discussionId, 'by user:', userId);
       
       // Get the current discussion
       const discussion = await getDocument('discussions', discussionId);
@@ -258,10 +245,8 @@ export function useDatabase() {
         replyCount: updatedReplies.length
       });
 
-      console.log('Reply deleted successfully');
       return true;
     } catch (error) {
-      console.error('Error deleting reply:', error);
       throw error;
     }
   };
@@ -274,7 +259,6 @@ export function useDatabase() {
       });
       return true;
     } catch (error) {
-      console.error('Error setting processing AI points flag:', error);
       throw error;
     }
   };
@@ -282,7 +266,6 @@ export function useDatabase() {
   // Update AI points for a discussion
   const updateAIPoints = async (discussionId, aiPoints) => {
     try {
-      console.log('Updating AI points for discussion:', discussionId, 'with points:', aiPoints);
       
       await updateDocument('discussions', discussionId, {
         aiPoints: aiPoints,
@@ -290,10 +273,8 @@ export function useDatabase() {
         processingAIPoints: false // Clear processing flag
       });
 
-      console.log('AI points updated successfully');
       return true;
     } catch (error) {
-      console.error('Error updating AI points:', error);
       throw error;
     }
   };
@@ -301,7 +282,6 @@ export function useDatabase() {
   // Update AI points for a specific reply within a discussion
   const updateReplyAIPoints = async (discussionId, replyId, aiPoints) => {
     try {
-      console.log('Updating AI points for reply:', replyId, 'in discussion:', discussionId);
 
       const discussion = await getDocument('discussions', discussionId);
       if (!discussion) {
@@ -318,10 +298,8 @@ export function useDatabase() {
         replies: updatedReplies
       });
 
-      console.log('Reply AI points updated successfully');
       return true;
     } catch (error) {
-      console.error('Error updating reply AI points:', error);
       throw error;
     }
   };
@@ -329,7 +307,6 @@ export function useDatabase() {
   // Update key points for replying to a specific reply within a discussion
   const updateReplyKeyPoints = async (discussionId, replyId, replyPoints) => {
     try {
-      console.log('Updating reply key points for reply:', replyId, 'in discussion:', discussionId);
 
       const discussion = await getDocument('discussions', discussionId);
       if (!discussion) {
@@ -346,10 +323,8 @@ export function useDatabase() {
         replies: updatedReplies
       });
 
-      console.log('Reply key points updated successfully');
       return true;
     } catch (error) {
-      console.error('Error updating reply key points:', error);
       throw error;
     }
   };
@@ -364,7 +339,6 @@ export function useDatabase() {
       
       return discussion.aiPoints || [];
     } catch (error) {
-      console.error('Error getting AI points:', error);
       throw error;
     }
   };
@@ -372,7 +346,6 @@ export function useDatabase() {
   // Increment view count for a discussion
   const incrementDiscussionView = async (discussionId, userId) => {
     try {
-      console.log('Incrementing view count for discussion:', discussionId, 'by user:', userId);
       
       const discussion = await getDocument('discussions', discussionId);
       if (!discussion) {
@@ -391,13 +364,11 @@ export function useDatabase() {
           viewedBy: newViewedBy
         });
 
-        console.log('Discussion view count incremented successfully');
         return { views: newViews, viewedBy: newViewedBy };
       }
       
       return { views: discussion.views || 0, viewedBy };
     } catch (error) {
-      console.error('Error incrementing discussion view:', error);
       throw error;
     }
   };
@@ -405,7 +376,6 @@ export function useDatabase() {
   // Increment view count for a reply
   const incrementReplyView = async (discussionId, replyId, userId) => {
     try {
-      console.log('Incrementing view count for reply:', replyId, 'in discussion:', discussionId, 'by user:', userId);
 
       const discussion = await getDocument('discussions', discussionId);
       if (!discussion) {
@@ -432,10 +402,8 @@ export function useDatabase() {
         replies: updatedReplies
       });
 
-      console.log('Reply view count incremented successfully');
       return true;
     } catch (error) {
-      console.error('Error incrementing reply view:', error);
       throw error;
     }
   };
@@ -448,7 +416,6 @@ export function useDatabase() {
       });
       return true;
     } catch (error) {
-      console.error('Error setting processing fact check flag:', error);
       throw error;
     }
   };
@@ -456,7 +423,6 @@ export function useDatabase() {
   // Update fact check results for a discussion
   const updateFactCheckResults = async (discussionId, factCheckResults) => {
     try {
-      console.log('Updating fact check results for discussion:', discussionId);
       
       await updateDocument('discussions', discussionId, {
         factCheckResults: factCheckResults,
@@ -464,10 +430,8 @@ export function useDatabase() {
         processingFactCheck: false // Clear processing flag
       });
 
-      console.log('Fact check results updated successfully');
       return true;
     } catch (error) {
-      console.error('Error updating fact check results:', error);
       throw error;
     }
   };
@@ -475,7 +439,6 @@ export function useDatabase() {
   // Update fact check results for a specific reply within a discussion
   const updateReplyFactCheckResults = async (discussionId, replyId, factCheckResults) => {
     try {
-      console.log('Updating fact check results for reply:', replyId, 'in discussion:', discussionId);
 
       const discussion = await getDocument('discussions', discussionId);
       if (!discussion) {
@@ -492,10 +455,8 @@ export function useDatabase() {
         replies: updatedReplies
       });
 
-      console.log('Reply fact check results updated successfully');
       return true;
     } catch (error) {
-      console.error('Error updating reply fact check results:', error);
       throw error;
     }
   };
@@ -503,7 +464,6 @@ export function useDatabase() {
   // Edit a discussion (only by author)
   const editDiscussion = async (discussionId, userId, updatedData) => {
     try {
-      console.log('Editing discussion:', discussionId, 'by user:', userId);
       
       // First check if the user is the author
       const discussion = await getDocument('discussions', discussionId);
@@ -529,11 +489,9 @@ export function useDatabase() {
       };
       
       await updateDocument('discussions', discussionId, updatePayload);
-      console.log('Discussion edited successfully');
       
       return { ...discussion, ...updatePayload };
     } catch (error) {
-      console.error('Error editing discussion:', error);
       throw error;
     }
   };
@@ -541,7 +499,6 @@ export function useDatabase() {
   // Edit a reply (only by author)
   const editReply = async (discussionId, replyId, userId, updatedContent) => {
     try {
-      console.log('Editing reply:', replyId, 'in discussion:', discussionId, 'by user:', userId);
       
       // Get the current discussion
       const discussion = await getDocument('discussions', discussionId);
@@ -578,10 +535,8 @@ export function useDatabase() {
         replies: updatedReplies
       });
 
-      console.log('Reply edited successfully');
       return updatedReplies[replyIndex];
     } catch (error) {
-      console.error('Error editing reply:', error);
       throw error;
     }
   };
@@ -589,7 +544,6 @@ export function useDatabase() {
   // User Points Management
   const createUserPoint = async (pointData) => {
     try {
-      console.log('Creating user point with data:', pointData);
       
       // Validate required fields
       if (!pointData.userId || !pointData.discussionId || !pointData.originalPoint || !pointData.rebuttal) {
@@ -615,11 +569,9 @@ export function useDatabase() {
       };
 
       const pointId = await addDocument('userPoints', completeData);
-      console.log('User point created successfully with ID:', pointId);
       
       return { id: pointId, ...completeData };
     } catch (error) {
-      console.error('Error creating user point:', error);
       throw error;
     }
   };
@@ -637,7 +589,6 @@ export function useDatabase() {
         // Filter by userId client-side for now
         return points.filter(point => point.userId === userId);
       } catch (orderError) {
-        console.warn('OrderBy query failed, trying without ordering:', orderError.message);
         
         // Fallback: get without orderBy and sort client-side
         const points = await getDocuments('userPoints', [limit(100)]);
@@ -646,7 +597,6 @@ export function useDatabase() {
         return userPoints.sort((a, b) => new Date(b.earnedAt) - new Date(a.earnedAt));
       }
     } catch (error) {
-      console.error('Error fetching user points:', error);
       return [];
     }
   };
@@ -656,7 +606,6 @@ export function useDatabase() {
       const allPoints = await getUserPoints(userId);
       return allPoints.filter(point => point.discussionId === discussionId);
     } catch (error) {
-      console.error('Error fetching user points for discussion:', error);
       return [];
     }
   };
@@ -666,7 +615,6 @@ export function useDatabase() {
       const points = await getUserPointsForDiscussion(userId, discussionId);
       return points.length > 0;
     } catch (error) {
-      console.error('Error checking if user earned points for discussion:', error);
       return false;
     }
   };
@@ -692,7 +640,6 @@ export function useDatabase() {
         pointsEarnedByUser: pointsByReplyId.get(reply.id) || null
       }));
     } catch (error) {
-      console.error('Error enriching replies with points:', error);
       return replies;
     }
   };
@@ -703,7 +650,6 @@ export function useDatabase() {
       const points = await getUserPointsForDiscussion(userId, discussionId);
       return points.some(point => point.originalPointId === originalPointId);
     } catch (error) {
-      console.error('Error checking if user collected point:', error);
       return false;
     }
   };
@@ -763,7 +709,6 @@ export function useDatabase() {
       
       return leaderboard;
     } catch (error) {
-      console.error('Error fetching leaderboard:', error);
       return [];
     }
   };
@@ -785,7 +730,6 @@ export function useDatabase() {
       
       return pointCountsMap;
     } catch (error) {
-      console.error('Error fetching point counts:', error);
       return new Map();
     }
   };
@@ -811,6 +755,7 @@ export function useDatabase() {
     setProcessingFactCheck,
     createUserPoint,
     getUserPoints,
+    updateDocument,
     getUserPointsForDiscussion,
     hasUserEarnedPointsForDiscussion,
     enrichRepliesWithPoints,

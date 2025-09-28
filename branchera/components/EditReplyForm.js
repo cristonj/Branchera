@@ -26,12 +26,10 @@ export default function EditReplyForm({ discussionId, reply, onEditComplete, onC
     }
 
     setIsSubmitting(true);
-    console.log('Editing reply...');
     
     try {
       const updatedReply = await editReply(discussionId, reply.id, user.uid, content.trim());
       
-      console.log('Reply edited successfully:', updatedReply);
       
       // Notify parent component
       if (onEditComplete) {
@@ -39,7 +37,6 @@ export default function EditReplyForm({ discussionId, reply, onEditComplete, onC
       }
       
     } catch (error) {
-      console.error('Error editing reply:', error);
       alert(`Failed to edit reply: ${error.message}`);
     } finally {
       setIsSubmitting(false);

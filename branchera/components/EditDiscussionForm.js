@@ -34,7 +34,6 @@ export default function EditDiscussionForm({ discussion, onEditComplete, onCance
     }
 
     setIsSubmitting(true);
-    console.log('Editing discussion...');
     
     try {
       const updatedDiscussion = await editDiscussion(discussion.id, user.uid, {
@@ -42,7 +41,6 @@ export default function EditDiscussionForm({ discussion, onEditComplete, onCance
         content: content.trim()
       });
       
-      console.log('Discussion edited successfully:', updatedDiscussion);
       
       // Notify parent component
       if (onEditComplete) {
@@ -50,7 +48,6 @@ export default function EditDiscussionForm({ discussion, onEditComplete, onCance
       }
       
     } catch (error) {
-      console.error('Error editing discussion:', error);
       alert(`Failed to edit discussion: ${error.message}`);
     } finally {
       setIsSubmitting(false);

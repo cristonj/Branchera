@@ -14,7 +14,6 @@ const initializeFirebaseAI = async () => {
     firebaseAI = { getAI, getGenerativeModel, GoogleAIBackend };
     return firebaseAI;
   } catch (error) {
-    console.error('Failed to initialize Firebase AI:', error);
     throw new Error('Firebase AI not available');
   }
 };

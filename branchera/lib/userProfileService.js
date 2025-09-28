@@ -32,7 +32,6 @@ export class UserProfileService {
         return null;
       }
     } catch (error) {
-      console.error('Error fetching user profile:', error);
       throw error;
     }
   }
@@ -67,7 +66,6 @@ export class UserProfileService {
         return { id: userId, ...newProfile };
       }
     } catch (error) {
-      console.error('Error creating/updating user profile:', error);
       throw error;
     }
   }
@@ -124,7 +122,6 @@ export class UserProfileService {
       
       return matches.length === 0;
     } catch (error) {
-      console.error('Error checking display name uniqueness:', error);
       throw error;
     }
   }
@@ -135,7 +132,6 @@ export class UserProfileService {
       const profile = await this.getUserProfile(userId);
       return profile?.displayName || fallbackName || 'Anonymous User';
     } catch (error) {
-      console.error('Error getting display name:', error);
       return fallbackName || 'Anonymous User';
     }
   }
@@ -151,7 +147,6 @@ export class UserProfileService {
       
       if (!existingProfile) {
         // Create initial profile with Google data
-        console.log('Creating new user profile for:', user.uid);
         return await this.createOrUpdateUserProfile(user.uid, {
           email: user.email,
           googleDisplayName: user.displayName,
@@ -161,7 +156,6 @@ export class UserProfileService {
         });
       } else {
         // Update Google-specific fields but preserve custom displayName
-        console.log('Updating existing profile for:', user.uid, { 
           hasDisplayName: !!existingProfile.displayName,
           displayName: existingProfile.displayName 
         });
@@ -175,7 +169,6 @@ export class UserProfileService {
         return updatedProfile;
       }
     } catch (error) {
-      console.error('Error initializing user profile:', error);
       throw error;
     }
   }

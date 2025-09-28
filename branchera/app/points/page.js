@@ -58,7 +58,6 @@ export default function PointsPage() {
         setUserRank(null); // Not ranked yet
       }
     } catch (error) {
-      console.error('Error loading leaderboard:', error);
     } finally {
       setLoading(false);
     }

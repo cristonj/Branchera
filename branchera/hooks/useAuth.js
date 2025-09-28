@@ -29,7 +29,6 @@ export function useAuth() {
       const result = await signInWithEmailAndPassword(auth, email, password);
       return result.user;
     } catch (error) {
-      console.error('Sign in error:', error);
       throw error;
     }
   };
@@ -39,7 +38,6 @@ export function useAuth() {
       const result = await createUserWithEmailAndPassword(auth, email, password);
       return result.user;
     } catch (error) {
-      console.error('Sign up error:', error);
       throw error;
     }
   };
@@ -50,7 +48,6 @@ export function useAuth() {
       const result = await signInWithPopup(auth, provider);
       return result.user;
     } catch (error) {
-      console.error('Google sign in error:', error);
       throw error;
     }
   };
@@ -59,7 +56,6 @@ export function useAuth() {
     try {
       await signOut(auth);
     } catch (error) {
-      console.error('Sign out error:', error);
       throw error;
     }
   };
