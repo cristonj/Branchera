@@ -156,9 +156,6 @@ export class UserProfileService {
         });
       } else {
         // Update Google-specific fields but preserve custom displayName
-          hasDisplayName: !!existingProfile.displayName,
-          displayName: existingProfile.displayName 
-        });
         const updatedProfile = await this.createOrUpdateUserProfile(user.uid, {
           email: user.email,
           googleDisplayName: user.displayName,
