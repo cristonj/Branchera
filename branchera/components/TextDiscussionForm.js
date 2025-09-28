@@ -133,11 +133,6 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
       }
       
     } catch (error) {
-        name: error.name,
-        message: error.message,
-        code: error.code,
-        stack: error.stack
-      });
       alert(`Failed to create discussion: ${error.message}`);
     } finally {
       setIsSubmitting(false);

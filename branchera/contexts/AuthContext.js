@@ -45,10 +45,6 @@ export function AuthProvider({ children }) {
           setUserProfile(profile);
           
           // Check if user needs to set display name
-            hasSetDisplayName: profile.hasSetDisplayName, 
-            displayName: profile.displayName,
-            shouldShow: !profile.hasSetDisplayName || !profile.displayName
-          });
           
           if (!profile.hasSetDisplayName || !profile.displayName) {
             setShowDisplayNameModal(true);

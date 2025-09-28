@@ -32,12 +32,6 @@ export class AIService {
   // Generate key points for replying to a specific reply, taking discussion context into account
   static async generateReplyKeyPoints(replyContent, discussionTitle = '', discussionContent = '', discussionContext = []) {
     try {
-        replyContent, 
-        discussionTitle, 
-        discussionContent,
-        discussionContextLength: discussionContext.length 
-      });
-
       const points = await this.generateReplyKeyPointsWithFirebaseAI(
         replyContent,
         discussionTitle,
