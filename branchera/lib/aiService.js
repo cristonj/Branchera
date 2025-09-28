@@ -36,6 +36,30 @@ export class AIService {
     }
   }
 
+  // Generate key points for replying to a specific reply, taking discussion context into account
+  static async generateReplyKeyPoints(replyContent, discussionTitle = '', discussionContent = '', discussionContext = []) {
+    try {
+      console.log('Generating key points for reply with discussion context:', { 
+        replyContent, 
+        discussionTitle, 
+        discussionContent,
+        discussionContextLength: discussionContext.length 
+      });
+
+      const points = await this.generateReplyKeyPointsWithFirebaseAI(
+        replyContent,
+        discussionTitle,
+        discussionContent,
+        discussionContext
+      );
+      console.log('Generated key points for reply with Firebase AI:', points);
+      return points;
+    } catch (error) {
+      console.error('Error generating key points for reply:', error);
+      throw error;
+    }
+  }
+
   // Firebase AI point generation using Gemini
   static async generatePointsWithFirebaseAI(content, title = '') {
     // Initialize the Firebase AI backend service
@@ -109,6 +133,106 @@ Do not include any explanation or additional text, just the JSON array.`;
       // Ensure each point has required fields
       const validatedPoints = points.map((point, index) => ({
         id: point.id || `p${index + 1}`,
+        text: point.text || 'Generated point',
+        type: point.type || 'claim',
+        originalSentence: point.text || ''
+      }));
+      
+      return validatedPoints;
+    } catch (parseError) {
+      console.error('Error parsing Gemini response:', parseError);
+      console.error('Raw response:', text);
+      throw new Error('Failed to parse AI response');
+    }
+  }
+
+  // Firebase AI key points generation for replies with discussion context using Gemini
+  static async generateReplyKeyPointsWithFirebaseAI(replyContent, discussionTitle = '', discussionContent = '', discussionContext = []) {
+    // Initialize the Firebase AI backend service
+    const ai = getAI(app, { backend: new GoogleAIBackend() });
+    
+    // Create a GenerativeModel instance
+    const model = getGenerativeModel(ai, { model: "gemini-2.5-flash" });
+
+    // Build context from discussion and previous replies
+    const contextText = discussionContext.length > 0 
+      ? discussionContext.map(reply => `- ${reply.authorName}: ${reply.content}`).join('\n')
+      : '';
+
+    const prompt = `
+You are analyzing a reply within an ongoing discussion to identify specific points that others could respond to. Consider the full discussion context when identifying what aspects of this reply are worth engaging with.
+
+DISCUSSION TITLE: ${discussionTitle}
+ORIGINAL DISCUSSION: ${discussionContent}
+
+DISCUSSION CONTEXT (previous replies):
+${contextText}
+
+REPLY TO ANALYZE:
+${replyContent}
+
+Extract 3-6 specific, addressable points from this reply that others could meaningfully respond to. Consider:
+- Claims or assertions made in the reply
+- Evidence or examples provided
+- Questions raised (explicit or implicit)
+- Assumptions underlying the reply
+- Points that build on or contradict the discussion context
+- Statements that could benefit from additional perspective
+
+Only include points that are:
+- SPECIFIC enough to address directly
+- SUBSTANTIAL enough to warrant a response
+- DEBATABLE or open to additional input
+- RELEVANT to the ongoing discussion
+
+Return ONLY a valid JSON array in this format:
+[
+  {"id": "r1", "text": "Specific point from the reply that can be addressed", "type": "claim"},
+  {"id": "r2", "text": "Question or assumption that could be explored further", "type": "question"},
+  {"id": "r3", "text": "Evidence or example that could be built upon", "type": "evidence"}
+]
+
+Types should be one of: "claim", "evidence", "question", "assumption", "example", "counterpoint", "extension"
+
+Make each point:
+- DIRECTLY from the reply content (not general discussion topics)
+- ADDRESSABLE (someone could specifically respond to it)
+- CONCISE (under 100 characters)
+- CONTEXTUAL (considers the ongoing discussion)
+
+Examples of GOOD reply points:
+- "The 15% statistic mentioned contradicts earlier data"
+- "The assumption that remote work reduces collaboration"
+- "The question about long-term sustainability effects"
+
+Examples of BAD reply points:
+- "This is interesting" (not specific)
+- "The general topic of economics" (too broad)
+- "Something not mentioned in the reply" (not from reply content)
+
+Do not include any explanation or additional text, just the JSON array.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    try {
+      // Clean up the response to extract just the JSON
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        throw new Error('No JSON array found in response');
+      }
+      
+      const points = JSON.parse(jsonMatch[0]);
+      
+      // Validate the structure
+      if (!Array.isArray(points) || points.length === 0) {
+        throw new Error('Invalid points structure');
+      }
+      
+      // Ensure each point has required fields
+      const validatedPoints = points.map((point, index) => ({
+        id: point.id || `r${index + 1}`,
         text: point.text || 'Generated point',
         type: point.type || 'claim',
         originalSentence: point.text || ''

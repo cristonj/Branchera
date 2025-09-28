@@ -2,6 +2,8 @@ import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DatabaseProvider } from "@/components/DatabaseProvider";
 import { ToastProvider } from "@/contexts/ToastContext";
+import FloatingActionButton from "@/components/FloatingActionButton";
+import AppContent from "./AppContent";
 
 export const metadata = {
   title: "Branchera - Social Media That Gets Out of Your Way",
@@ -119,26 +121,26 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no" />
-        
+
         {/* Apple PWA Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Branchera" />
         <meta name="apple-touch-fullscreen" content="yes" />
-        
+
         {/* Apple Touch Icons */}
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        
+
         {/* Additional PWA Meta Tags */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="Branchera" />
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
-        
+
         {/* PWA Manifest */}
         <link rel="manifest" href="/manifest.json" />
-        
+
         {/* Theme Colors */}
         <meta name="theme-color" content="#000000" />
         <meta name="msapplication-navbutton-color" content="#000000" />
@@ -148,11 +150,13 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <DatabaseProvider>
             <ToastProvider>
-              {children}
+              <AppContent>
+                {children}
+              </AppContent>
             </ToastProvider>
           </DatabaseProvider>
         </AuthProvider>
-        
+
         <script dangerouslySetInnerHTML={{
           __html: `
             if ('serviceWorker' in navigator) {

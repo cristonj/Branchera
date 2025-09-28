@@ -23,9 +23,6 @@ export default function FactCheckResults({ factCheckResults, isLoading = false, 
     return (
       <div className="bg-white rounded-lg border border-black/20 p-3 mt-3">
         <div className="flex items-center gap-2 mb-1">
-          <svg className="w-5 h-5 sm:w-4 sm:h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
           <span className="text-sm font-semibold text-gray-900">Fact Check Complete</span>
         </div>
         <p className="text-xs text-gray-600">No verifiable factual claims found in this content.</p>
@@ -45,26 +42,6 @@ export default function FactCheckResults({ factCheckResults, isLoading = false, 
     });
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'verified_accurate':
-        return <svg className="w-4 h-4 sm:w-3 sm:h-3 text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>;
-      case 'verified_inaccurate':
-        return <svg className="w-4 h-4 sm:w-3 sm:h-3 text-red-600" fill="currentColor" viewBox="0 0 24 24"><path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>;
-      case 'partially_accurate':
-        return <svg className="w-4 h-4 sm:w-3 sm:h-3 text-yellow-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>;
-      case 'insufficient_evidence':
-        return <svg className="w-4 h-4 sm:w-3 sm:h-3 text-orange-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>;
-      case 'likely_accurate':
-        return <svg className="w-4 h-4 sm:w-3 sm:h-3 text-green-600" fill="currentColor" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>;
-      case 'needs_verification':
-        return <svg className="w-4 h-4 sm:w-3 sm:h-3 text-yellow-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>;
-      case 'likely_inaccurate':
-        return <svg className="w-4 h-4 sm:w-3 sm:h-3 text-red-600" fill="currentColor" viewBox="0 0 24 24"><path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>;
-      default:
-        return <svg className="w-4 h-4 sm:w-3 sm:h-3 text-gray-600" fill="currentColor" viewBox="0 0 24 24"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>;
-    }
-  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -106,11 +83,6 @@ export default function FactCheckResults({ factCheckResults, isLoading = false, 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
               <span className="text-xs sm:text-sm font-semibold text-gray-900">Fact Check</span>
-              {factCheckResults.grounding?.searchPerformed && (
-                <span className="text-[10px] sm:text-xs text-green-700 bg-green-50 px-1 sm:px-2 py-0.5 rounded-full border border-green-200 whitespace-nowrap">
-                  ✓ Verified
-                </span>
-              )}
             </div>
             <div className="text-[10px] sm:text-xs text-gray-600 mt-0.5 sm:hidden">
               {factCheckResults.claims.length} claim{factCheckResults.claims.length !== 1 ? 's' : ''}
@@ -137,7 +109,6 @@ export default function FactCheckResults({ factCheckResults, isLoading = false, 
           return (
             <div key={claim.id} className={`border rounded-lg p-2 ${getStatusColor(claim.status)}`}>
               <div className="flex items-start gap-2">
-                {getStatusIcon(claim.status)}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-medium text-gray-900 truncate pr-2">
@@ -149,7 +120,7 @@ export default function FactCheckResults({ factCheckResults, isLoading = false, 
                   </div>
                   
                   {claim.originalPoint && (
-                    <div className="mt-1 p-1.5 bg-gray-100 rounded-lg text-[10px] text-gray-600">
+                    <div className="mt-1 p-1.5 bg-gray-100 rounded-lg text-[10px] text-gray-600 w-fit">
                       <span className="font-medium">From point:</span> <SearchHighlight text={claim.originalPoint} searchQuery={searchQuery} />
                     </div>
                   )}

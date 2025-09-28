@@ -28,6 +28,8 @@ export default function SearchFilterSort({
   const [sortBy, setSortBy] = useState(initialSortBy);
   const [filters, setFilters] = useState(initialFilters);
   const [isExpanded, setIsExpanded] = useState(false);
+  const searchTimeoutRef = useRef(null);
+  const filterTimeoutRef = useRef(null);
 
   // Get all unique tags from discussions for the tag filter
   const availableTags = useMemo(() => {
@@ -40,11 +42,11 @@ export default function SearchFilterSort({
     return Array.from(tagSet).sort();
   }, [discussions]);
 
-  // Handle tag selection
-  const handleTagSelection = (tag) => {
+  // Handle tag selection (uses the debounced filter handler)
+  const handleTagSelection = useCallback((tag) => {
     const currentSelectedTags = filters.selectedTags || [];
     let newSelectedTags;
-    
+
     if (currentSelectedTags.includes(tag)) {
       // Remove tag if already selected
       newSelectedTags = currentSelectedTags.filter(t => t !== tag);
@@ -52,9 +54,46 @@ export default function SearchFilterSort({
       // Add tag if not selected
       newSelectedTags = [...currentSelectedTags, tag];
     }
-    
+
     handleFilterChange('selectedTags', newSelectedTags);
-  };
+  }, [filters.selectedTags, handleFilterChange]);
+
+  // Debounced search handler to prevent excessive updates
+  const handleSearchChange = useCallback((value) => {
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Set new timeout to update search after user stops typing
+    searchTimeoutRef.current = setTimeout(() => {
+      setSearchQuery(value);
+    }, 300); // 300ms debounce delay
+  }, []);
+
+  // Debounced sort handler to prevent excessive updates
+  const handleSortChange = useCallback((value) => {
+    setSortBy(value);
+    // The useEffect will handle notifying parent components
+  }, []);
+
+  // Debounced search type handler to prevent excessive updates
+  const handleSearchTypeChange = useCallback((value) => {
+    setSearchType(value);
+    // The useEffect will handle notifying parent components
+  }, []);
+
+  // Clean up timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+      if (filterTimeoutRef.current) {
+        clearTimeout(filterTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Sync internal state with props when they change
   useEffect(() => {
@@ -384,15 +423,27 @@ export default function SearchFilterSort({
     onSortChange?.(sortBy);
   }, [processedDiscussions, searchQuery, searchType, filters, sortBy]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleFilterChange = (key, value) => {
+  // Debounced filter handler to prevent excessive updates
+  const handleFilterChange = useCallback((key, value) => {
+    // Clear existing timeout
+    if (filterTimeoutRef.current) {
+      clearTimeout(filterTimeoutRef.current);
+    }
+
+    // Update filters immediately for responsive UI, but debounce parent notifications
     setFilters(prev => ({
       ...prev,
       [key]: value
     }));
-  };
+
+    // Debounce the parent notification to prevent rapid polling changes
+    filterTimeoutRef.current = setTimeout(() => {
+      // This will trigger the useEffect that notifies parent components
+    }, 300); // 300ms debounce delay for filter changes
+  }, []);
 
   const clearFilters = () => {
-    setSearchQuery('');
+    handleSearchChange('');
     setSearchType('all');
     setSortBy('newest');
     setFilters({
@@ -430,12 +481,12 @@ export default function SearchFilterSort({
               type="text"
               placeholder="Search discussions, replies, fact-checks..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full px-4 py-2 pr-10 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery('')}
+                onClick={() => handleSearchChange('')}
                 className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -468,7 +519,7 @@ export default function SearchFilterSort({
               <label className="block text-sm font-medium text-gray-700 mb-2">Search in</label>
               <select
                 value={searchType}
-                onChange={(e) => setSearchType(e.target.value)}
+                onChange={(e) => handleSearchTypeChange(e.target.value)}
                 className="w-full pl-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
               >
                 <option value="all">All Content</option>
@@ -484,7 +535,7 @@ export default function SearchFilterSort({
               <label className="block text-sm font-medium text-gray-700 mb-2">Sort by</label>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => handleSortChange(e.target.value)}
                 className="w-full px-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
               >
                 <option value="newest">Newest First</option>

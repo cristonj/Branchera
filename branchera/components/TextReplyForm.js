@@ -8,11 +8,11 @@ import FactCheckResults from './FactCheckResults';
 import PointsAnimation from './PointsAnimation';
 import { useToast } from '@/contexts/ToastContext';
 
-export default function TextReplyForm({ 
-  discussionId, 
-  onReplyAdded, 
-  onCancel, 
-  selectedPoint = null, 
+export default function TextReplyForm({
+  discussionId,
+  onReplyAdded,
+  onCancel,
+  selectedPoint = null,
   replyType = 'general',
   replyingToReply = null,
   selectedReplyForPoints = null,
@@ -29,10 +29,10 @@ export default function TextReplyForm({
   const [qualityScore, setQualityScore] = useState('');
   const [showPointsAnimation, setShowPointsAnimation] = useState(false);
   const [isJudging, setIsJudging] = useState(false);
-  
+
   const { user, getDisplayName } = useAuth();
   const { addReply, updateReplyFactCheckResults, createUserPoint, hasUserEarnedPointsForDiscussion } = useDatabase();
-  
+
   // Safely get toast functions with fallbacks
   const toastContext = useToast();
   const showPointsToast = toastContext?.showPointsToast || (() => {});
@@ -42,7 +42,7 @@ export default function TextReplyForm({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!content.trim()) {
       alert('Please write a reply before submitting.');
       return;
@@ -50,7 +50,7 @@ export default function TextReplyForm({
 
     setIsSubmitting(true);
     console.log('Adding text reply...');
-    
+
     try {
       // Create reply data for text-based reply
       const replyData = {
@@ -63,31 +63,35 @@ export default function TextReplyForm({
         type: replyType,
         level: replyingToReply ? (replyingToReply.level || 0) + 1 : 0
       };
-      
+
       console.log('Adding reply to discussion:', discussionId, 'with data:', replyData);
       const createdReply = await addReply(discussionId, replyData);
       console.log('Reply added successfully:', createdReply);
-      
-      // Generate points and fact check the reply content based on those points
+
+      // Fact check the reply content directly with discussion context
       setIsFactChecking(true);
       let replyFactCheck = null;
-      
+
       try {
-        console.log('Generating points for reply content...');
-        
-        // Generate points from the reply content
-        const replyPoints = await AIService.generateReplyPoints(replyData.content, selectedPoint?.text || '');
-        console.log('Reply points generated:', replyPoints);
-        
-        // Fact check based on the generated points
-        console.log('Fact checking reply based on generated points...');
-        replyFactCheck = await AIService.factCheckPoints(replyPoints, 'Reply');
-        console.log('Reply fact check results based on points:', replyFactCheck);
-        
+        console.log('Fact checking reply with discussion context...');
+
+        // Build context for better fact checking
+        const contextTitle = selectedPoint ?
+          `Reply to: "${selectedPoint.text}"` :
+          `Reply in: ${discussionTitle}`;
+
+        const contextContent = selectedPoint ?
+          `Original Discussion: ${discussionContent}\n\nPoint being addressed: ${selectedPoint.text}\n\nReply: ${replyData.content}` :
+          `Original Discussion: ${discussionContent}\n\nReply: ${replyData.content}`;
+
+        // Fact check the reply content directly with full context
+        replyFactCheck = await AIService.factCheckContent(contextContent, contextTitle);
+        console.log('Reply fact check results with context:', replyFactCheck);
+
         // Update the reply with fact check results
         await updateReplyFactCheckResults(discussionId, createdReply.id, replyFactCheck);
         console.log('Reply fact check results saved:', replyFactCheck);
-        
+
         // Update the created reply object with fact check results
         createdReply.factCheckResults = replyFactCheck;
         createdReply.factCheckGenerated = true;
@@ -104,11 +108,11 @@ export default function TextReplyForm({
         try {
           // Check if user has already earned points for this discussion
           const hasEarnedPoints = await hasUserEarnedPointsForDiscussion(user.uid, discussionId);
-          
+
           if (!hasEarnedPoints) {
             setIsJudging(true);
             console.log('Judging rebuttal for points...');
-            
+
             try {
               // Get AI judgement on the rebuttal
               const judgement = await AIService.judgeRebuttal(
@@ -118,14 +122,14 @@ export default function TextReplyForm({
                 replyFactCheck,
                 `${discussionTitle}: ${discussionContent}`
               );
-              
+
               console.log('AI judgement result:', judgement);
-              
+
               // Validate judgement object before using it
               if (!judgement || typeof judgement !== 'object') {
                 throw new Error('Invalid judgement response from AI');
               }
-              
+
               // Ensure required properties exist with defaults
               const safeJudgement = {
                 pointsEarned: judgement.pointsEarned || 0,
@@ -135,10 +139,10 @@ export default function TextReplyForm({
                 isCoherent: judgement.isCoherent || false,
                 ...judgement
               };
-              
+
               if (safeJudgement.pointsEarned > 0) {
                 console.log('Creating user point record...');
-                
+
                 // Create user point record
                 const pointData = {
                   userId: user.uid,
@@ -156,10 +160,10 @@ export default function TextReplyForm({
                   isFactual: safeJudgement.isFactual,
                   isCoherent: safeJudgement.isCoherent
                 };
-                
+
                 await createUserPoint(pointData);
                 console.log('User point created successfully');
-                
+
                 // Refresh points data in parent component
                 if (onPointsEarned && typeof onPointsEarned === 'function') {
                   try {
@@ -169,17 +173,17 @@ export default function TextReplyForm({
                     // Don't crash if refresh fails
                   }
                 }
-                
+
                 // Show both animations and toast notification for immediate feedback
                 setPointsEarned(safeJudgement.pointsEarned);
                 setQualityScore(safeJudgement.qualityScore);
                 setShowPointsAnimation(true);
-                
+
                 // Show immediate toast notification with safe error handling
                 try {
                   if (showPointsToast && typeof showPointsToast === 'function') {
                     showPointsToast(
-                      safeJudgement.pointsEarned, 
+                      safeJudgement.pointsEarned,
                       safeJudgement.qualityScore
                     );
                   }
@@ -214,7 +218,7 @@ export default function TextReplyForm({
             // Show info toast for already earned points
             try {
               if (showSuccessToast && typeof showSuccessToast === 'function') {
-                showSuccessToast('Reply submitted! You can only earn points once per discussion.', 3000);
+                showSuccessToast('Reply submitted!', 3000);
               }
             } catch (toastError) {
               console.error('Error showing info toast:', toastError);
@@ -227,16 +231,16 @@ export default function TextReplyForm({
           setIsJudging(false);
         }
       }
-      
+
       // Reset form
       setContent('');
       setFactCheckResults(null);
-      
+
       // Notify parent component
       if (onReplyAdded) {
         onReplyAdded(createdReply);
       }
-      
+
       console.log('Reply creation process completed successfully');
     } catch (error) {
       console.error('Error adding reply:', error);
@@ -245,7 +249,6 @@ export default function TextReplyForm({
       setIsSubmitting(false);
     }
   };
-
 
   const getReplyTypeLabel = (type) => {
     // Always just say "Replying to" regardless of type
@@ -327,9 +330,9 @@ export default function TextReplyForm({
       </form>
 
       {/* Fact Check Results */}
-      <FactCheckResults 
-        factCheckResults={factCheckResults} 
-        isLoading={isFactChecking} 
+      <FactCheckResults
+        factCheckResults={factCheckResults}
+        isLoading={isFactChecking}
       />
 
       {/* Points Animation */}
@@ -345,7 +348,7 @@ export default function TextReplyForm({
       {selectedPoint && (
         <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded-lg">
           <div className="text-xs text-purple-800">
-            💡 <strong>Earn Points:</strong> Provide a factual and coherent response to this point to earn 1-3 points! 
+            💡 <strong>Earn Points:</strong> Provide a factual and coherent response to this point to earn 1-3 points!
             (One collection per discussion)
           </div>
         </div>
@@ -353,3 +356,4 @@ export default function TextReplyForm({
     </div>
   );
 }
+

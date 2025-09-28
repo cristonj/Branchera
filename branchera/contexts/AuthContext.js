@@ -141,7 +141,8 @@ export function AuthProvider({ children }) {
 
   // Get the display name to use throughout the app
   const getDisplayName = () => {
-    return userProfile?.displayName || user?.displayName || user?.email || 'Anonymous User';
+    // Only return the custom display name if it's set, otherwise return "Unknown User"
+    return userProfile?.displayName || 'Unknown User';
   };
 
   const value = {

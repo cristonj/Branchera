@@ -326,6 +326,34 @@ export function useDatabase() {
     }
   };
 
+  // Update key points for replying to a specific reply within a discussion
+  const updateReplyKeyPoints = async (discussionId, replyId, replyPoints) => {
+    try {
+      console.log('Updating reply key points for reply:', replyId, 'in discussion:', discussionId);
+
+      const discussion = await getDocument('discussions', discussionId);
+      if (!discussion) {
+        throw new Error('Discussion not found');
+      }
+
+      const updatedReplies = (discussion.replies || []).map((reply) =>
+        reply.id === replyId
+          ? { ...reply, replyPoints: replyPoints || [], replyPointsGenerated: true }
+          : reply
+      );
+
+      await updateDocument('discussions', discussionId, {
+        replies: updatedReplies
+      });
+
+      console.log('Reply key points updated successfully');
+      return true;
+    } catch (error) {
+      console.error('Error updating reply key points:', error);
+      throw error;
+    }
+  };
+
   // Get AI points for a discussion
   const getAIPoints = async (discussionId) => {
     try {
@@ -774,6 +802,7 @@ export function useDatabase() {
     getAIPoints,
     setupDatabase,
     updateReplyAIPoints,
+    updateReplyKeyPoints,
     incrementDiscussionView,
     incrementReplyView,
     updateFactCheckResults,
