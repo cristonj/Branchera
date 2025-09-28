@@ -24,7 +24,7 @@ export default function Home() {
             {/* Brand Badge */}
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-black text-white text-sm font-medium mb-4">
               <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-              Open Source • Ad-Free • Always
+              Grows With You • Not Owned by a Billionaire • You Are Not the Product
             </div>
             
             <div className="flex items-center justify-center mb-4">
@@ -39,9 +39,9 @@ export default function Home() {
             </div>
             
             <p className="text-lg md:text-xl lg:text-2xl mb-6 text-gray-700 font-light max-w-4xl mx-auto leading-relaxed">
-              The social app that <span className="font-semibold text-black">respects your intelligence</span>.
+              A social platform that <span className="font-semibold text-black">evolves with your interests</span> and <span className="font-semibold text-black">grows your understanding</span>.
               <br />
-              Built to maximize constructive dialogue, not engagement.
+              Community-driven conversations that develop deeper insights over time.
             </p>
 
             {/* Early CTA */}
@@ -61,16 +61,16 @@ export default function Home() {
             </div>
 
             <p className="text-xs text-gray-500 mb-6">
-              Free forever • No ads • 
+              Not owned by a billionaire • You are not the product • 
               <span className="font-medium text-gray-700">Join our growing community</span>
             </p>
             
             <div className="max-w-3xl mx-auto mb-4">
               <div className="bg-gray-50 border-l-4 border-black p-4 rounded-r-lg">
                 <p className="text-base md:text-lg text-gray-800 font-medium italic leading-relaxed">
-                  &ldquo;What if social media was about maximizing constructive dialogue instead of engagement?&rdquo;
+                  &ldquo;A platform that adapts to your thinking, not the other way around.&rdquo;
                 </p>
-                <p className="text-xs text-gray-600 mt-2">— Our founding mission</p>
+                <p className="text-xs text-gray-600 mt-2">— Our core philosophy</p>
               </div>
             </div>
             
@@ -84,17 +84,17 @@ export default function Home() {
             </div>
             
             <p className="text-base md:text-lg text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Experience AI-powered fact-checking, transparent discussions with smart point extraction, and a community where substance matters more than likes.
+              Experience conversations that evolve with your interests, AI that learns your thinking patterns, and a community that develops together over time.
             </p>
 
             {/* Key Features */}
             <div className="mt-16">
               <div className="text-center mb-12">
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-                  A Social Platform Built Differently
+                  A Platform That Grows With You
                 </h2>
                 <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-                  No dark patterns, no engagement algorithms, no hidden agendas. Just transparent, open-source tools for meaningful dialogue.
+                  Adaptive conversations, community-driven development, and AI that enhances understanding. Not owned by a billionaire. You are not the product.
                 </p>
               </div>
               
@@ -119,9 +119,9 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold mb-3 text-black">Gets Out of Your Way</h3>
+                  <h3 className="text-xl font-bold mb-3 text-black">Grows With You</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Clean, distraction-free interface. No infinite scroll, no notification spam, no attention hijacking. Focus on what matters: the conversation.
+                    Conversations that evolve with your interests. AI that learns your thinking patterns. A community that develops deeper insights together over time.
                   </p>
                 </div>
 
@@ -132,9 +132,9 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold mb-3 text-black">Forever Free & Ad-Free</h3>
+                  <h3 className="text-xl font-bold mb-3 text-black">Community Owned</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    No ads, no premium tiers, no paywalls. Built as a public good, funded by community support, not by harvesting your attention or data.
+                    Not owned by a billionaire. You are not the product. Built by the community, for the community. Funded by users who believe in the mission.
                   </p>
                 </div>
               </div>
@@ -267,11 +267,11 @@ export default function Home() {
                 </div>
                 
                 <h2 className="text-3xl md:text-4xl font-bold mb-4 text-black">
-                  Ready for Social Media That Respects Your Intelligence?
+                  Ready for a Platform That Grows With You?
                 </h2>
                 
                 <p className="text-xl text-gray-600 mb-6 max-w-3xl mx-auto leading-relaxed">
-                  Be part of a community that values thoughtful discourse over viral content. Where every claim is fact-checked, every discussion is transparent, and your time is respected.
+                  Join a community that evolves with your interests and deepens your understanding. Not owned by a billionaire. You are not the product.
                 </p>
 
                 {/* Value Props */}
@@ -280,19 +280,19 @@ export default function Home() {
                     <svg className="w-6 h-6 sm:w-5 sm:h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-gray-700 font-medium">No ads, ever</span>
+                    <span className="text-gray-700 font-medium">Grows with you</span>
                   </div>
                   <div className="flex items-center justify-center">
                     <svg className="w-6 h-6 sm:w-5 sm:h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-gray-700 font-medium">100% open source</span>
+                    <span className="text-gray-700 font-medium">Not owned by a billionaire</span>
                   </div>
                   <div className="flex items-center justify-center">
                     <svg className="w-6 h-6 sm:w-5 sm:h-5 text-green-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="text-gray-700 font-medium">AI-powered fact checking</span>
+                    <span className="text-gray-700 font-medium">You are not the product</span>
                   </div>
                 </div>
                 
@@ -329,7 +329,7 @@ export default function Home() {
                   <h3 className="text-2xl font-bold text-black">Branches</h3>
                 </div>
                 <p className="text-gray-600 mb-4 max-w-md">
-                  The social app that gets out of your way. Open source, ad-free, and designed for constructive dialogue instead of endless engagement.
+                  A platform that grows with you. Community-driven, not owned by a billionaire. You are not the product.
                 </p>
                 <div className="flex items-center space-x-4">
                   <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium">
@@ -371,7 +371,7 @@ export default function Home() {
                 &copy; 2025 Branches. A platform that grows with you. Not owned by a billionaire. You are not the product.
               </p>
               <p className="text-xs text-gray-400">
-                &ldquo;What if social media was about maximizing constructive dialogue instead of engagement?&rdquo;
+                &ldquo;A platform that adapts to your thinking, not the other way around.&rdquo;
               </p>
             </div>
           </div>

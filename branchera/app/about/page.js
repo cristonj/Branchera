@@ -20,7 +20,7 @@ export default function AboutPage() {
             <div className="mb-16">
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-black text-white text-sm font-medium mb-6">
                 <span className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></span>
-                Our Story • Our Mission • Our Values
+                Grows With You • Community Driven • Not Owned by a Billionaire
               </div>
               
               <div className="flex items-center justify-center mb-6">
@@ -35,19 +35,19 @@ export default function AboutPage() {
               </div>
               
               <p className="text-xl md:text-2xl text-gray-700 font-light max-w-4xl mx-auto leading-relaxed mb-6">
-                We&rsquo;re building the social platform that puts <span className="font-semibold text-black">people before profit</span> and <span className="font-semibold text-black">dialogue before engagement</span>
+                We&rsquo;re building a platform that <span className="font-semibold text-black">evolves with your interests</span> and <span className="font-semibold text-black">grows your understanding</span> through adaptive conversations and community-driven development.
               </p>
             </div>
 
             {/* Mission Statement */}
             <div className="max-w-5xl mx-auto mb-16">
               <div className="bg-gray-50 border-l-4 border-black p-6 rounded-r-lg">
-                <h2 className="text-2xl font-bold text-black mb-3">Our Founding Question</h2>
+                <h2 className="text-2xl font-bold text-black mb-3">Our Core Philosophy</h2>
                 <p className="text-xl md:text-2xl text-gray-800 font-medium italic leading-relaxed mb-3">
-                  &ldquo;What if social media was about maximizing constructive dialogue instead of engagement?&rdquo;
+                  &ldquo;A platform that adapts to your thinking, not the other way around.&rdquo;
                 </p>
                 <p className="text-lg text-gray-600 leading-relaxed">
-                  This simple question drives everything we do. Instead of optimizing for time spent scrolling, we optimize for meaningful conversations. Instead of algorithmic feeds designed to capture attention, we provide transparent tools that help people think more clearly together.
+                  This philosophy drives everything we build. Instead of forcing you to adapt to rigid algorithms, we create tools that learn and evolve with your interests. Instead of extracting value from your data, we help you develop deeper understanding through meaningful conversations that grow over time.
                 </p>
               </div>
             </div>
@@ -91,16 +91,16 @@ export default function AboutPage() {
                   </p>
                 </div>
 
-                {/* Gets Out of Your Way */}
+                {/* Community Ownership */}
                 <div className="bg-white rounded-2xl p-6 border-2 border-black">
                   <div className="w-14 h-14 mx-auto mb-4 bg-black rounded-2xl flex items-center justify-center">
                     <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </div>
-                  <h3 className="text-xl font-bold mb-3 text-black">Grows With You</h3>
+                  <h3 className="text-xl font-bold mb-3 text-black">Community Ownership</h3>
                   <p className="text-gray-600 leading-relaxed">
-                    Adaptive conversations that evolve with your interests. AI that learns your thinking patterns. A community that develops deeper insights together over time.
+                    Not owned by a billionaire. Built by the community, for the community. Your voice shapes our development roadmap and platform evolution.
                   </p>
                 </div>
 
