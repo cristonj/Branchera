@@ -39,7 +39,7 @@ export default function PointsPage() {
         <div className="rounded-lg border border-black/20 p-8 text-center">
           <h3 className="text-lg font-bold text-gray-900 mb-3">Points System Coming Soon</h3>
           <p className="text-gray-600 mb-6 max-w-md mx-auto">
-            We're working on a new and improved points system. For now, enjoy the discussion features!
+            We&apos;re working on a new and improved points system. For now, enjoy the discussion features!
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
