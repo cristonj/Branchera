@@ -35,9 +35,6 @@ export default function LoginPage() {
               Branches
             </h1>
           </div>
-          <p className="text-sm text-gray-600">
-            The app should be the product, not the users
-          </p>
         </div>
 
 
