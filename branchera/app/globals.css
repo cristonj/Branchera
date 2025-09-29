@@ -103,6 +103,11 @@ a {
 
 /* Prevent horizontal overflow on small screens */
 @media screen and (max-width: 640px) {
+  /* Ensure the html and body don't exceed viewport width */
+  html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
   /* Ensure flex containers don't cause horizontal overflow */
   .flex {
     min-width: 0;
@@ -121,9 +126,37 @@ a {
   }
   
   /* Ensure search inputs are always usable on mobile */
-  input[type="text"], 
+  input[type="text"],
   input[type="search"] {
-    min-width: 200px;
+    min-width: 120px;
+  }
+
+  /* Further reduce min-width on very small screens */
+  @media screen and (max-width: 400px) {
+    input[type="text"],
+    input[type="search"] {
+      min-width: 80px;
+    }
+  }
+
+  /* Very small screen optimizations */
+  @media screen and (max-width: 360px) {
+    /* Reduce button padding on very small screens */
+    button {
+      padding: 8px 12px;
+      min-height: 40px;
+      min-width: 40px;
+    }
+
+    /* Ensure text doesn't get too small */
+    body {
+      font-size: 14px;
+    }
+
+    /* Reduce margins and padding for better fit */
+    .min-h-screen {
+      min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    }
   }
   
   /* Override min-width for flex-1 inputs to allow proper shrinking */
