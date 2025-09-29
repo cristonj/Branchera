@@ -26,12 +26,12 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-2">
-            <img 
-              src="/logo.svg" 
-              alt="Branches Logo" 
-              className="w-8 h-8 mr-3"
+            <img
+              src="/logo.svg"
+              alt="Branches Logo"
+              className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mr-3 sm:mr-4"
             />
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-5xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-black">
               Branches
             </h1>
           </div>
