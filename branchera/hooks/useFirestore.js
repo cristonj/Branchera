@@ -85,6 +85,13 @@ export function useFirestore() {
       });
       return documents;
     } catch (error) {
+      // Check for index-related errors and provide helpful messages
+      if (error.code === 'failed-precondition' || 
+          error.message?.includes('index') || 
+          error.message?.includes('The query requires an index')) {
+        throw new Error(`Firebase index required: ${error.message}. Please create the required index in your Firebase Console.`);
+      }
+      
       throw error;
     }
   };

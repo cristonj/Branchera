@@ -58,6 +58,14 @@ export default function PointsPage() {
         setUserRank(null); // Not ranked yet
       }
     } catch (error) {
+      // Check if this is an index-related error that should be shown to the user
+      if (error.message?.includes('Firebase index required')) {
+        console.error('Firebase index error:', error.message);
+        // You could add a toast notification here if you have one available
+      } else {
+        // For other errors, log but don't show to user to avoid spam
+        console.error('Error loading leaderboard:', error);
+      }
     } finally {
       setLoading(false);
     }
