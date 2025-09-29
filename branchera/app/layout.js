@@ -6,10 +6,10 @@ import FloatingActionButton from "@/components/FloatingActionButton";
 import AppContent from "./AppContent";
 
 export const metadata = {
-  title: "Branches - Grows With You",
-  description: "At Branches, we think the app should be the product, not the users. A social platform where you're the customer, not the commodity being sold to advertisers.",
+  title: "Branches",
+  description: "Social media where you're a human, not a product.",
   keywords: ["Branches", "open source", "social media", "ad-free", "constructive dialogue", "fact-checking", "transparent", "AI-powered", "meaningful conversations", "no ads"],
-  authors: [{ name: "Branchera Team" }],
+  authors: [{ name: "Branches Team" }],
   creator: "Branches",
   publisher: "Branches",
   formatDetection: {
@@ -19,17 +19,17 @@ export const metadata = {
   },
   metadataBase: new URL('https://branches.live'), // Update this with your actual domain
   openGraph: {
-    title: "Branches - Grows With You",
-    description: "At Branches, we think the app should be the product, not the users. A social platform where you're the customer, not the commodity being sold to advertisers.",
+    title: "Branches",
+    description: "Social media where you're a human, not a product.",
     url: 'https://branches.live', // Update this with your actual domain
     siteName: 'Branches',
     images: [
       {
-        url: '/og-image.webp', // Will be served from public folder
+        url: '/og-image.png', // Will be served from public folder
         width: 1200,
         height: 630,
-        alt: 'Branchera - Where Progress Happens',
-        type: 'image/webp',
+        alt: 'Branches',
+        type: 'image/png',
       }
     ],
     locale: 'en_US',
@@ -37,9 +37,9 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: "Branches - Grows With You",
-    description: "At Branches, we think the app should be the product, not the users. A social platform where you're the customer, not the commodity being sold to advertisers.",
-    images: ['/og-image.webp'], // Twitter will use this image
+    title: "Branches",
+    description: "Social media where you're a human, not a product.",
+    images: ['/og-image.png'], // Twitter will use this image
     creator: '@branches', // Update this with your actual Twitter handle
   },
   // Apple specific
@@ -92,7 +92,7 @@ export const metadata = {
   },
   // For Discord and other apps that use these meta tags
   other: {
-    'discord:image': '/og-image.webp',
+    'discord:image': '/og-image.png',
     'og:image:width': '1200',
     'og:image:height': '630',
     'theme-color': '#000000',
