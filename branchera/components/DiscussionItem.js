@@ -45,9 +45,15 @@ export default function DiscussionItem({
   const showErrorToast = toastContext?.showErrorToast || (() => {});
 
   const isExpanded = useMemo(() => {
-    if (!expandedDiscussions) return false;
+    if (!expandedDiscussions || !discussion?.id) return false;
     return !!expandedDiscussions[discussion.id];
-  }, [expandedDiscussions, discussion.id]);
+  }, [expandedDiscussions, discussion?.id]);
+
+  // Safety check - return null if discussion is not provided
+  if (!discussion || !discussion.id) {
+    return null;
+  }
+
   const replies = discussion.replies || [];
 
   // Enhanced smooth scroll function with fallbacks and top spacing
@@ -210,7 +216,7 @@ export default function DiscussionItem({
     
     // Expand replies to show the new reply
     if (setExpandedReplies) {
-      setExpandedReplies(prev => new Set([...prev, discussionId]));
+      setExpandedReplies(prev => ({ ...prev, [discussionId]: true }));
     }
   };
 
@@ -260,17 +266,8 @@ export default function DiscussionItem({
   };
 
   const toggleAIPoints = (discussionId) => {
-    if (!setExpandedAIPoints) return;
-    
-    setExpandedAIPoints(prev => {
-      const next = new Set(prev);
-      if (next.has(discussionId)) {
-        next.delete(discussionId);
-      } else {
-        next.add(discussionId);
-      }
-      return next;
-    });
+    // AI Points functionality not implemented yet
+    console.log('AI Points toggle for discussion:', discussionId);
   };
 
   const handlePointClick = (discussion, point) => {
@@ -315,10 +312,11 @@ export default function DiscussionItem({
       }
 
       // Increment view count only when expanding (not collapsing) and user is authenticated
-      if (!currentlyExpanded && user) {
+      if (!currentlyExpanded && user && discussion) {
         // Increment view count asynchronously
         incrementDiscussionView(discussionId, user.uid).then(result => {
-          if (onDiscussionUpdate) {
+          // Check if component is still mounted and discussion still exists
+          if (onDiscussionUpdate && result && discussion) {
             onDiscussionUpdate(discussionId, {
               ...discussion,
               views: result.views,
@@ -326,6 +324,7 @@ export default function DiscussionItem({
             });
           }
         }).catch(error => {
+          // Silently handle errors to prevent crashes
           console.error('Failed to increment view count:', error);
         });
       }
@@ -609,7 +608,7 @@ export default function DiscussionItem({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
               {discussion.replyCount || 0}
-              <svg className={`w-3 h-3 transition-transform ${expandedReplies?.has(discussion.id) ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className={`w-3 h-3 transition-transform ${expandedReplies?.[discussion.id] ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </button>
