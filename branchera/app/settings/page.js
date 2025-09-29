@@ -126,27 +126,10 @@ export default function SettingsPage() {
         )}
 
         {/* Display Name Section */}
-        <div className="rounded-lg border border-black/20 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h4 className="text-lg font-bold text-gray-900">Display Name</h4>
-              <p className="text-gray-600 text-sm">
-                This is how other users will see you in discussions
-              </p>
-            </div>
-            {!showDisplayNameForm && (
-              <button
-                onClick={handleEditClick}
-                className="px-4 py-2 text-gray-900 border border-black/20 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Edit
-              </button>
-            )}
-          </div>
-
+        <div className="rounded-lg border border-black/20 p-6 w-full">
           {showDisplayNameForm ? (
             <form onSubmit={handleDisplayNameSubmit} className="space-y-4">
-              <div>
+              <div className="space-y-4">
                 <input
                   type="text"
                   value={displayName}
@@ -160,10 +143,38 @@ export default function SettingsPage() {
                   disabled={isSubmitting}
                   autoFocus
                 />
-                <div className="flex justify-between items-center mt-1">
+
+                <div className="flex justify-between items-center">
                   <span className="text-xs text-gray-500">
                     {displayName.length}/50 characters
                   </span>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      disabled={isSubmitting}
+                      className="flex items-center justify-center w-10 h-10 text-gray-700 border border-black/20 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Cancel"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || !displayName.trim()}
+                      className="flex items-center justify-center w-10 h-10 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      title="Save"
+                    >
+                      {isSubmitting ? (
+                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -172,35 +183,21 @@ export default function SettingsPage() {
                   {error}
                 </div>
               )}
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleCancelEdit}
-                  disabled={isSubmitting}
-                  className="px-4 py-2 text-gray-700 border border-black/20 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !displayName.trim()}
-                  className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center">
-                      <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2"></div>
-                      Saving...
-                    </div>
-                  ) : (
-                    'Save Changes'
-                  )}
-                </button>
-              </div>
             </form>
           ) : (
-            <div className="bg-gray-50 border border-black/20 rounded-lg p-4">
-              <p className="font-medium text-gray-900">{getDisplayName()}</p>
+            <div className="flex items-center justify-between">
+              <div className="bg-gray-50 border border-black/20 rounded-lg p-4 flex-1 mr-3">
+                <p className="font-medium text-gray-900">{getDisplayName()}</p>
+              </div>
+              <button
+                onClick={handleEditClick}
+                className="flex items-center justify-center w-10 h-10 text-gray-900 border border-black/20 rounded-lg hover:bg-gray-50 transition-colors flex-shrink-0"
+                title="Edit"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </button>
             </div>
           )}
         </div>

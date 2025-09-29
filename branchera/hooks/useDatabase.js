@@ -89,8 +89,17 @@ export function useDatabase() {
         const discussions = await getDocuments('discussions', queryConstraints);
         return discussions;
       } catch (orderError) {
+        // Check if this is an index-related error
+        if (orderError.code === 'failed-precondition' || 
+            orderError.message?.includes('index') || 
+            orderError.message?.includes('The query requires an index')) {
+          // Re-throw index errors so they can be properly displayed to the user
+          throw new Error(`Firebase index required: ${orderError.message}. Please create the required index in your Firebase Console. Go to Firestore Database → Indexes and create an index for the 'discussions' collection with fields: ${orderField} (${orderDirection}).`);
+        }
         
-        // Fallback: get without orderBy and sort client-side
+        // For other errors, fall back to client-side sorting
+        console.warn('OrderBy query failed, falling back to client-side sorting:', orderError);
+        
         const queryConstraints = [limit(maxResults)];
         
         // Note: startAfter won't work without orderBy, so we'll skip pagination in fallback
@@ -123,7 +132,13 @@ export function useDatabase() {
         }
       }
     } catch (error) {
-      // Return empty array instead of throwing to prevent app crashes
+      // Check if this is an index-related error that should be shown to the user
+      if (error.message?.includes('Firebase index required')) {
+        throw error; // Re-throw index errors so they can be displayed
+      }
+      
+      // For other errors, return empty array to prevent app crashes
+      console.error('Error loading discussions:', error);
       return [];
     }
   };
@@ -589,14 +604,30 @@ export function useDatabase() {
         // Filter by userId client-side for now
         return points.filter(point => point.userId === userId);
       } catch (orderError) {
+        // Check if this is an index-related error
+        if (orderError.code === 'failed-precondition' || 
+            orderError.message?.includes('index') || 
+            orderError.message?.includes('The query requires an index')) {
+          // Re-throw index errors so they can be properly displayed to the user
+          throw new Error(`Firebase index required: ${orderError.message}. Please create the required index in your Firebase Console. Go to Firestore Database → Indexes and create an index for the 'userPoints' collection with fields: earnedAt (desc).`);
+        }
         
-        // Fallback: get without orderBy and sort client-side
+        // For other errors, fall back to client-side sorting
+        console.warn('OrderBy query failed, falling back to client-side sorting:', orderError);
+        
         const points = await getDocuments('userPoints', [limit(100)]);
         const userPoints = points.filter(point => point.userId === userId);
         
         return userPoints.sort((a, b) => new Date(b.earnedAt) - new Date(a.earnedAt));
       }
     } catch (error) {
+      // Check if this is an index-related error that should be shown to the user
+      if (error.message?.includes('Firebase index required')) {
+        throw error; // Re-throw index errors so they can be displayed
+      }
+      
+      // For other errors, return empty array to prevent app crashes
+      console.error('Error loading user points:', error);
       return [];
     }
   };

@@ -49,6 +49,12 @@ export default function DashboardPage() {
       
       setCollectedPoints(collected);
     } catch (error) {
+      // Check if this is an index-related error that should be shown to the user
+      if (error.message?.includes('Firebase index required')) {
+        console.error('Firebase index error:', error.message);
+      } else {
+        console.error('Error loading collected points:', error);
+      }
     }
   }, [user, getUserPoints]);
 
@@ -58,6 +64,12 @@ export default function DashboardPage() {
       const counts = await getPointCounts();
       setPointCounts(counts);
     } catch (error) {
+      // Check if this is an index-related error that should be shown to the user
+      if (error.message?.includes('Firebase index required')) {
+        console.error('Firebase index error:', error.message);
+      } else {
+        console.error('Error loading point counts:', error);
+      }
     }
   }, [getPointCounts]);
 
@@ -193,6 +205,12 @@ export default function DashboardPage() {
         });
 
       } catch (error) {
+        // Check if this is an index-related error that should be shown to the user
+        if (error.message?.includes('Firebase index required')) {
+          console.error('Firebase index error:', error.message);
+        } else {
+          console.error('Error loading dashboard data:', error);
+        }
       } finally {
         setLoading(false);
       }
@@ -450,20 +468,7 @@ export default function DashboardPage() {
                   </div>
                 </Link>
 
-                <Link
-                  href="/about"
-                  className="flex items-center gap-3 p-4 border border-black/20 rounded-lg hover:bg-gray-50 transition-colors group"
-                >
-                  <div className="p-2 bg-black rounded-lg">
-                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">Learn More</h3>
-                    <p className="text-sm text-gray-500">About Branches</p>
-                  </div>
-                </Link>
+
               </div>
             </div>
           </>

@@ -8,7 +8,6 @@ import SearchFilterSort from './SearchFilterSort';
 import { AIService } from '@/lib/aiService';
 import { usePolling } from '@/hooks/usePolling';
 import { REALTIME_CONFIG } from '@/lib/realtimeConfig';
-import { NewsService } from '@/lib/newsService';
 import { useToast } from '@/contexts/ToastContext';
 
 export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
@@ -138,17 +137,23 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       });
       
       // Check if we should create an auto-news post (non-blocking, after page loads)
-      if (!isLoadingMore) {
-        setTimeout(() => {
-          checkAndCreateNewsPost(discussionsData);
-        }, 100);
-      }
       
     } catch (error) {
-      if (!isLoadingMore) {
-        // Set empty array to prevent crashes
-        setDiscussions([]);
-        setHasMore(false);
+      // Check if this is an index-related error that should be shown to the user
+      if (error.message?.includes('Firebase index required')) {
+        showErrorToast(error.message);
+        // Still set empty array to prevent crashes, but show the error
+        if (!isLoadingMore) {
+          setDiscussions([]);
+          setHasMore(false);
+        }
+      } else {
+        // For other errors, handle silently to prevent crashes
+        console.error('Error loading discussions:', error);
+        if (!isLoadingMore) {
+          setDiscussions([]);
+          setHasMore(false);
+        }
       }
     } finally {
       if (!isLoadingMore) {
@@ -195,6 +200,13 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       });
       
     } catch (error) {
+      // Check if this is an index-related error that should be shown to the user
+      if (error.message?.includes('Firebase index required')) {
+        showErrorToast(error.message);
+      } else {
+        // For other errors, log but don't show to user to avoid spam
+        console.error('Error loading more discussions:', error);
+      }
     } finally {
       setLoadingMore(false);
     }
@@ -206,67 +218,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   }, [loadMoreDiscussions]);
 
   // Check if we should create a news post and create one if needed (non-blocking)
-  const checkAndCreateNewsPost = useCallback(async (discussionsData) => {
-    // Wrap everything in a try-catch to ensure this never blocks the UI
-    try {
-      
-      // Only check if we have user context (don't create posts for anonymous users)
-      if (!user) {
-        return;
-      }
-      
-      // Add a timeout to prevent hanging (increased to 60 seconds for AI processing)
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('News post creation timeout after 60 seconds')), 60000)
-      );
-      
-      const shouldCreatePromise = NewsService.shouldCreateNewsPost(discussionsData);
-      
-      const shouldCreate = await Promise.race([shouldCreatePromise, timeoutPromise]);
-      
-      if (shouldCreate) {
-        setIsCreatingNewsPost(true);
-        
-        try {
-          // Create news post with timeout protection and immediate AI generation
-          const createNewsPromise = NewsService.createNewsDiscussion(
-            createDiscussion, 
-            updateAIPoints, 
-            updateFactCheckResults
-          );
-          
-          const newsDiscussion = await Promise.race([createNewsPromise, timeoutPromise]);
-          
-          if (newsDiscussion) {
-            
-            // Add the new discussion to the current list with all AI-generated content
-            setDiscussions(prev => [newsDiscussion, ...prev]);
-            
-            // Show success toast
-            if (showSuccessToast) {
-              showSuccessToast('New AI news post created successfully!');
-            }
-            
-            // No need to refresh since we already have the complete discussion with AI content
-          }
-        } finally {
-          setIsCreatingNewsPost(false);
-        }
-      } else {
-      }
-    } catch (error) {
-      setIsCreatingNewsPost(false); // Reset progress indicator on error
-      
-      if (error.message.includes('timeout')) {
-        // Show a subtle toast to inform user that news creation is taking longer than expected
-        if (showErrorToast) {
-          showErrorToast('AI news post creation is taking longer than expected. It will appear when ready.');
-        }
-      } else {
-      }
-      // This is intentionally non-blocking - errors here should never affect the main UI
-    }
-  }, [user, createDiscussion, updateAIPoints, updateFactCheckResults, showErrorToast]);
+
 
   useEffect(() => {
     loadDiscussions();
