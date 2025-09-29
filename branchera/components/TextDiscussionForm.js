@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDatabase } from '@/hooks/useDatabase';
-import { AIService } from '@/lib/aiService';
-import FactCheckResults from './FactCheckResults';
 
 export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = false }) {
   const [title, setTitle] = useState('');
@@ -12,11 +10,9 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isFactChecking, setIsFactChecking] = useState(false);
-  const [factCheckResults, setFactCheckResults] = useState(null);
-  
+
   const { user, getDisplayName } = useAuth();
-  const { createDiscussion, updateAIPoints, updateFactCheckResults } = useDatabase();
+  const { createDiscussion } = useDatabase();
   
   const TITLE_CHAR_LIMIT = 100;
 
@@ -80,52 +76,11 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
       
       const createdDiscussion = await createDiscussion(discussionData);
       
-      // Generate AI points first, then fact check based on those points
-      setIsFactChecking(true);
-      
-      try {
-        
-        // Step 1: Generate AI points
-        const aiPoints = await AIService.generatePoints(discussionData.content, discussionData.title);
-        
-        // Save AI points
-        await updateAIPoints(createdDiscussion.id, aiPoints);
-        createdDiscussion.aiPoints = aiPoints;
-        createdDiscussion.aiPointsGenerated = true;
-        
-        // Step 2: Fact check based on the generated points
-        const factCheckResults = await AIService.factCheckPoints(aiPoints, discussionData.title);
-        
-        // Save fact check results
-        await updateFactCheckResults(createdDiscussion.id, factCheckResults);
-        createdDiscussion.factCheckResults = factCheckResults;
-        createdDiscussion.factCheckGenerated = true;
-        setFactCheckResults(factCheckResults);
-        
-      } catch (error) {
-        
-        // Try to generate AI points at minimum, even if fact checking fails
-        try {
-          if (!createdDiscussion.aiPointsGenerated) {
-            const aiPoints = await AIService.generatePoints(discussionData.content, discussionData.title);
-            await updateAIPoints(createdDiscussion.id, aiPoints);
-            createdDiscussion.aiPoints = aiPoints;
-            createdDiscussion.aiPointsGenerated = true;
-          }
-        } catch (fallbackError) {
-        }
-        
-        alert('Discussion created successfully, but AI processing had some issues.');
-      } finally {
-        setIsFactChecking(false);
-      }
-      
       // Reset form
       setTitle('');
       setContent('');
       setTags([]);
       setTagInput('');
-      setFactCheckResults(null);
       
       // Notify parent component
       if (onDiscussionCreated) {
@@ -299,11 +254,6 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
         </div>
       </form>
 
-      {/* Fact Check Results */}
-      <FactCheckResults 
-        factCheckResults={factCheckResults} 
-        isLoading={isFactChecking} 
-      />
     </div>
   );
 }

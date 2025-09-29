@@ -105,13 +105,6 @@ export default function TopNav() {
                     Feed
                   </Link>
                   <Link
-                    href="/points"
-                    onClick={closeDropdown}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                  >
-                    Leaderboard
-                  </Link>
-                  <Link
                     href="/settings"
                     onClick={closeDropdown}
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"

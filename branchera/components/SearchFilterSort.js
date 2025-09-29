@@ -127,9 +127,6 @@ export default function SearchFilterSort({
     setSortBy(initialSortBy);
   }, [initialSortBy]);
 
-  useEffect(() => {
-    setFilters(initialFilters);
-  }, [initialFilters]);
 
   // Helper functions for searching (no useCallback needed as they don't depend on props/state)
   const searchInDiscussion = (discussion, query, type) => {
