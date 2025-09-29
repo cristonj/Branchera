@@ -1,7 +1,7 @@
 {
   "name": "Branches",
   "short_name": "Branches",
-  "description": "The app should be the product, not the users.",
+  "description": "Social media where you're a human, not a product.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
