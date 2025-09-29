@@ -16,22 +16,16 @@ export default function FloatingActionButton() {
       {/* Floating Action Button */}
       <button
         onClick={() => setIsDialogOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-black text-white rounded-full shadow-lg hover:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-200 flex items-center justify-center z-40"
+        className="fixed bottom-6 right-6 w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 bg-black text-white rounded-full shadow-lg hover:bg-gray-800 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-200 flex items-center justify-center z-40"
         aria-label="Start a new discussion"
       >
-        {/* Notepad Icon */}
+        {/* Leaf Icon */}
         <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+          className="w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8"
+          fill="currentColor"
+          viewBox="0 0 512 512"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
+          <path d="M476.188,24.146c-6.748-3.504-60.728,38.022-185.304,67.086C230.347,105.355,62.5,153.527,65.286,392.815 L0,431.218l20.338,35.598c63.073-40.692,236.014-120.042,409.766-323.621c0,0-26.875,134.419-334.096,311.056 c103.685,53.758,249.604,53.758,360.979-76.806C568.346,246.888,476.188,24.146,476.188,24.146z"/>
         </svg>
       </button>
 

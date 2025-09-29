@@ -25,7 +25,7 @@ export function useDatabase() {
   // Create a discussion with proper validation
   const createDiscussion = async (discussionData) => {
     try {
-      
+
       // Validate required fields
       if (!discussionData.title || !discussionData.content || !discussionData.authorId) {
         throw new Error('Missing required fields: title, content, or authorId');
@@ -44,10 +44,6 @@ export function useDatabase() {
         replyCount: 0,
         views: 0, // Track how many times this discussion has been viewed (expanded)
         viewedBy: [], // Track which users have viewed this discussion
-        aiPoints: [], // AI-generated points for anchored replies
-        aiPointsGenerated: false, // Track if AI points have been generated
-        factCheckResults: null, // AI fact check results
-        factCheckGenerated: false, // Track if fact checking has been performed
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         // Add metadata for better querying
@@ -57,7 +53,7 @@ export function useDatabase() {
       };
 
       const discussionId = await addDocument('discussions', completeData);
-      
+
       return { id: discussionId, ...completeData };
     } catch (error) {
       throw error;
@@ -188,7 +184,7 @@ export function useDatabase() {
   // Add a reply to a discussion
   const addReply = async (discussionId, replyData) => {
     try {
-      
+
       // Validate required fields
       if (!replyData.content || !replyData.authorId) {
         throw new Error('Missing required fields: content or authorId');
@@ -207,20 +203,13 @@ export function useDatabase() {
         authorId: replyData.authorId,
         authorName: replyData.authorName || 'Anonymous',
         authorPhoto: replyData.authorPhoto || null,
-        replyToPointId: replyData.replyToPointId || null, // Which AI point this replies to
         replyToReplyId: replyData.replyToReplyId || null, // Which reply this is responding to (for nested replies)
-        type: replyData.type || 'general', // "agree" | "challenge" | "expand" | "clarify" | "general"
-        level: replyData.level || 0, // Nesting level (0 = top level, 1 = reply to reply, etc.)
-        views: 0, // Track how many times this reply has been viewed (expanded)
-        viewedBy: [], // Track which users have viewed this reply
-        factCheckResults: null, // AI fact check results for this reply
-        factCheckGenerated: false, // Track if fact checking has been performed for this reply
         createdAt: new Date().toISOString()
       };
 
       // Add reply to the discussion's replies array
       const updatedReplies = [...(discussion.replies || []), reply];
-      
+
       await updateDocument('discussions', discussionId, {
         replies: updatedReplies,
         replyCount: updatedReplies.length
@@ -266,97 +255,7 @@ export function useDatabase() {
     }
   };
 
-  // Set processing flag for AI points generation
-  const setProcessingAIPoints = async (discussionId, processing = true) => {
-    try {
-      await updateDocument('discussions', discussionId, {
-        processingAIPoints: processing
-      });
-      return true;
-    } catch (error) {
-      throw error;
-    }
-  };
 
-  // Update AI points for a discussion
-  const updateAIPoints = async (discussionId, aiPoints) => {
-    try {
-      
-      await updateDocument('discussions', discussionId, {
-        aiPoints: aiPoints,
-        aiPointsGenerated: true,
-        processingAIPoints: false // Clear processing flag
-      });
-
-      return true;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  // Update AI points for a specific reply within a discussion
-  const updateReplyAIPoints = async (discussionId, replyId, aiPoints) => {
-    try {
-
-      const discussion = await getDocument('discussions', discussionId);
-      if (!discussion) {
-        throw new Error('Discussion not found');
-      }
-
-      const updatedReplies = (discussion.replies || []).map((reply) =>
-        reply.id === replyId
-          ? { ...reply, aiPoints: aiPoints || [], aiPointsGenerated: true }
-          : reply
-      );
-
-      await updateDocument('discussions', discussionId, {
-        replies: updatedReplies
-      });
-
-      return true;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  // Update key points for replying to a specific reply within a discussion
-  const updateReplyKeyPoints = async (discussionId, replyId, replyPoints) => {
-    try {
-
-      const discussion = await getDocument('discussions', discussionId);
-      if (!discussion) {
-        throw new Error('Discussion not found');
-      }
-
-      const updatedReplies = (discussion.replies || []).map((reply) =>
-        reply.id === replyId
-          ? { ...reply, replyPoints: replyPoints || [], replyPointsGenerated: true }
-          : reply
-      );
-
-      await updateDocument('discussions', discussionId, {
-        replies: updatedReplies
-      });
-
-      return true;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  // Get AI points for a discussion
-  const getAIPoints = async (discussionId) => {
-    try {
-      const discussion = await getDocument('discussions', discussionId);
-      if (!discussion) {
-        throw new Error('Discussion not found');
-      }
-      
-      return discussion.aiPoints || [];
-    } catch (error) {
-      throw error;
-    }
-  };
 
   // Increment view count for a discussion
   const incrementDiscussionView = async (discussionId, userId) => {
@@ -423,58 +322,7 @@ export function useDatabase() {
     }
   };
 
-  // Set processing flag for fact check generation
-  const setProcessingFactCheck = async (discussionId, processing = true) => {
-    try {
-      await updateDocument('discussions', discussionId, {
-        processingFactCheck: processing
-      });
-      return true;
-    } catch (error) {
-      throw error;
-    }
-  };
 
-  // Update fact check results for a discussion
-  const updateFactCheckResults = async (discussionId, factCheckResults) => {
-    try {
-      
-      await updateDocument('discussions', discussionId, {
-        factCheckResults: factCheckResults,
-        factCheckGenerated: true,
-        processingFactCheck: false // Clear processing flag
-      });
-
-      return true;
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  // Update fact check results for a specific reply within a discussion
-  const updateReplyFactCheckResults = async (discussionId, replyId, factCheckResults) => {
-    try {
-
-      const discussion = await getDocument('discussions', discussionId);
-      if (!discussion) {
-        throw new Error('Discussion not found');
-      }
-
-      const updatedReplies = (discussion.replies || []).map((reply) =>
-        reply.id === replyId
-          ? { ...reply, factCheckResults: factCheckResults, factCheckGenerated: true }
-          : reply
-      );
-
-      await updateDocument('discussions', discussionId, {
-        replies: updatedReplies
-      });
-
-      return true;
-    } catch (error) {
-      throw error;
-    }
-  };
 
   // Edit a discussion (only by author)
   const editDiscussion = async (discussionId, userId, updatedData) => {
@@ -556,215 +404,6 @@ export function useDatabase() {
     }
   };
 
-  // User Points Management
-  const createUserPoint = async (pointData) => {
-    try {
-      
-      // Validate required fields
-      if (!pointData.userId || !pointData.discussionId || !pointData.originalPoint || !pointData.rebuttal) {
-        throw new Error('Missing required fields for user point');
-      }
-
-      const completeData = {
-        userId: pointData.userId,
-        userName: formatNameForLeaderboard(pointData.userName || 'Anonymous User'),
-        userPhoto: pointData.userPhoto || null,
-        discussionId: pointData.discussionId,
-        discussionTitle: pointData.discussionTitle || 'Unknown Discussion',
-        originalPoint: pointData.originalPoint,
-        originalPointId: pointData.originalPointId,
-        rebuttal: pointData.rebuttal,
-        pointsEarned: pointData.pointsEarned || 1,
-        qualityScore: pointData.qualityScore || 'basic', // 'excellent', 'good', 'fair', 'basic'
-        judgeExplanation: pointData.judgeExplanation || '',
-        isFactual: pointData.isFactual || false,
-        isCoherent: pointData.isCoherent || false,
-        earnedAt: new Date().toISOString(),
-        createdAt: new Date().toISOString()
-      };
-
-      const pointId = await addDocument('userPoints', completeData);
-      
-      return { id: pointId, ...completeData };
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const getUserPoints = async (userId) => {
-    try {
-      // Try with orderBy first
-      try {
-        const points = await getDocuments('userPoints', [
-          // Add where clause for userId when available
-          orderBy('earnedAt', 'desc'),
-          limit(100)
-        ]);
-        
-        // Filter by userId client-side for now
-        return points.filter(point => point.userId === userId);
-      } catch (orderError) {
-        // Check if this is an index-related error
-        if (orderError.code === 'failed-precondition' || 
-            orderError.message?.includes('index') || 
-            orderError.message?.includes('The query requires an index')) {
-          // Re-throw index errors so they can be properly displayed to the user
-          throw new Error(`Firebase index required: ${orderError.message}. Please create the required index in your Firebase Console. Go to Firestore Database → Indexes and create an index for the 'userPoints' collection with fields: earnedAt (desc).`);
-        }
-        
-        // For other errors, fall back to client-side sorting
-        console.warn('OrderBy query failed, falling back to client-side sorting:', orderError);
-        
-        const points = await getDocuments('userPoints', [limit(100)]);
-        const userPoints = points.filter(point => point.userId === userId);
-        
-        return userPoints.sort((a, b) => new Date(b.earnedAt) - new Date(a.earnedAt));
-      }
-    } catch (error) {
-      // Check if this is an index-related error that should be shown to the user
-      if (error.message?.includes('Firebase index required')) {
-        throw error; // Re-throw index errors so they can be displayed
-      }
-      
-      // For other errors, return empty array to prevent app crashes
-      console.error('Error loading user points:', error);
-      return [];
-    }
-  };
-
-  const getUserPointsForDiscussion = async (userId, discussionId) => {
-    try {
-      const allPoints = await getUserPoints(userId);
-      return allPoints.filter(point => point.discussionId === discussionId);
-    } catch (error) {
-      return [];
-    }
-  };
-
-  const hasUserEarnedPointsForDiscussion = async (userId, discussionId) => {
-    try {
-      const points = await getUserPointsForDiscussion(userId, discussionId);
-      return points.length > 0;
-    } catch (error) {
-      return false;
-    }
-  };
-
-  // Enrich replies with points earned by user
-  const enrichRepliesWithPoints = async (replies, userId) => {
-    if (!replies || !userId) return replies;
-    
-    try {
-      const userPoints = await getUserPoints(userId);
-      const pointsByReplyId = new Map();
-      
-      // Create a map of reply IDs to points earned
-      userPoints.forEach(point => {
-        if (point.replyId && point.pointsEarned) {
-          pointsByReplyId.set(point.replyId, point.pointsEarned);
-        }
-      });
-      
-      // Enrich replies with points data
-      return replies.map(reply => ({
-        ...reply,
-        pointsEarnedByUser: pointsByReplyId.get(reply.id) || null
-      }));
-    } catch (error) {
-      return replies;
-    }
-  };
-
-  // Check if user has collected a specific AI point
-  const hasUserCollectedPoint = async (userId, discussionId, originalPointId) => {
-    try {
-      const points = await getUserPointsForDiscussion(userId, discussionId);
-      return points.some(point => point.originalPointId === originalPointId);
-    } catch (error) {
-      return false;
-    }
-  };
-
-  // Get all users and their total points for leaderboard
-  const getLeaderboard = async () => {
-    try {
-      const allPoints = await getDocuments('userPoints', [limit(1000)]);
-      
-      // Group points by user
-      const userPointsMap = new Map();
-      allPoints.forEach(point => {
-        const userId = point.userId;
-        if (!userPointsMap.has(userId)) {
-          userPointsMap.set(userId, {
-            userId: userId,
-            userName: 'Loading...', // Will be updated with actual display name
-            userPhoto: point.userPhoto || null,
-            totalPoints: 0,
-            pointCount: 0,
-            lastEarned: null
-          });
-        }
-        
-        const userData = userPointsMap.get(userId);
-        userData.totalPoints += point.pointsEarned || 1;
-        userData.pointCount += 1;
-        
-        if (!userData.lastEarned || new Date(point.earnedAt) > new Date(userData.lastEarned)) {
-          userData.lastEarned = point.earnedAt;
-        }
-      });
-      
-      // Get all user profiles to fetch current display names
-      const userProfiles = await getDocuments('userProfiles', [limit(1000)]);
-      const profilesMap = new Map();
-      userProfiles.forEach(profile => {
-        profilesMap.set(profile.userId, profile);
-      });
-      
-      // Update user names with current display names from profiles
-      userPointsMap.forEach((userData, userId) => {
-        const profile = profilesMap.get(userId);
-        let displayName = 'Anonymous User'; // Default fallback
-        
-        if (profile && profile.displayName) {
-          // Use custom display name if set
-          displayName = profile.displayName;
-        }
-        
-        userData.userName = formatNameForLeaderboard(displayName);
-      });
-      
-      // Convert to array and sort by total points
-      const leaderboard = Array.from(userPointsMap.values())
-        .sort((a, b) => b.totalPoints - a.totalPoints);
-      
-      return leaderboard;
-    } catch (error) {
-      return [];
-    }
-  };
-
-  // Get point counts for AI points (how many users earned points for each point)
-  const getPointCounts = async () => {
-    try {
-      const allPoints = await getDocuments('userPoints', [limit(1000)]);
-      
-      // Group by discussion and original point ID
-      const pointCountsMap = new Map();
-      allPoints.forEach(point => {
-        if (point.originalPointId) {
-          const pointKey = `${point.discussionId}-${point.originalPointId}`;
-          const currentCount = pointCountsMap.get(pointKey) || 0;
-          pointCountsMap.set(pointKey, currentCount + 1);
-        }
-      });
-      
-      return pointCountsMap;
-    } catch (error) {
-      return new Map();
-    }
-  };
-
   return {
     createDiscussion,
     getDiscussions,
@@ -773,25 +412,8 @@ export function useDatabase() {
     addReply,
     deleteReply,
     editReply,
-    updateAIPoints,
-    getAIPoints,
-    setupDatabase,
-    updateReplyAIPoints,
-    updateReplyKeyPoints,
     incrementDiscussionView,
-    incrementReplyView,
-    updateFactCheckResults,
-    updateReplyFactCheckResults,
-    setProcessingAIPoints,
-    setProcessingFactCheck,
-    createUserPoint,
-    getUserPoints,
-    updateDocument,
-    getUserPointsForDiscussion,
-    hasUserEarnedPointsForDiscussion,
-    enrichRepliesWithPoints,
-    hasUserCollectedPoint,
-    getLeaderboard,
-    getPointCounts
+    setupDatabase,
+    updateDocument
   };
 }
