@@ -289,8 +289,8 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       })
     );
     
-    // Expand replies to show the new reply
-    setExpandedReplies(prev => new Set([...prev, discussionId]));
+  // Expand replies to show the new reply
+  setExpandedReplies(prev => ({ ...prev, [discussionId]: true }));
   }, []);
 
 
