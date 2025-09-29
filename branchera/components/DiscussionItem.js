@@ -657,7 +657,7 @@ export default function DiscussionItem({
           {user && (
             <button
               onClick={handleStartReply}
-              className="absolute bottom-3 right-3 bg-black text-white p-2 rounded-full shadow-lg hover:bg-gray-800 transition-colors z-10"
+              className="absolute bottom-3 right-3 bg-black text-white p-2 rounded-full shadow-lg hover:bg-gray-800 transition-colors z-10 flex items-center justify-center"
               title="Reply to discussion"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
