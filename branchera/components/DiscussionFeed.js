@@ -47,7 +47,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       
       // Load discussions directly without setup
       const discussionsData = await getDiscussions({
-        limit: 10, // Reduced limit for better pagination experience
+        limit: 15, // Optimized limit for better performance
         orderField: 'createdAt',
         orderDirection: 'desc',
         lastDoc: isLoadingMore ? lastDoc : null
@@ -63,7 +63,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       // Update pagination state
       if (discussionsData.length > 0) {
         setLastDoc(discussionsData[discussionsData.length - 1]);
-        setHasMore(discussionsData.length === 10); // If we got fewer than requested, we've reached the end
+        setHasMore(discussionsData.length === 15); // If we got fewer than requested, we've reached the end
       } else {
         setHasMore(false);
       }
@@ -105,7 +105,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       setLoadingMore(true);
       
       const discussionsData = await getDiscussions({
-        limit: 10,
+        limit: 15,
         orderField: 'createdAt',
         orderDirection: 'desc',
         lastDoc: lastDoc
@@ -117,7 +117,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       // Update pagination state
       if (discussionsData.length > 0) {
         setLastDoc(discussionsData[discussionsData.length - 1]);
-        setHasMore(discussionsData.length === 10);
+        setHasMore(discussionsData.length === 15);
       } else {
         setHasMore(false);
       }
@@ -158,12 +158,17 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       (entries) => {
         const target = entries[0];
         if (target.isIntersecting && loadMoreRef.current) {
-          loadMoreRef.current();
+          // Use requestIdleCallback for better performance
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => loadMoreRef.current());
+          } else {
+            setTimeout(() => loadMoreRef.current(), 0);
+          }
         }
       },
       {
         root: null,
-        rootMargin: '100px', // Start loading 100px before the trigger element is visible
+        rootMargin: '200px', // Start loading earlier for better UX
         threshold: 0.1,
       }
     );

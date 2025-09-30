@@ -1,17 +1,30 @@
 import "./globals.css";
+import { Inter } from 'next/font/google';
 import { AuthProvider } from "@/contexts/AuthContext";
 import { DatabaseProvider } from "@/components/DatabaseProvider";
 import { ToastProvider } from "@/contexts/ToastContext";
 import FloatingActionButton from "@/components/FloatingActionButton";
 import AppContent from "./AppContent";
 
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  preload: true,
+  variable: '--font-inter',
+});
+
 export const metadata = {
-  title: "Branches",
-  description: "Social media where you're a human, not a product.",
-  keywords: ["Branches", "open source", "social media", "ad-free", "constructive dialogue", "fact-checking", "transparent", "AI-powered", "meaningful conversations", "no ads"],
+  title: {
+    default: "Branches - Social media where you're a human, not a product",
+    template: "%s | Branches"
+  },
+  description: "Social media where you're a human, not a product. Join meaningful conversations, fact-check content, and connect authentically without ads or algorithms.",
+  keywords: ["Branches", "open source", "social media", "ad-free", "constructive dialogue", "fact-checking", "transparent", "AI-powered", "meaningful conversations", "no ads", "privacy-focused", "authentic connections"],
   authors: [{ name: "Branches Team" }],
   creator: "Branches",
   publisher: "Branches",
+  category: "Social Media",
+  classification: "Social Network",
   formatDetection: {
     email: false,
     address: false,
@@ -118,9 +131,19 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className={inter.variable}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+
+        {/* Preload critical resources */}
+        <link rel="preload" href="/logo.svg" as="image" type="image/svg+xml" />
+        <link rel="preload" href="/manifest.json" as="fetch" crossOrigin="anonymous" />
+        
+        {/* DNS prefetch for external domains */}
+        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="//firebasestorage.googleapis.com" />
+        <link rel="dns-prefetch" href="//lh3.googleusercontent.com" />
+        <link rel="dns-prefetch" href="//avatars.githubusercontent.com" />
 
         {/* Apple PWA Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -146,7 +169,7 @@ export default function RootLayout({ children }) {
         <meta name="msapplication-navbutton-color" content="#000000" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body>
+      <body className={inter.className}>
         <AuthProvider>
           <DatabaseProvider>
             <ToastProvider>
@@ -159,14 +182,52 @@ export default function RootLayout({ children }) {
 
         <script dangerouslySetInnerHTML={{
           __html: `
+            // Service Worker Registration
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/sw.js')
                   .then(function(registration) {
+                    console.log('SW registered: ', registration);
                   })
                   .catch(function(registrationError) {
+                    console.log('SW registration failed: ', registrationError);
                   });
               });
+            }
+
+            // Performance monitoring
+            if ('PerformanceObserver' in window) {
+              // Monitor Largest Contentful Paint
+              const lcpObserver = new PerformanceObserver((list) => {
+                for (const entry of list.getEntries()) {
+                  if (entry.entryType === 'largest-contentful-paint') {
+                    console.log('LCP:', entry.startTime);
+                  }
+                }
+              });
+              lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
+
+              // Monitor First Input Delay
+              const fidObserver = new PerformanceObserver((list) => {
+                for (const entry of list.getEntries()) {
+                  if (entry.entryType === 'first-input') {
+                    console.log('FID:', entry.processingStart - entry.startTime);
+                  }
+                }
+              });
+              fidObserver.observe({ entryTypes: ['first-input'] });
+
+              // Monitor Cumulative Layout Shift
+              const clsObserver = new PerformanceObserver((list) => {
+                let clsValue = 0;
+                for (const entry of list.getEntries()) {
+                  if (!entry.hadRecentInput) {
+                    clsValue += entry.value;
+                  }
+                }
+                console.log('CLS:', clsValue);
+              });
+              clsObserver.observe({ entryTypes: ['layout-shift'] });
             }
           `
         }} />

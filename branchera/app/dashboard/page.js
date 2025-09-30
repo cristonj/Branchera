@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense, lazy } from 'react';
 
 // Force dynamic rendering to prevent pre-rendering issues with Firebase
 export const dynamic = 'force-dynamic';
@@ -9,7 +9,9 @@ import { useRouter } from 'next/navigation';
 import { useDatabase } from '@/hooks/useDatabase';
 import Link from 'next/link';
 import TopNav from '@/components/TopNav';
-import DiscussionItem from '@/components/DiscussionItem';
+
+// Lazy load heavy components
+const DiscussionItem = lazy(() => import('@/components/DiscussionItem'));
 
 
 export default function DashboardPage() {
@@ -257,18 +259,30 @@ export default function DashboardPage() {
                 ) : (
                   <div className="space-y-3">
                     {hotDiscussions.map((discussion) => (
-                      <DiscussionItem
-                        key={discussion.id}
-                        discussion={discussion}
-                        searchQuery=""
-                        onDiscussionUpdate={handleDiscussionUpdate}
-                        onReplyAdded={(discussionId, newReply) => handleReplyAdded(discussionId, newReply, 'hot')}
-                        expandedDiscussions={expandedHotDiscussions}
-                        setExpandedDiscussions={setExpandedHotDiscussions}
-                        expandedReplies={expandedHotReplies}
-                        setExpandedReplies={setExpandedHotReplies}
-                        showCompactView={true}
-                      />
+                      <Suspense key={discussion.id} fallback={
+                        <div className="rounded-lg border border-black/20 p-4 animate-pulse">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                            <div className="flex-1">
+                              <div className="h-3 bg-gray-200 rounded w-1/4 mb-1"></div>
+                              <div className="h-2 bg-gray-200 rounded w-1/6"></div>
+                            </div>
+                          </div>
+                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        </div>
+                      }>
+                        <DiscussionItem
+                          discussion={discussion}
+                          searchQuery=""
+                          onDiscussionUpdate={handleDiscussionUpdate}
+                          onReplyAdded={(discussionId, newReply) => handleReplyAdded(discussionId, newReply, 'hot')}
+                          expandedDiscussions={expandedHotDiscussions}
+                          setExpandedDiscussions={setExpandedHotDiscussions}
+                          expandedReplies={expandedHotReplies}
+                          setExpandedReplies={setExpandedHotReplies}
+                          showCompactView={true}
+                        />
+                      </Suspense>
                     ))}
                   </div>
                 )}
@@ -288,18 +302,30 @@ export default function DashboardPage() {
                     <h3 className="text-sm font-medium text-gray-700 mb-3">Latest Discussions</h3>
                     <div className="space-y-3">
                       {recentActivity.discussions?.slice(0, 3).map((discussion) => (
-                        <DiscussionItem
-                          key={discussion.id}
-                          discussion={discussion}
-                          searchQuery=""
-                          onDiscussionUpdate={handleDiscussionUpdate}
-                          onReplyAdded={(discussionId, newReply) => handleReplyAdded(discussionId, newReply, 'recent')}
-                          expandedDiscussions={expandedRecentDiscussions}
-                          setExpandedDiscussions={setExpandedRecentDiscussions}
-                          expandedReplies={expandedRecentReplies}
-                          setExpandedReplies={setExpandedRecentReplies}
-                          showCompactView={true}
-                        />
+                        <Suspense key={discussion.id} fallback={
+                          <div className="rounded-lg border border-black/20 p-4 animate-pulse">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                              <div className="flex-1">
+                                <div className="h-3 bg-gray-200 rounded w-1/4 mb-1"></div>
+                                <div className="h-2 bg-gray-200 rounded w-1/6"></div>
+                              </div>
+                            </div>
+                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                          </div>
+                        }>
+                          <DiscussionItem
+                            discussion={discussion}
+                            searchQuery=""
+                            onDiscussionUpdate={handleDiscussionUpdate}
+                            onReplyAdded={(discussionId, newReply) => handleReplyAdded(discussionId, newReply, 'recent')}
+                            expandedDiscussions={expandedRecentDiscussions}
+                            setExpandedDiscussions={setExpandedRecentDiscussions}
+                            expandedReplies={expandedRecentReplies}
+                            setExpandedReplies={setExpandedRecentReplies}
+                            showCompactView={true}
+                          />
+                        </Suspense>
                       ))}
                     </div>
                   </div>

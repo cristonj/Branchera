@@ -1,9 +1,5 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAnalytics, isSupported } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 
 // Your web app's Firebase configuration
 // These values come from .env.local file
@@ -27,20 +23,75 @@ if (hasRequiredConfig) {
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 }
 
-// Initialize Firebase services (only if app is initialized)
+// Lazy-loaded Firebase services
+let authInstance = null;
+let dbInstance = null;
+let storageInstance = null;
+let analyticsInstance = null;
+
+// Lazy getters for Firebase services
+export const getAuthInstance = async () => {
+  if (!authInstance && app) {
+    const { getAuth } = await import("firebase/auth");
+    authInstance = getAuth(app);
+  }
+  return authInstance;
+};
+
+export const getFirestoreInstance = async () => {
+  if (!dbInstance && app) {
+    const { getFirestore } = await import("firebase/firestore");
+    dbInstance = getFirestore(app);
+  }
+  return dbInstance;
+};
+
+export const getStorageInstance = async () => {
+  if (!storageInstance && app) {
+    const { getStorage } = await import("firebase/storage");
+    storageInstance = getStorage(app);
+  }
+  return storageInstance;
+};
+
+export const getAnalyticsInstance = async () => {
+  if (!analyticsInstance && app && typeof window !== 'undefined') {
+    const { getAnalytics, isSupported } = await import("firebase/analytics");
+    const supported = await isSupported();
+    if (supported) {
+      analyticsInstance = getAnalytics(app);
+    }
+  }
+  return analyticsInstance;
+};
+
+// Initialize services immediately for backward compatibility
 let auth = null;
 let db = null;
 let storage = null;
 let analytics = null;
 
 if (app) {
-  auth = getAuth(app);
-  db = getFirestore(app);
-  storage = getStorage(app);
+  // Use dynamic imports but initialize immediately
+  Promise.all([
+    import("firebase/auth").then(({ getAuth }) => {
+      auth = getAuth(app);
+      return auth;
+    }),
+    import("firebase/firestore").then(({ getFirestore }) => {
+      db = getFirestore(app);
+      return db;
+    }),
+    import("firebase/storage").then(({ getStorage }) => {
+      storage = getStorage(app);
+      return storage;
+    }),
+  ]);
 
   // Initialize Analytics (only in browser and if supported)
   if (typeof window !== 'undefined') {
-    isSupported().then((supported) => {
+    import("firebase/analytics").then(async ({ getAnalytics, isSupported }) => {
+      const supported = await isSupported();
       if (supported) {
         analytics = getAnalytics(app);
       }
