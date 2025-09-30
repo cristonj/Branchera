@@ -24,68 +24,80 @@ if (hasRequiredConfig) {
 }
 
 // Lazy-loaded Firebase services
+let authInstance = null;
+let dbInstance = null;
+let storageInstance = null;
+let analyticsInstance = null;
+
+// Lazy getters for Firebase services
+export const getAuthInstance = async () => {
+  if (!authInstance && app) {
+    const { getAuth } = await import("firebase/auth");
+    authInstance = getAuth(app);
+  }
+  return authInstance;
+};
+
+export const getFirestoreInstance = async () => {
+  if (!dbInstance && app) {
+    const { getFirestore } = await import("firebase/firestore");
+    dbInstance = getFirestore(app);
+  }
+  return dbInstance;
+};
+
+export const getStorageInstance = async () => {
+  if (!storageInstance && app) {
+    const { getStorage } = await import("firebase/storage");
+    storageInstance = getStorage(app);
+  }
+  return storageInstance;
+};
+
+export const getAnalyticsInstance = async () => {
+  if (!analyticsInstance && app && typeof window !== 'undefined') {
+    const { getAnalytics, isSupported } = await import("firebase/analytics");
+    const supported = await isSupported();
+    if (supported) {
+      analyticsInstance = getAnalytics(app);
+    }
+  }
+  return analyticsInstance;
+};
+
+// Initialize services immediately for backward compatibility
 let auth = null;
 let db = null;
 let storage = null;
 let analytics = null;
 
-// Lazy getters for Firebase services
-export const getAuthInstance = async () => {
-  if (!auth && app) {
-    const { getAuth } = await import("firebase/auth");
-    auth = getAuth(app);
-  }
-  return auth;
-};
+if (app) {
+  // Use dynamic imports but initialize immediately
+  Promise.all([
+    import("firebase/auth").then(({ getAuth }) => {
+      auth = getAuth(app);
+      return auth;
+    }),
+    import("firebase/firestore").then(({ getFirestore }) => {
+      db = getFirestore(app);
+      return db;
+    }),
+    import("firebase/storage").then(({ getStorage }) => {
+      storage = getStorage(app);
+      return storage;
+    }),
+  ]);
 
-export const getFirestoreInstance = async () => {
-  if (!db && app) {
-    const { getFirestore } = await import("firebase/firestore");
-    db = getFirestore(app);
+  // Initialize Analytics (only in browser and if supported)
+  if (typeof window !== 'undefined') {
+    import("firebase/analytics").then(async ({ getAnalytics, isSupported }) => {
+      const supported = await isSupported();
+      if (supported) {
+        analytics = getAnalytics(app);
+      }
+    });
   }
-  return db;
-};
+}
 
-export const getStorageInstance = async () => {
-  if (!storage && app) {
-    const { getStorage } = await import("firebase/storage");
-    storage = getStorage(app);
-  }
-  return storage;
-};
-
-export const getAnalyticsInstance = async () => {
-  if (!analytics && app && typeof window !== 'undefined') {
-    const { getAnalytics, isSupported } = await import("firebase/analytics");
-    const supported = await isSupported();
-    if (supported) {
-      analytics = getAnalytics(app);
-    }
-  }
-  return analytics;
-};
-
-// Legacy exports for backward compatibility (will be lazy-loaded)
-export { app };
-export const auth = new Proxy({}, {
-  get() {
-    console.warn('Direct auth access is deprecated. Use getAuthInstance() instead.');
-    return getAuthInstance();
-  }
-});
-
-export const db = new Proxy({}, {
-  get() {
-    console.warn('Direct db access is deprecated. Use getFirestoreInstance() instead.');
-    return getFirestoreInstance();
-  }
-});
-
-export const storage = new Proxy({}, {
-  get() {
-    console.warn('Direct storage access is deprecated. Use getStorageInstance() instead.');
-    return getStorageInstance();
-  }
-});
-
+export { app, auth, db, storage, analytics };
 export default app;

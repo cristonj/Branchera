@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function TopNav() {
@@ -54,9 +55,11 @@ export default function TopNav() {
             href="/dashboard" 
             className="flex items-center text-xl font-bold text-gray-900 hover:text-gray-600 transition-colors"
           >
-            <img 
+            <Image 
               src="/logo.svg" 
               alt="Branches Logo" 
+              width={32}
+              height={32}
               className="w-8 h-8 mr-2"
             />
             Branches

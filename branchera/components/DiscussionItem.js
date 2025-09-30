@@ -699,9 +699,11 @@ export default function DiscussionItem({
                 {discussion.replies.map((reply) => (
                   <div key={reply.id} className="bg-gray-50 rounded-lg p-3">
                     <div className="flex items-start gap-3">
-                      <img
+                      <Image
                         src={reply.authorPhoto || '/default-avatar.png'}
                         alt={reply.authorName}
+                        width={24}
+                        height={24}
                         className="w-6 h-6 rounded-full flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">
