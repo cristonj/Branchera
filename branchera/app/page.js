@@ -64,6 +64,7 @@ export default function Home() {
                 height={96}
                 className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mr-3 sm:mr-4"
                 priority
+                unoptimized
               />
               <h1 className="text-5xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-black">
                 Branches
