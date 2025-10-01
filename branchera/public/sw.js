@@ -1,12 +1,12 @@
-const CACHE_NAME = 'branches-v2';
-const STATIC_CACHE = 'branches-static-v2';
-const DYNAMIC_CACHE = 'branches-dynamic-v2';
+const CACHE_NAME = 'branches-v3';
+const STATIC_CACHE = 'branches-static-v3';
+const DYNAMIC_CACHE = 'branches-dynamic-v3';
 
 // Critical resources to cache immediately
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
-  '/logo.svg',
+  '/logo.svg?v=3',
   '/icon-192.png',
   '/icon-512.png',
   '/apple-touch-icon.png',

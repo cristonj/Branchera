@@ -28,7 +28,7 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-2">
             <Image
-              src="/logo.svg"
+              src="/logo.svg?v=3"
               alt="Branches Logo"
               width={96}
               height={96}

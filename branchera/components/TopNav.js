@@ -56,7 +56,7 @@ export default function TopNav() {
             className="flex items-center text-xl font-bold text-gray-900 hover:text-gray-600 transition-colors"
           >
             <Image 
-              src="/logo.svg" 
+              src="/logo.svg?v=3" 
               alt="Branches Logo" 
               width={32}
               height={32}

@@ -44,7 +44,7 @@ export default function Home() {
               "name": "Branches",
               "logo": {
                 "@type": "ImageObject",
-                "url": "https://branches.live/logo.svg"
+                "url": "https://branches.live/logo.svg?v=3"
               }
             }
           })
@@ -58,7 +58,7 @@ export default function Home() {
             
             <div className="flex items-center justify-center mb-6 md:mb-8">
               <Image
-                src="/logo.svg"
+                src="/logo.svg?v=3"
                 alt="Branches Logo"
                 width={96}
                 height={96}
