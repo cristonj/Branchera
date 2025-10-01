@@ -1,0 +1,31 @@
+# Default headers for all pages
+/*
+  X-Robots-Tag: index, follow
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: origin-when-cross-origin
+
+# Ensure homepage is indexable
+/
+  X-Robots-Tag: index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1
+
+# Discussion pages should be indexable
+/discussion/*
+  X-Robots-Tag: index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1
+
+# Feed page should be indexable
+/feed
+  X-Robots-Tag: index, follow
+
+# Private pages should not be indexed
+/dashboard
+  X-Robots-Tag: noindex, nofollow
+
+/settings
+  X-Robots-Tag: noindex, nofollow
+
+/points
+  X-Robots-Tag: noindex, nofollow
+
+/admin/*
+  X-Robots-Tag: noindex, nofollow
