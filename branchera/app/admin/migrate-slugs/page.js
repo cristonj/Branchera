@@ -26,7 +26,7 @@ export default function MigrateSlugsPage() {
   };
 
   const handleMigrate = async () => {
-    if (!window.confirm('This will add slugs to all discussions that don\'t have one. Continue?')) {
+    if (!window.confirm('This will add slugs to all discussions that don&apos;t have one. Continue?')) {
       return;
     }
 
@@ -101,7 +101,7 @@ export default function MigrateSlugsPage() {
               )}
             </div>
           ) : (
-            <p className="text-gray-600">Click "Check Status" to see migration status.</p>
+            <p className="text-gray-600">Click &quot;Check Status&quot; to see migration status.</p>
           )}
           
           <button
@@ -119,8 +119,8 @@ export default function MigrateSlugsPage() {
           
           <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800">
-              <strong>Warning:</strong> This will update all discussions that don't have a slug.
-              The operation is safe and won't overwrite existing slugs.
+              <strong>Warning:</strong> This will update all discussions that don&apos;t have a slug.
+              The operation is safe and won&apos;t overwrite existing slugs.
             </p>
           </div>
           

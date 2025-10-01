@@ -143,7 +143,7 @@ export default function DashboardPage() {
     };
 
     loadDashboardData();
-  }, [user?.uid]); // Only run when user changes
+  }, [user?.uid, getDiscussions, router]); // Only run when user changes
 
 
   const formatDate = (dateString) => {

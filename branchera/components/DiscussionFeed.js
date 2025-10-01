@@ -95,6 +95,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         setLoadingMore(false);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Remove dependencies to prevent refresh loops
 
   // Separate function for loading more discussions (for infinite scroll)
@@ -134,6 +135,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     } finally {
       setLoadingMore(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Update the ref whenever the function changes
@@ -146,6 +148,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
 
   useEffect(() => {
     loadDiscussions();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 
   // Set up intersection observer for infinite scrolling

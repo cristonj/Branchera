@@ -43,7 +43,7 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
           console.error('Failed to increment view count:', error);
         });
     }
-  }, [user, discussion?.id]);
+  }, [user, discussion?.id, incrementDiscussionView]);
 
   const handleLike = async () => {
     if (!user) {
