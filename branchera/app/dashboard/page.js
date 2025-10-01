@@ -143,7 +143,8 @@ export default function DashboardPage() {
     };
 
     loadDashboardData();
-  }, [user?.uid, getDiscussions, router]); // Only run when user changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid]); // Only run when user changes
 
 
   const formatDate = (dateString) => {

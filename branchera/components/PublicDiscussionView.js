@@ -18,6 +18,7 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
   const [discussion, setDiscussion] = useState(initialDiscussion);
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [expandedReplies, setExpandedReplies] = useState({});
+  const [viewCountUpdated, setViewCountUpdated] = useState(false);
   const { user } = useAuth();
   const { updateDocument, incrementDiscussionView } = useDatabase();
   
@@ -28,7 +29,8 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
 
   // Update view count when component mounts (only if user is logged in)
   useEffect(() => {
-    if (user && discussion?.id) {
+    if (user && discussion?.id && !viewCountUpdated) {
+      setViewCountUpdated(true);
       incrementDiscussionView(discussion.id, user.uid)
         .then(result => {
           if (result) {
@@ -43,7 +45,8 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
           console.error('Failed to increment view count:', error);
         });
     }
-  }, [user, discussion?.id, incrementDiscussionView]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, discussion?.id]);
 
   const handleLike = async () => {
     if (!user) {
