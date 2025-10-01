@@ -65,14 +65,69 @@ export const getAnalyticsInstance = async () => {
   return analyticsInstance;
 };
 
-// Initialize services immediately for backward compatibility
+// Initialize services lazily to reduce initial bundle size
 let auth = null;
 let db = null;
 let storage = null;
 let analytics = null;
 
-if (app) {
-  // Use dynamic imports but initialize immediately
+// Defer Firebase initialization until after page load
+if (app && typeof window !== 'undefined') {
+  // Use requestIdleCallback for non-critical Firebase initialization
+  const initFirebase = () => {
+    // Initialize critical services (auth, firestore) after a short delay
+    setTimeout(() => {
+      Promise.all([
+        import("firebase/auth").then(({ getAuth }) => {
+          auth = getAuth(app);
+          return auth;
+        }),
+        import("firebase/firestore").then(({ getFirestore }) => {
+          db = getFirestore(app);
+          return db;
+        }),
+      ]);
+    }, 100);
+
+    // Initialize non-critical services with lower priority
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(() => {
+        import("firebase/storage").then(({ getStorage }) => {
+          storage = getStorage(app);
+        });
+        
+        // Initialize Analytics last (least critical)
+        import("firebase/analytics").then(async ({ getAnalytics, isSupported }) => {
+          const supported = await isSupported();
+          if (supported) {
+            analytics = getAnalytics(app);
+          }
+        });
+      }, { timeout: 2000 });
+    } else {
+      setTimeout(() => {
+        import("firebase/storage").then(({ getStorage }) => {
+          storage = getStorage(app);
+        });
+        
+        import("firebase/analytics").then(async ({ getAnalytics, isSupported }) => {
+          const supported = await isSupported();
+          if (supported) {
+            analytics = getAnalytics(app);
+          }
+        });
+      }, 1000);
+    }
+  };
+
+  // Initialize after DOM content is loaded
+  if (document.readyState === 'complete') {
+    initFirebase();
+  } else {
+    window.addEventListener('load', initFirebase);
+  }
+} else if (app) {
+  // Server-side: initialize immediately
   Promise.all([
     import("firebase/auth").then(({ getAuth }) => {
       auth = getAuth(app);
@@ -87,16 +142,6 @@ if (app) {
       return storage;
     }),
   ]);
-
-  // Initialize Analytics (only in browser and if supported)
-  if (typeof window !== 'undefined') {
-    import("firebase/analytics").then(async ({ getAnalytics, isSupported }) => {
-      const supported = await isSupported();
-      if (supported) {
-        analytics = getAnalytics(app);
-      }
-    });
-  }
 }
 
 export { app, auth, db, storage, analytics };

@@ -172,13 +172,15 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
-      <DisplayNameModal 
-        isOpen={showDisplayNameModal}
-        onSubmit={updateDisplayName}
-        onClose={closeDisplayNameModal}
-        currentName={userProfile?.displayName || ''}
-      />
+      {children}
+      {!loading && (
+        <DisplayNameModal 
+          isOpen={showDisplayNameModal}
+          onSubmit={updateDisplayName}
+          onClose={closeDisplayNameModal}
+          currentName={userProfile?.displayName || ''}
+        />
+      )}
     </AuthContext.Provider>
   );
 }

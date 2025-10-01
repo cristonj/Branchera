@@ -261,6 +261,17 @@ img, video {
   height: auto;
 }
 
+/* Optimize image decoding */
+img {
+  decoding: async;
+}
+
+/* Content visibility for off-screen content */
+.off-screen {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
+}
+
 /* Optimize animations */
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -7,6 +7,7 @@ const nextConfig = {
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: ['firebase', 'firebase/auth', 'firebase/firestore'],
+    scrollRestoration: true,
   },
 
   // Turbopack configuration
