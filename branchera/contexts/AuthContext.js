@@ -21,6 +21,7 @@ export function AuthProvider({ children }) {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDisplayNameModal, setShowDisplayNameModal] = useState(false);
+  const [pendingRedirect, setPendingRedirect] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -45,12 +46,22 @@ export function AuthProvider({ children }) {
           setUserProfile(profile);
           
           // Check if user needs to set display name
-          
           if (!profile.hasSetDisplayName || !profile.displayName) {
+            console.log('User needs to set display name, showing modal');
             setShowDisplayNameModal(true);
+            // Don't redirect to dashboard if user needs to set display name
+            setPendingRedirect(true);
           } else {
+            console.log('User profile complete, checking for pending redirect');
+            // User has complete profile, safe to redirect if pending
+            if (pendingRedirect) {
+              console.log('Redirecting to dashboard after profile completion');
+              setPendingRedirect(false);
+              router.push('/dashboard');
+            }
           }
         } catch (error) {
+          console.error('Error initializing user profile:', error);
           setUser({
             uid: user.uid,
             email: user.email,
@@ -61,17 +72,19 @@ export function AuthProvider({ children }) {
           
           // If profile creation failed, still show the modal for new users
           setShowDisplayNameModal(true);
+          setPendingRedirect(true);
         }
       } else {
         setUser(null);
         setUserProfile(null);
         setShowDisplayNameModal(false);
+        setPendingRedirect(false);
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [pendingRedirect, router]);
 
   const signInWithGoogle = async () => {
     if (!auth) {
@@ -80,7 +93,9 @@ export function AuthProvider({ children }) {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      router.push('/dashboard');
+      // Set pending redirect flag - actual redirect will happen after profile initialization
+      console.log('Google sign-in successful, setting pending redirect');
+      setPendingRedirect(true);
       return result.user;
     } catch (error) {
       throw error;
@@ -110,6 +125,13 @@ export function AuthProvider({ children }) {
       
       setUserProfile(updatedProfile);
       setShowDisplayNameModal(false);
+      
+      // After setting display name, redirect to dashboard if there was a pending redirect
+      if (pendingRedirect) {
+        console.log('Display name set, redirecting to dashboard');
+        setPendingRedirect(false);
+        router.push('/dashboard');
+      }
       
       return updatedProfile;
     } catch (error) {
@@ -144,7 +166,8 @@ export function AuthProvider({ children }) {
     openDisplayNameModal,
     closeDisplayNameModal,
     getDisplayName,
-    showDisplayNameModal
+    showDisplayNameModal,
+    pendingRedirect
   };
 
   return (

@@ -7,14 +7,15 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, userProfile, showDisplayNameModal } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
+    // Only redirect if user is fully authenticated AND has completed profile setup
+    if (user && userProfile && !showDisplayNameModal) {
       router.push('/dashboard');
     }
-  }, [user, router]);
+  }, [user, userProfile, showDisplayNameModal, router]);
 
   return (
     <div className="min-h-screen bg-white">

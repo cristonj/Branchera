@@ -6,14 +6,15 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 export default function LoginPage() {
-  const { user, signInWithGoogle } = useAuth();
+  const { user, signInWithGoogle, userProfile, showDisplayNameModal } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
+    // Only redirect if user is fully authenticated AND has completed profile setup
+    if (user && userProfile && !showDisplayNameModal) {
       router.push('/dashboard');
     }
-  }, [user, router]);
+  }, [user, userProfile, showDisplayNameModal, router]);
 
   const handleGoogleSignIn = async () => {
     try {
