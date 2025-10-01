@@ -10,7 +10,7 @@ export default function AppContent({ children }) {
   const publicPages = ['/', '/login', '/privacy', '/terms'];
 
   // Show FAB only if not on public pages
-  const showFAB = !publicPages.includes(pathname);
+  const showFAB = !publicPages.includes(pathname) && !pathname.includes('/discussion');
 
   return (
     <>

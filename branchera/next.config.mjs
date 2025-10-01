@@ -10,14 +10,27 @@ const nextConfig = {
     scrollRestoration: true,
   },
 
-  // Turbopack configuration
-  turbopack: {
-    rules: {
-      '*.svg': {
-        loaders: ['@svgr/webpack'],
-        as: '*.js',
-      },
-    },
+  // Webpack configuration
+  webpack(config, { isServer }) {
+    // SVG support
+    config.module.rules.push({
+      test: /\.svg$/,
+      use: ['@svgr/webpack'],
+    });
+
+    // Bundle analyzer (only in development when ANALYZE=true)
+    if (process.env.ANALYZE === 'true' && !isServer) {
+      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'static',
+          openAnalyzer: false,
+          reportFilename: '../bundle-analyzer-report.html',
+        })
+      );
+    }
+
+    return config;
   },
 
   // Image optimization
@@ -71,7 +84,7 @@ const nextConfig = {
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            value: 'geolocation=(self)',
           },
         ],
       },
@@ -122,23 +135,6 @@ const nextConfig = {
       },
     ];
   },
-
-  // Bundle analyzer (only in development)
-  ...(process.env.ANALYZE === 'true' && {
-    webpack: (config, { isServer }) => {
-      if (!isServer) {
-        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-        config.plugins.push(
-          new BundleAnalyzerPlugin({
-            analyzerMode: 'static',
-            openAnalyzer: false,
-            reportFilename: '../bundle-analyzer-report.html',
-          })
-        );
-      }
-      return config;
-    },
-  }),
 };
 
 export default nextConfig;

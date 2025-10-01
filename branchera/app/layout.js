@@ -162,8 +162,7 @@ export default function RootLayout({ children }) {
         <link rel="dns-prefetch" href="https://avatars.githubusercontent.com" />
         
         {/* Preload critical resources */}
-        <link rel="preload" href="/logo.svg?v=3" as="image" type="image/svg+xml" fetchpriority="high" />
-        <link rel="preload" href="/manifest.json" as="fetch" crossOrigin="anonymous" fetchpriority="low" />
+        <link rel="preload" href="/logo.svg?v=3" as="image" type="image/svg+xml" fetchPriority="high" />
 
         {/* Apple PWA Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -239,7 +238,7 @@ export default function RootLayout({ children }) {
                     const lastEntry = entries[entries.length - 1];
                     console.log('LCP:', lastEntry.startTime);
                   });
-                  lcpObserver.observe({ entryTypes: ['largest-contentful-paint'], buffered: true });
+                  lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
 
                   // Monitor First Input Delay
                   const fidObserver = new PerformanceObserver((list) => {
@@ -247,7 +246,7 @@ export default function RootLayout({ children }) {
                       console.log('FID:', entry.processingStart - entry.startTime);
                     }
                   });
-                  fidObserver.observe({ entryTypes: ['first-input'], buffered: true });
+                  fidObserver.observe({ type: 'first-input', buffered: true });
 
                   // Monitor Cumulative Layout Shift
                   let clsValue = 0;
@@ -258,7 +257,7 @@ export default function RootLayout({ children }) {
                       }
                     }
                   });
-                  clsObserver.observe({ entryTypes: ['layout-shift'], buffered: true });
+                  clsObserver.observe({ type: 'layout-shift', buffered: true });
                   
                   // Log CLS on page hide
                   addEventListener('visibilitychange', function() {

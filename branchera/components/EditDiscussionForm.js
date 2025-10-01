@@ -12,7 +12,7 @@ export default function EditDiscussionForm({ discussion, onEditComplete, onCance
   const { user } = useAuth();
   const { editDiscussion } = useDatabase();
   
-  const TITLE_CHAR_LIMIT = 100;
+  const TITLE_CHAR_LIMIT = 35;
 
   const handleSubmit = async (e) => {
     e.preventDefault();

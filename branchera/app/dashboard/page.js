@@ -143,6 +143,7 @@ export default function DashboardPage() {
     };
 
     loadDashboardData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]); // Only run when user changes
 
 

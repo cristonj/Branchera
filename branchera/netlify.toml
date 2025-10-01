@@ -11,11 +11,48 @@
   to = "/index.html"
   status = 200
 
-# Security headers (optional, but good practice)
+# Security headers - SEO optimized
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    Referrer-Policy = "origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(self)"
+
+# Ensure public pages are indexable
+[[headers]]
+  for = "/"
+  [headers.values]
+    X-Robots-Tag = "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+
+[[headers]]
+  for = "/discussion/*"
+  [headers.values]
+    X-Robots-Tag = "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+
+[[headers]]
+  for = "/feed"
+  [headers.values]
+    X-Robots-Tag = "index, follow"
+
+# Private pages should not be indexed
+[[headers]]
+  for = "/dashboard"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/settings"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/points"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
