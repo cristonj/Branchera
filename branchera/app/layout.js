@@ -11,6 +11,8 @@ const inter = Inter({
   display: 'swap',
   preload: true,
   variable: '--font-inter',
+  adjustFontFallback: true,
+  fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
 });
 
 export const metadata = {
@@ -134,16 +136,34 @@ export default function RootLayout({ children }) {
     <html lang="en" className={inter.variable}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-
-        {/* Preload critical resources */}
-        <link rel="preload" href="/logo.svg?v=3" as="image" type="image/svg+xml" />
-        <link rel="preload" href="/manifest.json" as="fetch" crossOrigin="anonymous" />
         
-        {/* DNS prefetch for external domains */}
-        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="//firebasestorage.googleapis.com" />
-        <link rel="dns-prefetch" href="//lh3.googleusercontent.com" />
-        <link rel="dns-prefetch" href="//avatars.githubusercontent.com" />
+        {/* Inline critical CSS for faster FCP */}
+        <style dangerouslySetInnerHTML={{__html: `
+          *{box-sizing:border-box}
+          html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+          body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;background:#fff;color:#000;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;margin:0;padding:0;line-height:1.5}
+          .min-h-screen{min-height:100vh}
+          img{max-width:100%;height:auto}
+        `}} />
+
+        {/* Preconnect for critical third-party domains */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        
+        {/* DNS prefetch for Firebase domains (defer until needed) */}
+        <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
+        <link rel="dns-prefetch" href="https://www.googleapis.com" />
+        <link rel="dns-prefetch" href="https://securetoken.googleapis.com" />
+        <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+        <link rel="dns-prefetch" href="https://firebaseinstallations.googleapis.com" />
+        
+        {/* DNS prefetch for user content domains */}
+        <link rel="dns-prefetch" href="https://lh3.googleusercontent.com" />
+        <link rel="dns-prefetch" href="https://avatars.githubusercontent.com" />
+        
+        {/* Preload critical resources */}
+        <link rel="preload" href="/logo.svg?v=3" as="image" type="image/svg+xml" fetchpriority="high" />
+        <link rel="preload" href="/manifest.json" as="fetch" crossOrigin="anonymous" fetchpriority="low" />
 
         {/* Apple PWA Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -182,52 +202,74 @@ export default function RootLayout({ children }) {
 
         <script dangerouslySetInnerHTML={{
           __html: `
-            // Service Worker Registration
+            // Service Worker Registration (deferred)
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js')
-                  .then(function(registration) {
-                    console.log('SW registered: ', registration);
-                  })
-                  .catch(function(registrationError) {
-                    console.log('SW registration failed: ', registrationError);
+                if ('requestIdleCallback' in window) {
+                  requestIdleCallback(function() {
+                    navigator.serviceWorker.register('/sw.js')
+                      .then(function(registration) {
+                        console.log('SW registered: ', registration);
+                      })
+                      .catch(function(registrationError) {
+                        console.log('SW registration failed: ', registrationError);
+                      });
                   });
+                } else {
+                  setTimeout(function() {
+                    navigator.serviceWorker.register('/sw.js')
+                      .then(function(registration) {
+                        console.log('SW registered: ', registration);
+                      })
+                      .catch(function(registrationError) {
+                        console.log('SW registration failed: ', registrationError);
+                      });
+                  }, 1000);
+                }
               });
             }
 
-            // Performance monitoring
-            if ('PerformanceObserver' in window) {
-              // Monitor Largest Contentful Paint
-              const lcpObserver = new PerformanceObserver((list) => {
-                for (const entry of list.getEntries()) {
-                  if (entry.entryType === 'largest-contentful-paint') {
-                    console.log('LCP:', entry.startTime);
-                  }
-                }
-              });
-              lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
+            // Performance monitoring (lightweight, deferred)
+            if ('PerformanceObserver' in window && 'requestIdleCallback' in window) {
+              requestIdleCallback(function() {
+                try {
+                  // Monitor Largest Contentful Paint
+                  const lcpObserver = new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    const lastEntry = entries[entries.length - 1];
+                    console.log('LCP:', lastEntry.startTime);
+                  });
+                  lcpObserver.observe({ entryTypes: ['largest-contentful-paint'], buffered: true });
 
-              // Monitor First Input Delay
-              const fidObserver = new PerformanceObserver((list) => {
-                for (const entry of list.getEntries()) {
-                  if (entry.entryType === 'first-input') {
-                    console.log('FID:', entry.processingStart - entry.startTime);
-                  }
-                }
-              });
-              fidObserver.observe({ entryTypes: ['first-input'] });
+                  // Monitor First Input Delay
+                  const fidObserver = new PerformanceObserver((list) => {
+                    for (const entry of list.getEntries()) {
+                      console.log('FID:', entry.processingStart - entry.startTime);
+                    }
+                  });
+                  fidObserver.observe({ entryTypes: ['first-input'], buffered: true });
 
-              // Monitor Cumulative Layout Shift
-              const clsObserver = new PerformanceObserver((list) => {
-                let clsValue = 0;
-                for (const entry of list.getEntries()) {
-                  if (!entry.hadRecentInput) {
-                    clsValue += entry.value;
-                  }
+                  // Monitor Cumulative Layout Shift
+                  let clsValue = 0;
+                  const clsObserver = new PerformanceObserver((list) => {
+                    for (const entry of list.getEntries()) {
+                      if (!entry.hadRecentInput) {
+                        clsValue += entry.value;
+                      }
+                    }
+                  });
+                  clsObserver.observe({ entryTypes: ['layout-shift'], buffered: true });
+                  
+                  // Log CLS on page hide
+                  addEventListener('visibilitychange', function() {
+                    if (document.visibilityState === 'hidden') {
+                      console.log('CLS:', clsValue);
+                    }
+                  }, { once: true });
+                } catch (e) {
+                  console.error('Performance monitoring error:', e);
                 }
-                console.log('CLS:', clsValue);
-              });
-              clsObserver.observe({ entryTypes: ['layout-shift'] });
+              }, { timeout: 2000 });
             }
           `
         }} />
