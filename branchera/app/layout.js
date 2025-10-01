@@ -162,7 +162,7 @@ export default function RootLayout({ children }) {
         <link rel="dns-prefetch" href="https://avatars.githubusercontent.com" />
         
         {/* Preload critical resources */}
-        <link rel="preload" href="/logo.svg?v=3" as="image" type="image/svg+xml" fetchpriority="high" />
+        <link rel="preload" href="/logo.svg?v=3" as="image" type="image/svg+xml" fetchPriority="high" />
 
         {/* Apple PWA Meta Tags */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
