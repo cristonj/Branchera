@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function TopNav() {
@@ -54,10 +55,13 @@ export default function TopNav() {
             href="/dashboard" 
             className="flex items-center text-xl font-bold text-gray-900 hover:text-gray-600 transition-colors"
           >
-            <img 
-              src="/logo.svg" 
+            <Image 
+              src="/logo.svg?v=3" 
               alt="Branches Logo" 
+              width={32}
+              height={32}
               className="w-8 h-8 mr-2"
+              unoptimized
             />
             Branches
           </Link>
@@ -103,13 +107,6 @@ export default function TopNav() {
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                   >
                     Feed
-                  </Link>
-                  <Link
-                    href="/points"
-                    onClick={closeDropdown}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                  >
-                    Leaderboard
                   </Link>
                   <Link
                     href="/settings"

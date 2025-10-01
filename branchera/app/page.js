@@ -4,19 +4,53 @@ import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Home() {
-  const { user } = useAuth();
+  const { user, userProfile, showDisplayNameModal } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
+    // Only redirect if user is fully authenticated AND has completed profile setup
+    if (user && userProfile && !showDisplayNameModal) {
       router.push('/dashboard');
     }
-  }, [user, router]);
+  }, [user, userProfile, showDisplayNameModal, router]);
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "Branches",
+            "description": "Social media where you're a human, not a product. Join meaningful conversations, fact-check content, and connect authentically without ads or algorithms.",
+            "url": "https://branches.live",
+            "applicationCategory": "SocialNetworkingApplication",
+            "operatingSystem": "Web",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "author": {
+              "@type": "Organization",
+              "name": "Branches Team"
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "Branches",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://branches.live/logo.svg?v=3"
+              }
+            }
+          })
+        }}
+      />
       <div className="relative flex flex-col items-center justify-center min-h-screen p-4">
         <main className="text-center max-w-5xl w-full">
           
@@ -24,10 +58,15 @@ export default function Home() {
           <div className="mb-8 sm:mb-12 md:mb-16 mt-4 sm:mt-6 md:mt-10">
             
             <div className="flex items-center justify-center mb-6 md:mb-8">
-              <img
-                src="/logo.svg"
+              <Image
+                src="/logo.svg?v=3"
                 alt="Branches Logo"
+                width={96}
+                height={96}
                 className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mr-3 sm:mr-4"
+                priority
+                unoptimized
+                fetchPriority="high"
               />
               <h1 className="text-5xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-black">
                 Branches

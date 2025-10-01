@@ -52,35 +52,42 @@ export function DatabaseProvider({ children }) {
     isLoading
   };
 
-  // Show loading state while initializing
-  if (authLoading || (user && isLoading)) {
+  // Show loading state while initializing (but don't block content render)
+  // Only show spinner if auth is loading or database initialization takes too long
+  const showLoadingSpinner = authLoading || (user && isLoading);
+  
+  if (showLoadingSpinner) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="flex items-center justify-center mb-6">
-            <div className="relative">
-              <svg 
-                width="48" 
-                height="48" 
-                viewBox="0 0 512 512" 
-                className="animate-pulse text-black"
-                fill="currentColor"
-              >
-                <polygon points="365.284,332.418 365.284,305.202 272.767,305.202 387.051,212.689 376.17,174.592 169.368,316.092 180.253,141.939 147.601,152.828 125.83,348.761 0.664,452.14 0.664,512 49.643,512 240.114,343.3"/>
-                <path d="M448.163,41.908c-67.94,15.609-85.271,84.366-46.608,131.48C435.48,175.564,496.759,99.05,448.163,41.908z"/>
-                <path d="M388.215,327.476c13.457,19.787,82.469,20.759,93.207-30.955C443.376,265.519,397.673,285.616,388.215,327.476z"/>
-                <path d="M194.275,410.152c-2.594,28.061,59.378,80.659,107.876,41.708C290.815,395.196,234.234,379.221,194.275,410.152z"/>
-                <path d="M395.844,214.419c5.895,27.582,80.787,59.318,115.492,7.646C483.585,171.331,424.774,172.95,395.844,214.419z"/>
-                <path d="M273.866,79.44c-26.323-12.93-100.453,27.83-80.575,89.436C252.613,178.872,289.141,129.774,273.866,79.44z"/>
-                <path d="M155.457,137.594C184.645,117.665,185.881,15.721,109.463,0C63.772,56.297,93.599,123.747,155.457,137.594z"/>
-                <path d="M122.828,279.804c16.633-25.486-16.028-106.951-81.979-94.235C23.096,245.414,69.069,289.203,122.828,279.804z"/>
-                <path d="M368.488,362.114c-21.842,27.79,7.657,125.373,85.267,117.377C480.386,412.058,431.645,356.709,368.488,362.114z"/>
-              </svg>
+      <>
+        {children}
+        <div className="fixed inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50" style={{ backdropFilter: 'blur(4px)' }}>
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-6">
+              <div className="relative">
+                <svg 
+                  width="48" 
+                  height="48" 
+                  viewBox="0 0 512 512" 
+                  className="animate-pulse text-black"
+                  fill="currentColor"
+                  aria-label="Loading"
+                >
+                  <polygon points="365.284,332.418 365.284,305.202 272.767,305.202 387.051,212.689 376.17,174.592 169.368,316.092 180.253,141.939 147.601,152.828 125.83,348.761 0.664,452.14 0.664,512 49.643,512 240.114,343.3"/>
+                  <path d="M448.163,41.908c-67.94,15.609-85.271,84.366-46.608,131.48C435.48,175.564,496.759,99.05,448.163,41.908z"/>
+                  <path d="M388.215,327.476c13.457,19.787,82.469,20.759,93.207-30.955C443.376,265.519,397.673,285.616,388.215,327.476z"/>
+                  <path d="M194.275,410.152c-2.594,28.061,59.378,80.659,107.876,41.708C290.815,395.196,234.234,379.221,194.275,410.152z"/>
+                  <path d="M395.844,214.419c5.895,27.582,80.787,59.318,115.492,7.646C483.585,171.331,424.774,172.95,395.844,214.419z"/>
+                  <path d="M273.866,79.44c-26.323-12.93-100.453,27.83-80.575,89.436C252.613,178.872,289.141,129.774,273.866,79.44z"/>
+                  <path d="M155.457,137.594C184.645,117.665,185.881,15.721,109.463,0C63.772,56.297,93.599,123.747,155.457,137.594z"/>
+                  <path d="M122.828,279.804c16.633-25.486-16.028-106.951-81.979-94.235C23.096,245.414,69.069,289.203,122.828,279.804z"/>
+                  <path d="M368.488,362.114c-21.842,27.79,7.657,125.373,85.267,117.377C480.386,412.058,431.645,356.709,368.488,362.114z"/>
+                </svg>
+              </div>
             </div>
+            <h1 className="text-2xl font-bold text-gray-900 animate-pulse">Branches</h1>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 animate-pulse">Branches</h1>
         </div>
-      </div>
+      </>
     );
   }
 

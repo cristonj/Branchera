@@ -5,7 +5,6 @@ import { useDatabase } from '@/hooks/useDatabase';
 import { useAuth } from '@/contexts/AuthContext';
 import DiscussionItem from './DiscussionItem';
 import SearchFilterSort from './SearchFilterSort';
-import { AIService } from '@/lib/aiService';
 import { usePolling } from '@/hooks/usePolling';
 import { REALTIME_CONFIG } from '@/lib/realtimeConfig';
 import { useToast } from '@/contexts/ToastContext';
@@ -17,81 +16,24 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [lastDoc, setLastDoc] = useState(null);
-  const [expandedReplies, setExpandedReplies] = useState(new Set()); // Track which discussions have expanded replies
-  const [expandedDiscussions, setExpandedDiscussions] = useState(new Set()); // Track expanded discussion cards
-  const [expandedAIPoints, setExpandedAIPoints] = useState(new Set()); // Track expanded AI points sections
+  const [expandedReplies, setExpandedReplies] = useState({}); // Track which discussions have expanded replies as object
+  const [expandedDiscussions, setExpandedDiscussions] = useState({}); // Track expanded discussion cards as object
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentSearchType, setCurrentSearchType] = useState('all');
-  const [currentFilters, setCurrentFilters] = useState({
-    hasReplies: false,
-    hasFactCheck: false,
-    showNewsOnly: false,
-    selectedTags: [],
-    dateRange: 'all',
-    author: '',
-    minLikes: 0,
-    minViews: 0
-  });
   const [currentSort, setCurrentSort] = useState('newest');
-  const [isUserSearching, setIsUserSearching] = useState(false);
-  const [collectedPoints, setCollectedPoints] = useState(new Map()); // Track which points user has collected
-  const [pointCounts, setPointCounts] = useState(new Map()); // Track how many points earned for each AI point
-  const [isCreatingNewsPost, setIsCreatingNewsPost] = useState(false); // Track news post creation progress
   const searchTimeoutRef = useRef(null);
   const observerRef = useRef(null);
   const loadingTriggerRef = useRef(null);
   const loadMoreRef = useRef(null);
   
-  const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, updateAIPoints, updateReplyAIPoints, incrementDiscussionView, incrementReplyView, updateFactCheckResults, updateReplyFactCheckResults, hasUserCollectedPoint, createUserPoint, getUserPoints, getPointCounts, createDiscussion, updateDocument } = useDatabase();
+  const { getDiscussions, deleteDiscussion, deleteReply, editDiscussion, incrementDiscussionView, createDiscussion, updateDocument } = useDatabase();
   const { user } = useAuth();
 
-  // Placeholder functions for AI generation (these might be implemented elsewhere)
-  const generateAIPointsForDiscussion = useCallback((discussion) => {
-    // This function should generate AI points for a discussion
-    // Implementation depends on your AI service setup
-  }, []);
-
-  const generateFactCheckForDiscussion = useCallback((discussion) => {
-    // This function should generate fact-check results for a discussion
-    // Implementation depends on your fact-checking service setup
-  }, []);
   
   // Safely get toast functions with fallbacks
   const toastContext = useToast();
   const showSuccessToast = toastContext?.showSuccessToast || (() => {});
   const showErrorToast = toastContext?.showErrorToast || (() => {});
 
-  const loadCollectedPoints = useCallback(async () => {
-    if (!user) return;
-    
-    try {
-      // Load all user's points to show visual indicators
-      const userPoints = await getUserPoints(user.uid);
-      const collected = new Map();
-      
-      // For each point, create a key to track collection status
-      userPoints.forEach(point => {
-        if (point.originalPointId) {
-          const pointKey = `${point.discussionId}-${point.originalPointId}`;
-          collected.set(pointKey, true);
-        }
-      });
-      
-      setCollectedPoints(collected);
-    } catch (error) {
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Remove dependencies to prevent constant refreshes
-
-  const loadPointCounts = useCallback(async () => {
-    try {
-      // Load point counts for all AI points
-      const counts = await getPointCounts();
-      setPointCounts(counts);
-    } catch (error) {
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Remove dependencies to prevent constant refreshes
 
   const loadDiscussions = useCallback(async (isLoadingMore = false) => {
     try {
@@ -105,7 +47,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       
       // Load discussions directly without setup
       const discussionsData = await getDiscussions({
-        limit: 10, // Reduced limit for better pagination experience
+        limit: 15, // Optimized limit for better performance
         orderField: 'createdAt',
         orderDirection: 'desc',
         lastDoc: isLoadingMore ? lastDoc : null
@@ -121,20 +63,11 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       // Update pagination state
       if (discussionsData.length > 0) {
         setLastDoc(discussionsData[discussionsData.length - 1]);
-        setHasMore(discussionsData.length === 10); // If we got fewer than requested, we've reached the end
+        setHasMore(discussionsData.length === 15); // If we got fewer than requested, we've reached the end
       } else {
         setHasMore(false);
       }
       
-      // Generate AI points and fact-check results for older discussions that don't have them
-      discussionsData.forEach(discussion => {
-        if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0) && !discussion.processingAIPoints) {
-          generateAIPointsForDiscussion(discussion);
-        }
-        if (!discussion.factCheckGenerated && !discussion.factCheckResults && !discussion.processingFactCheck) {
-          generateFactCheckForDiscussion(discussion);
-        }
-      });
       
       // Check if we should create an auto-news post (non-blocking, after page loads)
       
@@ -166,13 +99,13 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
 
   // Separate function for loading more discussions (for infinite scroll)
   const loadMoreDiscussions = useCallback(async () => {
-    if (loadingMore || !hasMore || isUserSearching) return;
+    if (loadingMore || !hasMore) return;
     
     try {
       setLoadingMore(true);
       
       const discussionsData = await getDiscussions({
-        limit: 10,
+        limit: 15,
         orderField: 'createdAt',
         orderDirection: 'desc',
         lastDoc: lastDoc
@@ -184,20 +117,11 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       // Update pagination state
       if (discussionsData.length > 0) {
         setLastDoc(discussionsData[discussionsData.length - 1]);
-        setHasMore(discussionsData.length === 10);
+        setHasMore(discussionsData.length === 15);
       } else {
         setHasMore(false);
       }
       
-      // Generate AI points and fact-check results for new discussions
-      discussionsData.forEach(discussion => {
-        if (!discussion.aiPointsGenerated && (!discussion.aiPoints || discussion.aiPoints.length === 0) && !discussion.processingAIPoints) {
-          generateAIPointsForDiscussion(discussion);
-        }
-        if (!discussion.factCheckGenerated && !discussion.factCheckResults && !discussion.processingFactCheck) {
-          generateFactCheckForDiscussion(discussion);
-        }
-      });
       
     } catch (error) {
       // Check if this is an index-related error that should be shown to the user
@@ -234,12 +158,17 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       (entries) => {
         const target = entries[0];
         if (target.isIntersecting && loadMoreRef.current) {
-          loadMoreRef.current();
+          // Use requestIdleCallback for better performance
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => loadMoreRef.current());
+          } else {
+            setTimeout(() => loadMoreRef.current(), 0);
+          }
         }
       },
       {
         root: null,
-        rootMargin: '100px', // Start loading 100px before the trigger element is visible
+        rootMargin: '200px', // Start loading earlier for better UX
         threshold: 0.1,
       }
     );
@@ -254,21 +183,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     };
   }, [hasMore, loadingMore]);
 
-  // Load collected points and point counts separately to avoid refresh loops
-  useEffect(() => {
-    if (user) {
-      loadCollectedPoints();
-    }
-    loadPointCounts(); // Load point counts for all users
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.uid]); // Only load when user ID changes
 
   // Silent refresh without showing loading skeleton to avoid flicker during polling
   const refreshDiscussions = useCallback(async () => {
-    // Don't refresh if user is actively searching
-    if (isUserSearching) {
-      return;
-    }
     
     try {
       const discussionsData = await getDiscussions({
@@ -316,13 +233,13 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       });
     } catch (error) {
     }
-  }, [isUserSearching, getDiscussions]);
+  }, [getDiscussions]);
 
-  // Poll for near-realtime updates, but pause when user is actively searching
+  // Poll for near-realtime updates
   usePolling(
     refreshDiscussions,
     REALTIME_CONFIG.pollingIntervalMs,
-    { enabled: !isUserSearching, immediate: false, pauseOnHidden: REALTIME_CONFIG.pauseOnHidden }
+    { enabled: true, immediate: false, pauseOnHidden: REALTIME_CONFIG.pauseOnHidden }
   );
 
   // Add new discussion to the top of the feed when created
@@ -341,18 +258,9 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
           return [newDiscussion, ...prev];
         }
       });
-      // Refresh point counts to show new points earned
-      loadPointCounts();
     }
-  }, [newDiscussion, loadPointCounts]);
+  }, [newDiscussion]);
 
-  // Function to refresh point counts and collected points (called after earning points)
-  const refreshPointsData = useCallback(() => {
-    if (user) {
-      loadCollectedPoints();
-    }
-    loadPointCounts();
-  }, [user?.uid]); // Only depend on user.uid
 
   // Handle discussion updates from DiscussionItem components
   const handleDiscussionUpdate = useCallback((discussionId, updatedData) => {
@@ -386,21 +294,21 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       })
     );
     
-    // Expand replies to show the new reply
-    setExpandedReplies(prev => new Set([...prev, discussionId]));
+  // Expand replies to show the new reply
+  setExpandedReplies(prev => ({ ...prev, [discussionId]: true }));
   }, []);
 
 
   // Initialize filtered discussions when discussions change, but preserve search results
   useEffect(() => {
-    // Only reset to show all discussions if there's no active search or filters
-    if (!searchQuery.trim() && !isUserSearching) {
+    // Only reset to show all discussions if there's no active search
+    if (!searchQuery.trim()) {
       setFilteredDiscussions(discussions);
     }
     // If there is an active search, let the SearchFilterSort component handle the filtering
-  }, [discussions, searchQuery, isUserSearching]);
+  }, [discussions, searchQuery]);
 
-  // Handle search query changes and manage searching state
+  // Handle search query changes
   const handleSearchChange = useCallback((query) => {
     // Prevent duplicate calls with the same query
     if (query === searchQuery) {
@@ -408,22 +316,6 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
     }
 
     setSearchQuery(query);
-
-    // Clear any existing timeout
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-      searchTimeoutRef.current = null;
-    }
-
-    if (query.trim()) {
-      // User is searching - pause polling until search is cleared
-      setIsUserSearching(true);
-    } else {
-      // Search cleared - resume polling after a short delay to prevent rapid toggling
-      searchTimeoutRef.current = setTimeout(() => {
-        setIsUserSearching(false);
-      }, 500); // 500ms delay before resuming polling
-    }
   }, [searchQuery]);
 
   // Clean up timeout on unmount
@@ -476,12 +368,6 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-bold text-gray-900">Discussions</h2>
-          {isCreatingNewsPost && (
-            <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
-              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
-              <span>Creating AI news post...</span>
-            </div>
-          )}
         </div>
         {onStartDiscussion && (
           <button
@@ -500,14 +386,10 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
         key="search-filter-sort"
         discussions={discussions}
         onResults={setFilteredDiscussions}
-        onSearchChange={handleSearchChange}
-        onSearchTypeChange={setCurrentSearchType}
-        onFilterChange={setCurrentFilters}
+        onSearchChange={setSearchQuery}
         onSortChange={setCurrentSort}
         initialSearchQuery={searchQuery}
-        initialSearchType={currentSearchType}
         initialSortBy={currentSort}
-        initialFilters={currentFilters}
       />
 
       {/* Conditional content based on results */}
@@ -529,17 +411,12 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
               setExpandedDiscussions={setExpandedDiscussions}
               expandedReplies={expandedReplies}
               setExpandedReplies={setExpandedReplies}
-              expandedAIPoints={expandedAIPoints}
-              setExpandedAIPoints={setExpandedAIPoints}
-              collectedPoints={collectedPoints}
-              pointCounts={pointCounts}
-              refreshPointsData={refreshPointsData}
               showCompactView={false}
             />
           ))}
 
           {/* Infinite scroll loading trigger and indicator */}
-          {hasMore && !isUserSearching && (
+          {hasMore && (
             <div ref={loadingTriggerRef} className="py-8">
               {loadingMore ? (
                 <div className="flex items-center justify-center">
@@ -555,7 +432,7 @@ export default function DiscussionFeed({ newDiscussion, onStartDiscussion }) {
             </div>
           )}
 
-          {!hasMore && !isUserSearching && discussions.length > 0 && (
+          {!hasMore && discussions.length > 0 && (
             <div className="text-center py-8">
               <p className="text-gray-500">You&apos;ve reached the end of the discussions</p>
             </div>

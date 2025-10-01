@@ -3,16 +3,18 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function LoginPage() {
-  const { user, signInWithGoogle } = useAuth();
+  const { user, signInWithGoogle, userProfile, showDisplayNameModal } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (user) {
+    // Only redirect if user is fully authenticated AND has completed profile setup
+    if (user && userProfile && !showDisplayNameModal) {
       router.push('/dashboard');
     }
-  }, [user, router]);
+  }, [user, userProfile, showDisplayNameModal, router]);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -26,10 +28,14 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-2">
-            <img
-              src="/logo.svg"
+            <Image
+              src="/logo.svg?v=3"
               alt="Branches Logo"
+              width={96}
+              height={96}
               className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 mr-3 sm:mr-4"
+              priority
+              unoptimized
             />
             <h1 className="text-5xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-black">
               Branches
