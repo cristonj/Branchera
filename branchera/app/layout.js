@@ -17,7 +17,7 @@ const inter = Inter({
 
 export const metadata = {
   title: {
-    default: "Branches - Social media where you're a human, not a product",
+    default: "Branches",
     template: "%s | Branches"
   },
   description: "Social media where you're a human, not a product. Join meaningful conversations, fact-check content, and connect authentically without ads or algorithms.",
