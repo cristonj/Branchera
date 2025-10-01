@@ -14,7 +14,7 @@ export default function TextDiscussionForm({ onDiscussionCreated, isInDialog = f
   const { user, getDisplayName } = useAuth();
   const { createDiscussion } = useDatabase();
   
-  const TITLE_CHAR_LIMIT = 100;
+  const TITLE_CHAR_LIMIT = 35;
 
   // Predefined tag suggestions
   const suggestedTags = [
