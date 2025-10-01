@@ -2,6 +2,7 @@
 
 import { useState, useRef, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useDatabase } from '@/hooks/useDatabase';
 import { useAuth } from '@/contexts/AuthContext';
 import TextReplyForm from './TextReplyForm';
@@ -411,14 +412,26 @@ export default function DiscussionItem({
     <div className="rounded-lg border border-black/20">
       {/* Collapsed Header - shows when not expanded */}
       {!isExpanded && (
-        <button
-          onClick={() => toggleDiscussion(discussion.id)}
-          className="w-full px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left min-h-10 rounded-lg"
-          title="Expand discussion"
-        >
+        <div className="w-full px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between hover:bg-gray-50 transition-colors min-h-10 rounded-lg">
           <div className="flex-1 min-w-0 mr-4">
-            <div className="font-semibold text-gray-900 truncate mb-1">
-              <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
+            <div className="font-semibold text-gray-900 mb-1">
+              {discussion.slug ? (
+                <Link 
+                  href={`/discussion/${discussion.slug}`}
+                  className="hover:underline hover:text-blue-600 transition-colors"
+                  title="View full discussion"
+                >
+                  <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
+                </Link>
+              ) : (
+                <button
+                  onClick={() => toggleDiscussion(discussion.id)}
+                  className="text-left truncate w-full"
+                  title="Expand discussion"
+                >
+                  <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
+                </button>
+              )}
             </div>
             {/* Tags in compressed view */}
             {discussion.tags && discussion.tags.length > 0 && (
@@ -447,12 +460,24 @@ export default function DiscussionItem({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleDiscussion(discussion.id);
+              }}
+              className="flex items-center gap-3 text-left flex-shrink-0"
+              title="Expand discussion"
+            >
+              <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
             <div
               onClick={(e) => {
                 e.stopPropagation();
                 toggleReplies(discussion.id);
               }}
-                className="flex items-center gap-1 text-xs sm:text-sm text-gray-800 hover:text-black cursor-pointer"
+              className="flex items-center gap-1 text-xs sm:text-sm text-gray-800 hover:text-black cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -471,26 +496,29 @@ export default function DiscussionItem({
               </svg>
               {discussion.likes || 0}
             </div>
-
-            <div className="flex items-center gap-3 text-left flex-shrink-0">
-              <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </div>
           </div>
-        </button>
+        </div>
       )}
 
       {/* Expanded Header - shows when expanded */}
       {isExpanded && (
-        <button
-          onClick={() => toggleDiscussion(discussion.id)}
-          className="w-full px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between hover:bg-gray-50 transition-colors text-left rounded-lg"
-          title="Collapse discussion"
-        >
+        <div className="w-full px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between hover:bg-gray-50 transition-colors rounded-lg">
           <div className="flex-1 min-w-0 mr-4">
-            <div className="font-semibold text-gray-900 truncate mb-1">
+            <div className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
               <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
+              {discussion.slug && (
+                <Link 
+                  href={`/discussion/${discussion.slug}`}
+                  className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline ml-2"
+                  title="View full page"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                  <span className="hidden sm:inline">View</span>
+                </Link>
+              )}
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="text-xs text-gray-600">
@@ -501,10 +529,16 @@ export default function DiscussionItem({
               </div>
             </div>
           </div>
-          <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+          <button
+            onClick={() => toggleDiscussion(discussion.id)}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Collapse discussion"
+          >
+            <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
       )}
 
       {/* Expanded Content */}

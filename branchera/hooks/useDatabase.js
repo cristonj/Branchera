@@ -31,10 +31,17 @@ export function useDatabase() {
         throw new Error('Missing required fields: title, content, or authorId');
       }
 
+      // Import slug utility
+      const { generateUniqueSlug } = await import('@/lib/slugUtils');
+      
+      // Generate a temporary slug (will be updated with final one after getting doc ID)
+      const tempSlug = generateUniqueSlug(discussionData.title);
+
       // Ensure all required fields are present
       const completeData = {
         title: discussionData.title.trim(),
         content: discussionData.content.trim(),
+        slug: tempSlug, // Temporary slug, will be updated
         authorId: discussionData.authorId,
         authorName: discussionData.authorName || 'Anonymous',
         authorPhoto: discussionData.authorPhoto || null,
@@ -53,8 +60,14 @@ export function useDatabase() {
       };
 
       const discussionId = await addDocument('discussions', completeData);
+      
+      // Generate final unique slug with discussion ID
+      const finalSlug = generateUniqueSlug(discussionData.title, discussionId);
+      
+      // Update the discussion with the final slug
+      await updateDocument('discussions', discussionId, { slug: finalSlug });
 
-      return { id: discussionId, ...completeData };
+      return { id: discussionId, ...completeData, slug: finalSlug };
     } catch (error) {
       throw error;
     }
@@ -404,9 +417,34 @@ export function useDatabase() {
     }
   };
 
+  // Get a discussion by its slug
+  const getDiscussionBySlug = async (slug) => {
+    try {
+      if (!slug) {
+        throw new Error('Slug is required');
+      }
+      
+      // Query discussions by slug field
+      const discussions = await getDocuments('discussions', []);
+      
+      // Find discussion with matching slug
+      const discussion = discussions.find(d => d.slug === slug);
+      
+      if (!discussion) {
+        return null;
+      }
+      
+      return discussion;
+    } catch (error) {
+      console.error('Error getting discussion by slug:', error);
+      return null;
+    }
+  };
+
   return {
     createDiscussion,
     getDiscussions,
+    getDiscussionBySlug,
     deleteDiscussion,
     editDiscussion,
     addReply,
