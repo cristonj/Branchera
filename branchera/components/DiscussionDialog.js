@@ -69,7 +69,7 @@ export default function DiscussionDialog({ isOpen, onClose, onDiscussionCreated 
           <h2 className="text-xl font-bold text-gray-900">Start a Discussion</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="w-9 h-9 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors"
             aria-label="Close dialog"
           >
             <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
