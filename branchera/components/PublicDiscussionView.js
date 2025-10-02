@@ -19,11 +19,10 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
   const [discussion, setDiscussion] = useState(initialDiscussion);
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyingToReply, setReplyingToReply] = useState(null);
-  const [selectedPoint, setSelectedPoint] = useState(null);
   const [viewCountUpdated, setViewCountUpdated] = useState(false);
   const replyFormRef = useRef(null);
   const { user } = useAuth();
-  const { updateDocument, incrementDiscussionView, deleteReply, incrementReplyView } = useDatabase();
+  const { updateDocument, incrementDiscussionView, deleteReply } = useDatabase();
   
   // Safely get toast functions with fallbacks
   const toastContext = useToast();
@@ -129,7 +128,6 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
     
     setShowReplyForm(false);
     setReplyingToReply(null);
-    setSelectedPoint(null);
     showSuccessToast('Reply added successfully');
   };
 
@@ -168,37 +166,6 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
     }
   };
 
-  const handleReplyView = async (replyId, userId) => {
-    try {
-      await incrementReplyView(discussion.id, replyId, userId);
-    } catch (error) {
-      console.error('Failed to increment reply view:', error);
-    }
-  };
-
-  const handlePointClick = (reply, point) => {
-    if (!user) {
-      showErrorToast('Please log in to reply to points');
-      return;
-    }
-    
-    setSelectedPoint(point);
-    setReplyingToReply(reply);
-    setShowReplyForm(true);
-    
-    // Scroll to reply form
-    setTimeout(() => {
-      if (replyFormRef.current) {
-        const elementTop = replyFormRef.current.getBoundingClientRect().top + window.pageYOffset;
-        const offset = 80;
-        window.scrollTo({
-          top: elementTop - offset,
-          behavior: 'smooth'
-        });
-      }
-    }, 100);
-  };
-
   const handleReplyToReply = (reply) => {
     if (!user) {
       showErrorToast('Please log in to reply');
@@ -206,7 +173,6 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
     }
     
     setReplyingToReply(reply);
-    setSelectedPoint(null);
     setShowReplyForm(true);
     
     // Scroll to reply form
@@ -430,12 +396,10 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
                 <TextReplyForm
                   discussionId={discussion.id}
                   replyingToReply={replyingToReply}
-                  replyingToPoint={selectedPoint}
                   onReplyAdded={handleReplyAdded}
                   onCancel={() => {
                     setShowReplyForm(false);
                     setReplyingToReply(null);
-                    setSelectedPoint(null);
                   }}
                 />
               </div>
@@ -452,17 +416,10 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
             
             <ReplyTree
               replies={replies}
-              aiPoints={discussion.aiPoints || []}
               discussionId={discussion.id}
-              discussionTitle={discussion.title}
-              discussionContent={discussion.content}
-              searchQuery=""
               onReplyToReply={handleReplyToReply}
               onDeleteReply={handleDeleteReply}
               onReplyEdited={handleReplyEdited}
-              onReplyView={handleReplyView}
-              onPointClick={handlePointClick}
-              showFilters={replies.length > 3}
             />
           </section>
         )}
