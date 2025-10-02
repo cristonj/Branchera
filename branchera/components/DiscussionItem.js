@@ -25,17 +25,17 @@ export default function DiscussionItem({
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyingToReply, setReplyingToReply] = useState(null);
   const [editingDiscussion, setEditingDiscussion] = useState(null);
-  const [selectedDiscussion, setSelectedDiscussion] = useState(null);
-  const [selectedPoint, setSelectedPoint] = useState(null);
-  const [selectedReplyType, setSelectedReplyType] = useState('general');
-  const [selectedReplyForPoints, setSelectedReplyForPoints] = useState(null);
+  const [editingReply, setEditingReply] = useState(null);
+  const [expandedNestedReplies, setExpandedNestedReplies] = useState({});
   const replyFormRef = useRef(null);
 
   const {
     deleteDiscussion,
     deleteReply,
     incrementDiscussionView,
-    updateDocument
+    updateDocument,
+    voteOnReply,
+    editReply
   } = useDatabase();
   const { user } = useAuth();
 
@@ -182,12 +182,99 @@ export default function DiscussionItem({
     setReplyingTo(discussion.id);
     setReplyingToReply(null);
     setEditingDiscussion(null);
-    setSelectedDiscussion(discussion);
-    setSelectedPoint(null);
-    setSelectedReplyType('general');
-    setSelectedReplyForPoints(null);
+    setEditingReply(null);
 
     smoothScrollToReplyForm();
+  };
+
+  const handleReplyToReply = (reply) => {
+    if (!user) return;
+
+    setReplyingTo(discussion.id);
+    setReplyingToReply(reply);
+    setEditingDiscussion(null);
+    setEditingReply(null);
+
+    smoothScrollToReplyForm();
+  };
+
+  const handleVoteOnReply = async (reply, voteType) => {
+    if (!user) return;
+    
+    try {
+      const updatedReply = await voteOnReply(discussion.id, reply.id, user.uid, voteType);
+      
+      // Update local state
+      if (onDiscussionUpdate) {
+        const updatedReplies = replies.map(r => 
+          r.id === updatedReply.id ? updatedReply : r
+        );
+        onDiscussionUpdate(discussion.id, { 
+          ...discussion, 
+          replies: updatedReplies 
+        });
+      }
+    } catch (error) {
+      showErrorToast('Failed to vote on reply');
+      console.error('Vote error:', error);
+    }
+  };
+
+  const handleEditReply = (reply) => {
+    if (!user || reply.authorId !== user.uid) return;
+    
+    setEditingReply(reply);
+    setReplyingTo(null);
+    setReplyingToReply(null);
+  };
+
+  const handleEditReplyComplete = (updatedReply) => {
+    if (onDiscussionUpdate) {
+      const updatedReplies = replies.map(r => 
+        r.id === updatedReply.id ? updatedReply : r
+      );
+      onDiscussionUpdate(discussion.id, { 
+        ...discussion, 
+        replies: updatedReplies 
+      });
+    }
+    setEditingReply(null);
+  };
+
+  const handleEditReplyCancel = () => {
+    setEditingReply(null);
+  };
+
+  const handleDeleteReply = async (replyId) => {
+    if (!user) return;
+    
+    const confirmed = window.confirm('Are you sure you want to delete this reply? This action cannot be undone.');
+    if (!confirmed) return;
+    
+    try {
+      await deleteReply(discussion.id, replyId, user.uid);
+      
+      // Update local state
+      if (onDiscussionUpdate) {
+        const updatedReplies = replies.filter(r => r.id !== replyId);
+        onDiscussionUpdate(discussion.id, { 
+          ...discussion, 
+          replies: updatedReplies,
+          replyCount: updatedReplies.length
+        });
+      }
+      
+      showSuccessToast('Reply deleted successfully');
+    } catch (error) {
+      showErrorToast(error.message || 'Failed to delete reply');
+    }
+  };
+
+  const toggleNestedReplies = (replyId) => {
+    setExpandedNestedReplies(prev => ({
+      ...prev,
+      [replyId]: !prev[replyId]
+    }));
   };
 
   const handleReplyAddedLocal = (discussionId, newReply) => {
@@ -688,20 +775,8 @@ export default function DiscussionItem({
           {/* Replies */}
           {expandedReplies && expandedReplies[discussion.id] && replies.length > 0 && (
             <div className="mt-4 pt-4 border-t border-black/10">
-              <div className="space-y-3">
-                {replies.map((reply) => (
-                  <div key={reply.id} className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-gray-900">{reply.authorName}</span>
-                          <span className="text-xs text-gray-500">{new Date(reply.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        <p className="text-sm text-gray-800 whitespace-pre-wrap">{reply.content}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="space-y-2">
+                {renderReplies(replies)}
               </div>
             </div>
           )}
