@@ -96,14 +96,18 @@ export default function DashboardPage() {
         const totalDiscussions = allDiscussions.length;
         const totalReplies = allDiscussions.reduce((sum, d) => sum + (d.replyCount || 0), 0);
         const totalViews = allDiscussions.reduce((sum, d) => sum + (d.views || 0), 0);
-        const totalLikes = allDiscussions.reduce((sum, d) => sum + (d.likes || 0), 0);
+        const totalUpvotes = allDiscussions.reduce((sum, d) => sum + (d.upvotes || 0), 0);
+        const totalDownvotes = allDiscussions.reduce((sum, d) => sum + (d.downvotes || 0), 0);
+        const totalScore = totalUpvotes - totalDownvotes;
 
         setStats({
           platform: {
             totalDiscussions,
             totalReplies,
             totalViews,
-            totalLikes,
+            totalUpvotes,
+            totalDownvotes,
+            totalScore,
             totalUsers: 0 // Will be calculated differently in simplified version
           }
         });
@@ -115,8 +119,10 @@ export default function DashboardPage() {
         const hotDiscussionsList = allDiscussions
           .filter(d => new Date(d.createdAt) > weekAgo)
           .sort((a, b) => {
-            const scoreA = (a.likes || 0) * 2 + (a.replyCount || 0) * 3 + (a.views || 0) * 0.1;
-            const scoreB = (b.likes || 0) * 2 + (b.replyCount || 0) * 3 + (b.views || 0) * 0.1;
+            const voteScoreA = ((a.upvotes || 0) - (a.downvotes || 0));
+            const voteScoreB = ((b.upvotes || 0) - (b.downvotes || 0));
+            const scoreA = voteScoreA * 2 + (a.replyCount || 0) * 3 + (a.views || 0) * 0.1;
+            const scoreB = voteScoreB * 2 + (b.replyCount || 0) * 3 + (b.views || 0) * 0.1;
             return scoreB - scoreA;
           })
           .slice(0, 5);
@@ -222,8 +228,8 @@ export default function DashboardPage() {
                   <div className="text-xs text-gray-600">Total views</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">{stats?.platform.totalLikes || 0}</div>
-                  <div className="text-xs text-gray-600">Total likes</div>
+                  <div className="text-2xl font-bold text-gray-900">{stats?.platform.totalScore || 0}</div>
+                  <div className="text-xs text-gray-600">Total score</div>
                 </div>
               </div>
             </div>

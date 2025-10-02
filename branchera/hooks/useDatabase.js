@@ -45,8 +45,10 @@ export function useDatabase() {
         authorId: discussionData.authorId,
         authorName: discussionData.authorName || 'Anonymous',
         authorPhoto: discussionData.authorPhoto || null,
-        likes: 0,
-        likedBy: [], // Track which users have liked this discussion
+        upvotes: 0,
+        downvotes: 0,
+        upvotedBy: [], // Track which users have upvoted this discussion
+        downvotedBy: [], // Track which users have downvoted this discussion
         replies: [], // Array of reply objects
         replyCount: 0,
         views: 0, // Track how many times this discussion has been viewed (expanded)
@@ -217,6 +219,10 @@ export function useDatabase() {
         authorName: replyData.authorName || 'Anonymous',
         authorPhoto: replyData.authorPhoto || null,
         replyToReplyId: replyData.replyToReplyId || null, // Which reply this is responding to (for nested replies)
+        upvotes: 0,
+        downvotes: 0,
+        upvotedBy: [],
+        downvotedBy: [],
         createdAt: new Date().toISOString()
       };
 
@@ -441,6 +447,115 @@ export function useDatabase() {
     }
   };
 
+  // Vote on a reply (upvote or downvote)
+  const voteOnReply = async (discussionId, replyId, userId, voteType) => {
+    try {
+      const discussion = await getDocument('discussions', discussionId);
+      if (!discussion) {
+        throw new Error('Discussion not found');
+      }
+
+      // Find the reply
+      const replyIndex = discussion.replies?.findIndex(r => r.id === replyId);
+      if (replyIndex === -1) {
+        throw new Error('Reply not found');
+      }
+
+      const reply = discussion.replies[replyIndex];
+      const upvotedBy = reply.upvotedBy || [];
+      const downvotedBy = reply.downvotedBy || [];
+      const hasUpvoted = upvotedBy.includes(userId);
+      const hasDownvoted = downvotedBy.includes(userId);
+
+      let newUpvotedBy = [...upvotedBy];
+      let newDownvotedBy = [...downvotedBy];
+      let newUpvotes = reply.upvotes || 0;
+      let newDownvotes = reply.downvotes || 0;
+
+      if (voteType === 'upvote') {
+        if (hasUpvoted) {
+          // Remove upvote
+          newUpvotedBy = upvotedBy.filter(uid => uid !== userId);
+          newUpvotes = Math.max(0, newUpvotes - 1);
+        } else {
+          // Add upvote
+          newUpvotedBy = [...upvotedBy, userId];
+          newUpvotes = newUpvotes + 1;
+          // Remove downvote if exists
+          if (hasDownvoted) {
+            newDownvotedBy = downvotedBy.filter(uid => uid !== userId);
+            newDownvotes = Math.max(0, newDownvotes - 1);
+          }
+        }
+      } else if (voteType === 'downvote') {
+        if (hasDownvoted) {
+          // Remove downvote
+          newDownvotedBy = downvotedBy.filter(uid => uid !== userId);
+          newDownvotes = Math.max(0, newDownvotes - 1);
+        } else {
+          // Add downvote
+          newDownvotedBy = [...downvotedBy, userId];
+          newDownvotes = newDownvotes + 1;
+          // Remove upvote if exists
+          if (hasUpvoted) {
+            newUpvotedBy = upvotedBy.filter(uid => uid !== userId);
+            newUpvotes = Math.max(0, newUpvotes - 1);
+          }
+        }
+      }
+
+      // Update reply in the array
+      const updatedReplies = [...discussion.replies];
+      updatedReplies[replyIndex] = {
+        ...reply,
+        upvotes: newUpvotes,
+        downvotes: newDownvotes,
+        upvotedBy: newUpvotedBy,
+        downvotedBy: newDownvotedBy
+      };
+
+      await updateDocument('discussions', discussionId, {
+        replies: updatedReplies
+      });
+
+      return updatedReplies[replyIndex];
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  // Update reply key points
+  const updateReplyKeyPoints = async (discussionId, replyId, replyPoints) => {
+    try {
+      const discussion = await getDocument('discussions', discussionId);
+      if (!discussion) {
+        throw new Error('Discussion not found');
+      }
+
+      // Find the reply
+      const replyIndex = discussion.replies?.findIndex(r => r.id === replyId);
+      if (replyIndex === -1) {
+        throw new Error('Reply not found');
+      }
+
+      // Update reply in the array
+      const updatedReplies = [...discussion.replies];
+      updatedReplies[replyIndex] = {
+        ...updatedReplies[replyIndex],
+        replyPoints: replyPoints,
+        replyPointsGenerated: true
+      };
+
+      await updateDocument('discussions', discussionId, {
+        replies: updatedReplies
+      });
+
+      return updatedReplies[replyIndex];
+    } catch (error) {
+      throw error;
+    }
+  };
+
   return {
     createDiscussion,
     getDiscussions,
@@ -450,7 +565,10 @@ export function useDatabase() {
     addReply,
     deleteReply,
     editReply,
+    voteOnReply,
     incrementDiscussionView,
+    incrementReplyView,
+    updateReplyKeyPoints,
     setupDatabase,
     updateDocument
   };

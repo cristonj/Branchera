@@ -69,30 +69,69 @@ export default function DiscussionItem({
     }
   };
 
-  const handleLike = async (discussionId) => {
+  const handleVote = async (discussionId, voteType) => {
     try {
       if (!user) return;
       
-      const likedBy = discussion.likedBy || [];
-      const hasLiked = likedBy.includes(user.uid);
+      const upvotedBy = discussion.upvotedBy || [];
+      const downvotedBy = discussion.downvotedBy || [];
+      const hasUpvoted = upvotedBy.includes(user.uid);
+      const hasDownvoted = downvotedBy.includes(user.uid);
       
-      const newLikedBy = hasLiked 
-        ? likedBy.filter(uid => uid !== user.uid)
-        : [...likedBy, user.uid];
-      const newLikes = hasLiked 
-        ? Math.max(0, (discussion.likes || 0) - 1)
-        : (discussion.likes || 0) + 1;
+      let newUpvotedBy = [...upvotedBy];
+      let newDownvotedBy = [...downvotedBy];
+      let newUpvotes = discussion.upvotes || 0;
+      let newDownvotes = discussion.downvotes || 0;
+      
+      if (voteType === 'upvote') {
+        if (hasUpvoted) {
+          // Remove upvote
+          newUpvotedBy = upvotedBy.filter(uid => uid !== user.uid);
+          newUpvotes = Math.max(0, newUpvotes - 1);
+        } else {
+          // Add upvote
+          newUpvotedBy = [...upvotedBy, user.uid];
+          newUpvotes = newUpvotes + 1;
+          // Remove downvote if exists
+          if (hasDownvoted) {
+            newDownvotedBy = downvotedBy.filter(uid => uid !== user.uid);
+            newDownvotes = Math.max(0, newDownvotes - 1);
+          }
+        }
+      } else if (voteType === 'downvote') {
+        if (hasDownvoted) {
+          // Remove downvote
+          newDownvotedBy = downvotedBy.filter(uid => uid !== user.uid);
+          newDownvotes = Math.max(0, newDownvotes - 1);
+        } else {
+          // Add downvote
+          newDownvotedBy = [...downvotedBy, user.uid];
+          newDownvotes = newDownvotes + 1;
+          // Remove upvote if exists
+          if (hasUpvoted) {
+            newUpvotedBy = upvotedBy.filter(uid => uid !== user.uid);
+            newUpvotes = Math.max(0, newUpvotes - 1);
+          }
+        }
+      }
       
       await updateDocument('discussions', discussionId, { 
-        likes: newLikes,
-        likedBy: newLikedBy
+        upvotes: newUpvotes,
+        downvotes: newDownvotes,
+        upvotedBy: newUpvotedBy,
+        downvotedBy: newDownvotedBy
       });
       
       if (onDiscussionUpdate) {
-        onDiscussionUpdate(discussionId, { likes: newLikes, likedBy: newLikedBy });
+        onDiscussionUpdate(discussionId, { 
+          upvotes: newUpvotes, 
+          downvotes: newDownvotes,
+          upvotedBy: newUpvotedBy, 
+          downvotedBy: newDownvotedBy 
+        });
       }
     } catch (error) {
-      console.error('Failed to like:', error);
+      console.error('Failed to vote:', error);
     }
   };
 
@@ -246,13 +285,13 @@ export default function DiscussionItem({
   // Compact view rendering
   if (showCompactView && !isExpanded) {
     return (
-      <button
-        onClick={() => toggleDiscussion(discussion.id)}
-        className="w-full border border-black/10 rounded-lg p-4 hover:bg-gray-50 transition-colors text-left"
-      >
+      <div className="w-full border border-black/10 rounded-lg p-4 hover:bg-gray-50 transition-colors">
         <div className="flex items-start gap-3">
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-gray-900 mb-1 hover:text-black transition-colors">
+            <h3 
+              onClick={() => toggleDiscussion(discussion.id)}
+              className="font-medium text-gray-900 mb-1 hover:text-black transition-colors cursor-pointer"
+            >
               <SearchHighlight text={discussion.title} searchQuery={searchQuery} />
             </h3>
             
@@ -279,7 +318,7 @@ export default function DiscussionItem({
             )}
             
             <div className="flex items-center gap-2 sm:gap-4 text-sm text-gray-500 flex-wrap">
-              <div
+              <button
                 onClick={(e) => {
                   e.stopPropagation();
                   toggleReplies(discussion.id);
@@ -290,30 +329,49 @@ export default function DiscussionItem({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
                 {discussion.replyCount || 0}
-              </div>
-              <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (user) handleLike(discussion.id);
-                }}
-                className={`flex items-center gap-1 hover:text-gray-700 ${user ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
-              >
-                <svg className="w-4 h-4" fill={user && (discussion.likedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-                {discussion.likes || 0}
+              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (user) handleVote(discussion.id, 'upvote');
+                  }}
+                  className={`p-0.5 hover:text-gray-700 ${user ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'} ${user && (discussion.upvotedBy || []).includes(user.uid) ? 'text-green-600' : ''}`}
+                  title="Upvote"
+                >
+                  <svg className="w-4 h-4" fill={user && (discussion.upvotedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  </svg>
+                </button>
+                <span className="text-xs font-medium">{(discussion.upvotes || 0) - (discussion.downvotes || 0)}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (user) handleVote(discussion.id, 'downvote');
+                  }}
+                  className={`p-0.5 hover:text-gray-700 ${user ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'} ${user && (discussion.downvotedBy || []).includes(user.uid) ? 'text-red-600' : ''}`}
+                  title="Downvote"
+                >
+                  <svg className="w-4 h-4" fill={user && (discussion.downvotedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
               </div>
               <span>{formatDate(discussion.createdAt)}</span>
             </div>
           </div>
           
-          <div className="p-2 flex-shrink-0">
+          <button
+            onClick={() => toggleDiscussion(discussion.id)}
+            className="p-2 flex-shrink-0 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Expand discussion"
+          >
             <svg className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
-          </div>
+          </button>
         </div>
-      </button>
+      </div>
     );
   }
 
@@ -394,17 +452,32 @@ export default function DiscussionItem({
               <span>{discussion.replyCount || 0}</span>
             </div>
             
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                if (user) handleLike(discussion.id);
-              }}
-              className={`flex items-center gap-1 text-sm text-gray-800 hover:text-black ${user ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
-            >
-              <svg className="w-4 h-4" fill={user && (discussion.likedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              <span>{discussion.likes || 0}</span>
+            <div className="flex items-center gap-1 text-sm text-gray-800">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (user) handleVote(discussion.id, 'upvote');
+                }}
+                className={`p-1 hover:text-black ${user ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'} ${user && (discussion.upvotedBy || []).includes(user.uid) ? 'text-green-600' : ''}`}
+                title="Upvote"
+              >
+                <svg className="w-4 h-4" fill={user && (discussion.upvotedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+              <span className="text-sm font-medium">{(discussion.upvotes || 0) - (discussion.downvotes || 0)}</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (user) handleVote(discussion.id, 'downvote');
+                }}
+                className={`p-1 hover:text-black ${user ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'} ${user && (discussion.downvotedBy || []).includes(user.uid) ? 'text-red-600' : ''}`}
+                title="Downvote"
+              >
+                <svg className="w-4 h-4" fill={user && (discussion.downvotedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -514,17 +587,29 @@ export default function DiscussionItem({
                   </svg>
                 </button>
                 
-                <button
-                  onClick={() => handleLike(discussion.id)}
-                  className="flex items-center gap-1.5 text-sm text-gray-700 hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={!user}
-                  title={user ? "Like discussion" : "Login to like"}
-                >
-                  <svg className="w-4 h-4 flex-shrink-0" fill={user && (discussion.likedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                  <span className="whitespace-nowrap">{discussion.likes || 0}</span>
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleVote(discussion.id, 'upvote')}
+                    className={`p-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${user && (discussion.upvotedBy || []).includes(user.uid) ? 'text-green-600 hover:text-green-700' : 'text-gray-700 hover:text-black'}`}
+                    disabled={!user}
+                    title={user ? "Upvote discussion" : "Login to vote"}
+                  >
+                    <svg className="w-4 h-4 flex-shrink-0" fill={user && (discussion.upvotedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                    </svg>
+                  </button>
+                  <span className="text-sm font-medium whitespace-nowrap">{(discussion.upvotes || 0) - (discussion.downvotes || 0)}</span>
+                  <button
+                    onClick={() => handleVote(discussion.id, 'downvote')}
+                    className={`p-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${user && (discussion.downvotedBy || []).includes(user.uid) ? 'text-red-600 hover:text-red-700' : 'text-gray-700 hover:text-black'}`}
+                    disabled={!user}
+                    title={user ? "Downvote discussion" : "Login to vote"}
+                  >
+                    <svg className="w-4 h-4 flex-shrink-0" fill={user && (discussion.downvotedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
                 
                 <div className="flex items-center gap-1.5 text-sm text-gray-600" title="Views">
                   <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

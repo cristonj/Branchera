@@ -19,7 +19,7 @@ export default function SearchFilterSort({
     selectedTags: [],
     dateRange: 'all',
     author: '',
-    minLikes: 0,
+    minScore: 0,
     minViews: 0
   }
 }) {
@@ -327,9 +327,12 @@ export default function SearchFilterSort({
         return false;
       }
 
-      // Min likes filter
-      if (filters.minLikes > 0 && (discussion.likes || 0) < filters.minLikes) {
-        return false;
+      // Min score filter (upvotes - downvotes)
+      if (filters.minScore > 0) {
+        const score = (discussion.upvotes || 0) - (discussion.downvotes || 0);
+        if (score < filters.minScore) {
+          return false;
+        }
       }
 
       // Min views filter
@@ -347,8 +350,10 @@ export default function SearchFilterSort({
       switch (sortBy) {
         case 'oldest':
           return new Date(a.createdAt) - new Date(b.createdAt);
-        case 'likes':
-          return (b.likes || 0) - (a.likes || 0);
+        case 'score':
+          const scoreA = (a.upvotes || 0) - (a.downvotes || 0);
+          const scoreB = (b.upvotes || 0) - (b.downvotes || 0);
+          return scoreB - scoreA;
         case 'views':
           return (b.views || 0) - (a.views || 0);
         case 'replies':
@@ -404,7 +409,8 @@ export default function SearchFilterSort({
     }
     
     // Boost score for discussions with more engagement
-    score += Math.log(1 + (discussion.likes || 0)) * 0.5;
+    const voteScore = (discussion.upvotes || 0) - (discussion.downvotes || 0);
+    score += Math.log(1 + Math.max(0, voteScore)) * 0.5;
     score += Math.log(1 + (discussion.views || 0)) * 0.3;
     score += Math.log(1 + (discussion.replyCount || 0)) * 0.4;
     
@@ -450,7 +456,7 @@ export default function SearchFilterSort({
       selectedTags: [],
       dateRange: 'all',
       author: '',
-      minLikes: 0,
+      minScore: 0,
       minViews: 0
     });
   };
@@ -463,7 +469,7 @@ export default function SearchFilterSort({
     (filters.selectedTags && filters.selectedTags.length > 0) ||
     filters.dateRange !== 'all' || 
     filters.author || 
-    filters.minLikes > 0 || 
+    filters.minScore > 0 || 
     filters.minViews > 0 ||
     sortBy !== 'newest';
 
@@ -537,7 +543,7 @@ export default function SearchFilterSort({
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
-                <option value="likes">Most Liked</option>
+                <option value="score">Highest Score</option>
                 <option value="views">Most Viewed</option>
                 <option value="replies">Most Replies</option>
                 {searchQuery.trim() && <option value="relevance">Most Relevant</option>}
@@ -571,15 +577,16 @@ export default function SearchFilterSort({
               />
             </div>
 
-            {/* Min Likes */}
+            {/* Min Score */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Likes</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Score</label>
               <input
                 type="number"
                 min="0"
-                value={filters.minLikes}
-                onChange={(e) => handleFilterChange('minLikes', parseInt(e.target.value) || 0)}
+                value={filters.minScore}
+                onChange={(e) => handleFilterChange('minScore', parseInt(e.target.value) || 0)}
                 className="w-full px-3 py-2 border border-black/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                placeholder="Upvotes - Downvotes"
               />
             </div>
 

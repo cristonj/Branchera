@@ -26,7 +26,7 @@ export default function ReplyTree({
   showFilters = true
 }) {
   const { user } = useAuth();
-  const { editReply, updateReplyKeyPoints } = useDatabase();
+  const { editReply, updateReplyKeyPoints, voteOnReply } = useDatabase();
   const [expandedReplies, setExpandedReplies] = useState(new Set());
   const [expandedReplyPoints, setExpandedReplyPoints] = useState(new Set());
   const [expandedPointSections, setExpandedPointSections] = useState(new Set());
@@ -49,6 +49,22 @@ export default function ReplyTree({
   // Safely get toast functions with fallbacks
   const toastContext = useToast();
   const showErrorToast = toastContext?.showErrorToast || (() => {});
+
+  const handleVoteOnReply = async (reply, voteType) => {
+    if (!user) return;
+    
+    try {
+      const updatedReply = await voteOnReply(discussionId, reply.id, user.uid, voteType);
+      
+      // Notify parent component that a reply was updated
+      if (onReplyEdited) {
+        onReplyEdited(updatedReply);
+      }
+    } catch (error) {
+      showErrorToast('Failed to vote on reply');
+      console.error('Vote error:', error);
+    }
+  };
 
   const toggleReply = async (replyId) => {
     const wasExpanded = expandedReplies.has(replyId);
@@ -377,6 +393,29 @@ export default function ReplyTree({
                 <span className="text-xs ml-1">{reply.children?.length || 0}</span>
               </button>
             )}
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={() => handleVoteOnReply(reply, 'upvote')}
+                className={`p-0.5 text-xs ${user ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'} ${user && (reply.upvotedBy || []).includes(user.uid) ? 'text-green-600' : 'text-gray-600 hover:text-gray-800'}`}
+                disabled={!user}
+                title="Upvote reply"
+              >
+                <svg className="w-3 h-3" fill={user && (reply.upvotedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+              <span className="text-xs font-medium text-gray-700">{(reply.upvotes || 0) - (reply.downvotes || 0)}</span>
+              <button
+                onClick={() => handleVoteOnReply(reply, 'downvote')}
+                className={`p-0.5 text-xs ${user ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'} ${user && (reply.downvotedBy || []).includes(user.uid) ? 'text-red-600' : 'text-gray-600 hover:text-gray-800'}`}
+                disabled={!user}
+                title="Downvote reply"
+              >
+                <svg className="w-3 h-3" fill={user && (reply.downvotedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
             <div className="flex items-center gap-1 text-xs text-gray-600">
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
