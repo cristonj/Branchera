@@ -45,6 +45,7 @@ export default async function sitemap() {
   let discussionPages = [];
   try {
     const discussions = await getAllDiscussionSlugs();
+    console.log(`[Sitemap] Found ${discussions.length} discussions to include in sitemap`);
     discussionPages = discussions.map((discussion) => ({
       url: `${baseUrl}/discussion/${discussion.slug}`,
       lastModified: new Date(),
@@ -52,8 +53,9 @@ export default async function sitemap() {
       priority: 0.8,
     }));
   } catch (error) {
-    console.error('Error generating sitemap for discussions:', error);
+    console.error('[Sitemap] Error generating sitemap for discussions:', error);
   }
 
+  console.log(`[Sitemap] Total pages in sitemap: ${staticPages.length + discussionPages.length} (${staticPages.length} static, ${discussionPages.length} discussions)`);
   return [...staticPages, ...discussionPages];
 }

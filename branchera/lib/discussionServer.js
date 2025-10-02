@@ -3,7 +3,7 @@
  * These functions run on the server and can be used in Server Components
  */
 
-import { db } from './firebase';
+import { getFirestoreInstance } from './firebase.js';
 import { collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
 
 /**
@@ -14,6 +14,13 @@ import { collection, query, where, getDocs, limit as firestoreLimit } from 'fire
 export async function getDiscussionBySlugServer(slug) {
   try {
     if (!slug) {
+      return null;
+    }
+
+    // Get Firestore instance
+    const db = await getFirestoreInstance();
+    if (!db) {
+      console.error('Firestore instance not available');
       return null;
     }
 
@@ -48,6 +55,13 @@ export async function getDiscussionBySlugServer(slug) {
  */
 export async function getAllDiscussionSlugs() {
   try {
+    // Get Firestore instance
+    const db = await getFirestoreInstance();
+    if (!db) {
+      console.error('Firestore instance not available');
+      return [];
+    }
+
     const discussionsRef = collection(db, 'discussions');
     const querySnapshot = await getDocs(discussionsRef);
 
