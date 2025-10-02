@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,6 +8,7 @@ import { useDatabase } from '@/hooks/useDatabase';
 import { useToast } from '@/contexts/ToastContext';
 import { formatDate } from '@/lib/dateUtils';
 import TextReplyForm from './TextReplyForm';
+import ReplyTree from './ReplyTree';
 import TopNav from './TopNav';
 
 /**
@@ -17,10 +18,12 @@ import TopNav from './TopNav';
 export default function PublicDiscussionView({ discussion: initialDiscussion }) {
   const [discussion, setDiscussion] = useState(initialDiscussion);
   const [showReplyForm, setShowReplyForm] = useState(false);
-  const [expandedReplies, setExpandedReplies] = useState({});
+  const [replyingToReply, setReplyingToReply] = useState(null);
+  const [selectedPoint, setSelectedPoint] = useState(null);
   const [viewCountUpdated, setViewCountUpdated] = useState(false);
+  const replyFormRef = useRef(null);
   const { user } = useAuth();
-  const { updateDocument, incrementDiscussionView } = useDatabase();
+  const { updateDocument, incrementDiscussionView, deleteReply, incrementReplyView } = useDatabase();
   
   // Safely get toast functions with fallbacks
   const toastContext = useToast();
@@ -116,7 +119,7 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
     }
   };
 
-  const handleReplyAdded = (discussionId, newReply) => {
+  const handleReplyAdded = (newReply) => {
     // Update discussion with new reply
     setDiscussion(prev => ({
       ...prev,
@@ -125,7 +128,98 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
     }));
     
     setShowReplyForm(false);
+    setReplyingToReply(null);
+    setSelectedPoint(null);
     showSuccessToast('Reply added successfully');
+  };
+
+  const handleReplyEdited = (updatedReply) => {
+    // Update the reply in the local state
+    setDiscussion(prev => ({
+      ...prev,
+      replies: (prev.replies || []).map(r => 
+        r.id === updatedReply.id ? updatedReply : r
+      )
+    }));
+  };
+
+  const handleDeleteReply = async (discussionId, replyId) => {
+    if (!user) {
+      showErrorToast('Please log in to delete replies');
+      return;
+    }
+
+    const confirmed = window.confirm('Are you sure you want to delete this reply? This action cannot be undone.');
+    if (!confirmed) return;
+
+    try {
+      await deleteReply(discussionId, replyId, user.uid);
+      
+      // Update local state
+      setDiscussion(prev => ({
+        ...prev,
+        replies: (prev.replies || []).filter(r => r.id !== replyId),
+        replyCount: Math.max(0, (prev.replyCount || 0) - 1)
+      }));
+      
+      showSuccessToast('Reply deleted successfully');
+    } catch (error) {
+      showErrorToast(error.message || 'Failed to delete reply');
+    }
+  };
+
+  const handleReplyView = async (replyId, userId) => {
+    try {
+      await incrementReplyView(discussion.id, replyId, userId);
+    } catch (error) {
+      console.error('Failed to increment reply view:', error);
+    }
+  };
+
+  const handlePointClick = (reply, point) => {
+    if (!user) {
+      showErrorToast('Please log in to reply to points');
+      return;
+    }
+    
+    setSelectedPoint(point);
+    setReplyingToReply(reply);
+    setShowReplyForm(true);
+    
+    // Scroll to reply form
+    setTimeout(() => {
+      if (replyFormRef.current) {
+        const elementTop = replyFormRef.current.getBoundingClientRect().top + window.pageYOffset;
+        const offset = 80;
+        window.scrollTo({
+          top: elementTop - offset,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
+  };
+
+  const handleReplyToReply = (reply) => {
+    if (!user) {
+      showErrorToast('Please log in to reply');
+      return;
+    }
+    
+    setReplyingToReply(reply);
+    setSelectedPoint(null);
+    setShowReplyForm(true);
+    
+    // Scroll to reply form
+    setTimeout(() => {
+      if (replyFormRef.current) {
+        const elementTop = replyFormRef.current.getBoundingClientRect().top + window.pageYOffset;
+        const offset = 80;
+        window.scrollTo({
+          top: elementTop - offset,
+          behavior: 'smooth'
+        });
+      }
+    }, 100);
   };
 
   const handleShare = async () => {
@@ -160,12 +254,6 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
     }
   };
 
-  const toggleReply = (replyId) => {
-    setExpandedReplies(prev => ({
-      ...prev,
-      [replyId]: !prev[replyId]
-    }));
-  };
 
   if (!discussion) {
     return (
@@ -338,53 +426,44 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
 
             {/* Reply Form */}
             {showReplyForm && user && (
-              <div className="mt-4 pt-4 border-t border-black/10">
+              <div className="mt-4 pt-4 border-t border-black/10" ref={replyFormRef}>
                 <TextReplyForm
                   discussionId={discussion.id}
+                  replyingToReply={replyingToReply}
+                  replyingToPoint={selectedPoint}
                   onReplyAdded={handleReplyAdded}
-                  onCancel={() => setShowReplyForm(false)}
+                  onCancel={() => {
+                    setShowReplyForm(false);
+                    setReplyingToReply(null);
+                    setSelectedPoint(null);
+                  }}
                 />
               </div>
             )}
           </footer>
         </article>
 
-        {/* Replies Section - All replies visible in DOM for SEO */}
+        {/* Replies Section - Full featured reply tree */}
         {replies.length > 0 && (
           <section className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">
               {replies.length} {replies.length === 1 ? 'Reply' : 'Replies'}
             </h2>
             
-            <div className="space-y-3">
-              {replies.map((reply) => (
-                <article key={reply.id} className="bg-white rounded-lg border border-black/20 p-4">
-                  <div className="flex items-start gap-3">
-                    {reply.authorPhoto && (
-                      <Image
-                        src={reply.authorPhoto}
-                        alt={reply.authorName}
-                        width={32}
-                        height={32}
-                        className="w-8 h-8 rounded-full flex-shrink-0"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium text-gray-900">{reply.authorName}</span>
-                        <span className="text-xs text-gray-500">{formatDate(reply.createdAt)}</span>
-                        {reply.isEdited && reply.editedAt && (
-                          <span className="text-xs text-gray-500 italic">edited</span>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
-                        {reply.content}
-                      </p>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+            <ReplyTree
+              replies={replies}
+              aiPoints={discussion.aiPoints || []}
+              discussionId={discussion.id}
+              discussionTitle={discussion.title}
+              discussionContent={discussion.content}
+              searchQuery=""
+              onReplyToReply={handleReplyToReply}
+              onDeleteReply={handleDeleteReply}
+              onReplyEdited={handleReplyEdited}
+              onReplyView={handleReplyView}
+              onPointClick={handlePointClick}
+              showFilters={replies.length > 3}
+            />
           </section>
         )}
 

@@ -219,10 +219,13 @@ export function useDatabase() {
         authorName: replyData.authorName || 'Anonymous',
         authorPhoto: replyData.authorPhoto || null,
         replyToReplyId: replyData.replyToReplyId || null, // Which reply this is responding to (for nested replies)
+        replyToPointId: replyData.replyToPointId || null, // Which AI point this is responding to
         upvotes: 0,
         downvotes: 0,
         upvotedBy: [],
         downvotedBy: [],
+        views: 0,
+        viewedBy: [],
         createdAt: new Date().toISOString()
       };
 

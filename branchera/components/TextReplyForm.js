@@ -9,7 +9,8 @@ export default function TextReplyForm({
   discussionId,
   onReplyAdded,
   onCancel,
-  replyingToReply = null
+  replyingToReply = null,
+  replyingToPoint = null
 }) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,7 +40,8 @@ export default function TextReplyForm({
         authorId: user.uid,
         authorName: getDisplayName(),
         authorPhoto: user.photoURL,
-        replyToReplyId: replyingToReply?.id || null
+        replyToReplyId: replyingToReply?.id || null,
+        replyToPointId: replyingToPoint?.id || null
       };
 
       const createdReply = await addReply(discussionId, replyData);
@@ -62,7 +64,28 @@ export default function TextReplyForm({
 
   return (
     <div className="bg-white rounded-lg border border-black/20 p-3">
-      {replyingToReply ? (
+      {replyingToPoint ? (
+        <div className="mb-3">
+          <div className="text-xs font-semibold text-gray-900 mb-1">
+            Replying to point
+          </div>
+          <div className="p-3 rounded-lg border border-black/15 bg-gray-50">
+            <p className="text-xs text-gray-900">{replyingToPoint.text}</p>
+            {replyingToPoint.type && (
+              <span className="inline-block px-2 py-0.5 text-[10px] rounded-full bg-black text-white mt-1 uppercase tracking-wide">
+                {replyingToPoint.type}
+              </span>
+            )}
+          </div>
+          {replyingToReply && (
+            <div className="mt-2">
+              <div className="text-xs text-gray-600 mb-1">
+                From reply by {replyingToReply.authorName}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : replyingToReply ? (
         <div className="mb-3">
           <div className="text-xs font-semibold text-gray-900 mb-1">
             Replying to {replyingToReply.authorName}

@@ -436,7 +436,7 @@ export default function ReplyTree({
                 </button>
                 <button
                   onClick={() => onDeleteReply && onDeleteReply(discussionId, reply.id)}
-                  className="p-1 text-gray-800 hover:text-black"
+                  className="p-1 text-gray-800 hover:text-red-600 hover:bg-red-50 rounded"
                   title="Delete reply"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -447,6 +447,21 @@ export default function ReplyTree({
             )}
           </div>
         </div>
+        
+        {/* Reply button for nested replies */}
+        {canReply && onReplyToReply && (
+          <div className="mt-2">
+            <button
+              onClick={() => onReplyToReply(reply)}
+              className="text-xs text-gray-600 hover:text-gray-800 flex items-center gap-1 hover:underline"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+              Reply
+            </button>
+          </div>
+        )}
         <div>
           <p className="text-gray-900 text-sm whitespace-pre-wrap leading-relaxed break-words">
             <SearchHighlight text={reply.content} searchQuery={replySearchQuery || searchQuery} />
