@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import TextReplyForm from './TextReplyForm';
 import SearchHighlight from './SearchHighlight';
 import EditDiscussionForm from './EditDiscussionForm';
+import EditReplyForm from './EditReplyForm';
 import { useToast } from '@/contexts/ToastContext';
 import Tag from './Tag';
 import { formatDate } from '@/lib/dateUtils';
@@ -25,17 +26,17 @@ export default function DiscussionItem({
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyingToReply, setReplyingToReply] = useState(null);
   const [editingDiscussion, setEditingDiscussion] = useState(null);
-  const [selectedDiscussion, setSelectedDiscussion] = useState(null);
-  const [selectedPoint, setSelectedPoint] = useState(null);
-  const [selectedReplyType, setSelectedReplyType] = useState('general');
-  const [selectedReplyForPoints, setSelectedReplyForPoints] = useState(null);
+  const [editingReply, setEditingReply] = useState(null);
+  const [expandedNestedReplies, setExpandedNestedReplies] = useState({});
   const replyFormRef = useRef(null);
 
   const {
     deleteDiscussion,
     deleteReply,
     incrementDiscussionView,
-    updateDocument
+    updateDocument,
+    voteOnReply,
+    editReply
   } = useDatabase();
   const { user } = useAuth();
 
@@ -182,12 +183,99 @@ export default function DiscussionItem({
     setReplyingTo(discussion.id);
     setReplyingToReply(null);
     setEditingDiscussion(null);
-    setSelectedDiscussion(discussion);
-    setSelectedPoint(null);
-    setSelectedReplyType('general');
-    setSelectedReplyForPoints(null);
+    setEditingReply(null);
 
     smoothScrollToReplyForm();
+  };
+
+  const handleReplyToReply = (reply) => {
+    if (!user) return;
+
+    setReplyingTo(discussion.id);
+    setReplyingToReply(reply);
+    setEditingDiscussion(null);
+    setEditingReply(null);
+
+    smoothScrollToReplyForm();
+  };
+
+  const handleVoteOnReply = async (reply, voteType) => {
+    if (!user) return;
+    
+    try {
+      const updatedReply = await voteOnReply(discussion.id, reply.id, user.uid, voteType);
+      
+      // Update local state
+      if (onDiscussionUpdate) {
+        const updatedReplies = replies.map(r => 
+          r.id === updatedReply.id ? updatedReply : r
+        );
+        onDiscussionUpdate(discussion.id, { 
+          ...discussion, 
+          replies: updatedReplies 
+        });
+      }
+    } catch (error) {
+      showErrorToast('Failed to vote on reply');
+      console.error('Vote error:', error);
+    }
+  };
+
+  const handleEditReply = (reply) => {
+    if (!user || reply.authorId !== user.uid) return;
+    
+    setEditingReply(reply);
+    setReplyingTo(null);
+    setReplyingToReply(null);
+  };
+
+  const handleEditReplyComplete = (updatedReply) => {
+    if (onDiscussionUpdate) {
+      const updatedReplies = replies.map(r => 
+        r.id === updatedReply.id ? updatedReply : r
+      );
+      onDiscussionUpdate(discussion.id, { 
+        ...discussion, 
+        replies: updatedReplies 
+      });
+    }
+    setEditingReply(null);
+  };
+
+  const handleEditReplyCancel = () => {
+    setEditingReply(null);
+  };
+
+  const handleDeleteReply = async (replyId) => {
+    if (!user) return;
+    
+    const confirmed = window.confirm('Are you sure you want to delete this reply? This action cannot be undone.');
+    if (!confirmed) return;
+    
+    try {
+      await deleteReply(discussion.id, replyId, user.uid);
+      
+      // Update local state
+      if (onDiscussionUpdate) {
+        const updatedReplies = replies.filter(r => r.id !== replyId);
+        onDiscussionUpdate(discussion.id, { 
+          ...discussion, 
+          replies: updatedReplies,
+          replyCount: updatedReplies.length
+        });
+      }
+      
+      showSuccessToast('Reply deleted successfully');
+    } catch (error) {
+      showErrorToast(error.message || 'Failed to delete reply');
+    }
+  };
+
+  const toggleNestedReplies = (replyId) => {
+    setExpandedNestedReplies(prev => ({
+      ...prev,
+      [replyId]: !prev[replyId]
+    }));
   };
 
   const handleReplyAddedLocal = (discussionId, newReply) => {
@@ -197,15 +285,181 @@ export default function DiscussionItem({
     
     setTimeout(() => {
       setReplyingTo(null);
-      setSelectedPoint(null);
-      setSelectedReplyType('general');
-      setSelectedDiscussion(null);
       setReplyingToReply(null);
     }, 200);
     
     if (setExpandedReplies) {
       setExpandedReplies(prev => ({ ...prev, [discussionId]: true }));
     }
+  };
+
+  // Build reply tree structure
+  const buildReplyTree = (replies) => {
+    const replyMap = {};
+    const rootReplies = [];
+
+    // Create a map of all replies
+    replies.forEach(reply => {
+      replyMap[reply.id] = { ...reply, children: [] };
+    });
+
+    // Build the tree structure
+    replies.forEach(reply => {
+      if (reply.replyToReplyId && replyMap[reply.replyToReplyId]) {
+        replyMap[reply.replyToReplyId].children.push(replyMap[reply.id]);
+      } else {
+        rootReplies.push(replyMap[reply.id]);
+      }
+    });
+
+    return rootReplies;
+  };
+
+  // Render individual reply with Twitter-like UI
+  const renderReply = (reply, level = 0) => {
+    const hasChildren = reply.children && reply.children.length > 0;
+    const isExpanded = expandedNestedReplies[reply.id];
+    const isEditing = editingReply && editingReply.id === reply.id;
+    const maxLevel = 3;
+    const canReply = level < maxLevel && user;
+
+    return (
+      <div key={reply.id} className={`${level > 0 ? 'ml-8 mt-2 border-l-2 border-gray-200 pl-3' : ''}`}>
+        <div className="bg-white rounded-lg border border-black/10 p-3">
+          {/* Reply Header */}
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-gray-900">{reply.authorName}</span>
+              <span className="text-xs text-gray-500">{formatDate(reply.createdAt)}</span>
+              {reply.isEdited && reply.editedAt && (
+                <span className="text-xs text-gray-500 italic">· edited</span>
+              )}
+            </div>
+          </div>
+
+          {/* Reply Content */}
+          {isEditing ? (
+            <EditReplyForm
+              discussionId={discussion.id}
+              reply={reply}
+              onEditComplete={handleEditReplyComplete}
+              onCancel={handleEditReplyCancel}
+            />
+          ) : (
+            <>
+              <p className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed mb-2">
+                {reply.content}
+              </p>
+
+              {/* Reply Actions */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs">
+                <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
+                  {/* Vote buttons */}
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleVoteOnReply(reply, 'upvote')}
+                      className={`p-1 rounded hover:bg-gray-100 transition-colors ${
+                        user && (reply.upvotedBy || []).includes(user.uid) 
+                          ? 'text-green-600' 
+                          : 'text-gray-600'
+                      } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={!user}
+                      title={user ? 'Upvote' : 'Log in to vote'}
+                    >
+                      <svg className="w-4 h-4" fill={user && (reply.upvotedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                      </svg>
+                    </button>
+                    <span className="font-medium text-gray-700 min-w-[20px] text-center">
+                      {(reply.upvotes || 0) - (reply.downvotes || 0)}
+                    </span>
+                    <button
+                      onClick={() => handleVoteOnReply(reply, 'downvote')}
+                      className={`p-1 rounded hover:bg-gray-100 transition-colors ${
+                        user && (reply.downvotedBy || []).includes(user.uid) 
+                          ? 'text-red-600' 
+                          : 'text-gray-600'
+                      } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={!user}
+                      title={user ? 'Downvote' : 'Log in to vote'}
+                    >
+                      <svg className="w-4 h-4" fill={user && (reply.downvotedBy || []).includes(user.uid) ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Reply button */}
+                  {canReply && (
+                    <button
+                      onClick={() => handleReplyToReply(reply)}
+                      className="flex items-center gap-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+                    >
+                      <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                      </svg>
+                      <span className="hidden sm:inline">Reply</span>
+                    </button>
+                  )}
+
+                  {/* Show replies button */}
+                  {hasChildren && (
+                    <button
+                      onClick={() => toggleNestedReplies(reply.id)}
+                      className="flex items-center gap-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+                    >
+                      <svg className={`w-4 h-4 flex-shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                      <span>{reply.children.length}</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Edit/Delete buttons for own replies */}
+                {user && reply.authorId === user.uid && (
+                  <div className="flex items-center gap-2 sm:ml-auto">
+                    <button
+                      onClick={() => handleEditReply(reply)}
+                      className="flex items-center gap-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+                      title="Edit reply"
+                    >
+                      <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      <span className="hidden sm:inline">Edit</span>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteReply(reply.id)}
+                      className="flex items-center gap-1 text-gray-600 hover:text-red-600 hover:bg-red-50 px-2 py-1 rounded transition-colors"
+                      title="Delete reply"
+                    >
+                      <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <span className="hidden sm:inline">Delete</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Nested replies */}
+        {hasChildren && isExpanded && (
+          <div className="mt-2">
+            {reply.children.map(childReply => renderReply(childReply, level + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Main render function for all replies
+  const renderReplies = (replies) => {
+    const replyTree = buildReplyTree(replies);
+    return replyTree.map(reply => renderReply(reply, 0));
   };
 
   const handleShare = async () => {
@@ -688,20 +942,8 @@ export default function DiscussionItem({
           {/* Replies */}
           {expandedReplies && expandedReplies[discussion.id] && replies.length > 0 && (
             <div className="mt-4 pt-4 border-t border-black/10">
-              <div className="space-y-3">
-                {replies.map((reply) => (
-                  <div key={reply.id} className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex items-start gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-medium text-gray-900">{reply.authorName}</span>
-                          <span className="text-xs text-gray-500">{new Date(reply.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        <p className="text-sm text-gray-800 whitespace-pre-wrap">{reply.content}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="space-y-2">
+                {renderReplies(replies)}
               </div>
             </div>
           )}

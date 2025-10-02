@@ -67,7 +67,7 @@ export default function TextReplyForm({
           <div className="text-xs font-semibold text-gray-900 mb-1">
             Replying to {replyingToReply.authorName}
           </div>
-          <div className="p-3 rounded-lg border border-black/15 bg-white">
+          <div className="p-3 rounded-lg border border-black/15 bg-gray-50">
             <p className="text-xs text-gray-900">{replyingToReply.content}</p>
           </div>
         </div>
