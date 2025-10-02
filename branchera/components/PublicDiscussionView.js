@@ -48,38 +48,71 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, discussion?.id]);
 
-  const handleLike = async () => {
+  const handleVote = async (voteType) => {
     if (!user) {
-      showErrorToast('Please log in to like discussions');
+      showErrorToast('Please log in to vote on discussions');
       return;
     }
     
     try {
-      const likedBy = discussion.likedBy || [];
-      const hasLiked = likedBy.includes(user.uid);
+      const upvotedBy = discussion.upvotedBy || [];
+      const downvotedBy = discussion.downvotedBy || [];
+      const hasUpvoted = upvotedBy.includes(user.uid);
+      const hasDownvoted = downvotedBy.includes(user.uid);
       
-      let newLikedBy, newLikes;
+      let newUpvotedBy = [...upvotedBy];
+      let newDownvotedBy = [...downvotedBy];
+      let newUpvotes = discussion.upvotes || 0;
+      let newDownvotes = discussion.downvotes || 0;
       
-      if (hasLiked) {
-        newLikedBy = likedBy.filter(uid => uid !== user.uid);
-        newLikes = Math.max(0, (discussion.likes || 0) - 1);
-      } else {
-        newLikedBy = [...likedBy, user.uid];
-        newLikes = (discussion.likes || 0) + 1;
+      if (voteType === 'upvote') {
+        if (hasUpvoted) {
+          // Remove upvote
+          newUpvotedBy = upvotedBy.filter(uid => uid !== user.uid);
+          newUpvotes = Math.max(0, newUpvotes - 1);
+        } else {
+          // Add upvote
+          newUpvotedBy = [...upvotedBy, user.uid];
+          newUpvotes = newUpvotes + 1;
+          // Remove downvote if exists
+          if (hasDownvoted) {
+            newDownvotedBy = downvotedBy.filter(uid => uid !== user.uid);
+            newDownvotes = Math.max(0, newDownvotes - 1);
+          }
+        }
+      } else if (voteType === 'downvote') {
+        if (hasDownvoted) {
+          // Remove downvote
+          newDownvotedBy = downvotedBy.filter(uid => uid !== user.uid);
+          newDownvotes = Math.max(0, newDownvotes - 1);
+        } else {
+          // Add downvote
+          newDownvotedBy = [...downvotedBy, user.uid];
+          newDownvotes = newDownvotes + 1;
+          // Remove upvote if exists
+          if (hasUpvoted) {
+            newUpvotedBy = upvotedBy.filter(uid => uid !== user.uid);
+            newUpvotes = Math.max(0, newUpvotes - 1);
+          }
+        }
       }
       
       await updateDocument('discussions', discussion.id, { 
-        likes: newLikes,
-        likedBy: newLikedBy
+        upvotes: newUpvotes,
+        downvotes: newDownvotes,
+        upvotedBy: newUpvotedBy,
+        downvotedBy: newDownvotedBy
       });
       
       setDiscussion(prev => ({
         ...prev,
-        likes: newLikes,
-        likedBy: newLikedBy
+        upvotes: newUpvotes,
+        downvotes: newDownvotes,
+        upvotedBy: newUpvotedBy,
+        downvotedBy: newDownvotedBy
       }));
     } catch (error) {
-      showErrorToast('Failed to update like');
+      showErrorToast('Failed to update vote');
     }
   };
 
@@ -149,7 +182,8 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
   }
 
   const replies = discussion.replies || [];
-  const hasLiked = user ? (discussion.likedBy || []).includes(user.uid) : false;
+  const hasUpvoted = user ? (discussion.upvotedBy || []).includes(user.uid) : false;
+  const hasDownvoted = user ? (discussion.downvotedBy || []).includes(user.uid) : false;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -241,17 +275,29 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
                 
                 {/* Stat buttons */}
                 <div className="flex items-center gap-2.5 sm:gap-3">
-                  <button
-                    onClick={handleLike}
-                    className="flex items-center gap-1.5 text-sm text-gray-700 hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={!user}
-                    title={!user ? 'Log in to like' : hasLiked ? 'Unlike' : 'Like'}
-                  >
-                    <svg className="w-4 h-4 flex-shrink-0" fill={hasLiked ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
-                    <span className="whitespace-nowrap">{discussion.likes || 0}</span>
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleVote('upvote')}
+                      className={`p-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${hasUpvoted ? 'text-green-600 hover:text-green-700' : 'text-gray-700 hover:text-black'}`}
+                      disabled={!user}
+                      title={!user ? 'Log in to vote' : hasUpvoted ? 'Remove upvote' : 'Upvote'}
+                    >
+                      <svg className="w-4 h-4 flex-shrink-0" fill={hasUpvoted ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                      </svg>
+                    </button>
+                    <span className="text-sm font-medium whitespace-nowrap">{(discussion.upvotes || 0) - (discussion.downvotes || 0)}</span>
+                    <button
+                      onClick={() => handleVote('downvote')}
+                      className={`p-1 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${hasDownvoted ? 'text-red-600 hover:text-red-700' : 'text-gray-700 hover:text-black'}`}
+                      disabled={!user}
+                      title={!user ? 'Log in to vote' : hasDownvoted ? 'Remove downvote' : 'Downvote'}
+                    >
+                      <svg className="w-4 h-4 flex-shrink-0" fill={hasDownvoted ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
                   
                   <div className="flex items-center gap-1.5 text-sm text-gray-600">
                     <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -349,7 +395,7 @@ export default function PublicDiscussionView({ discussion: initialDiscussion }) 
               Join the Discussion
             </h3>
             <p className="text-gray-600 mb-4">
-              Log in to like, reply, and participate in this conversation
+              Log in to vote, reply, and participate in this conversation
             </p>
             <Link
               href="/login"

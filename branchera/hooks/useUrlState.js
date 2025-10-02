@@ -86,7 +86,7 @@ export function useSearchFilterSortState() {
     hasFactCheck: false,
     dateRange: 'all',
     author: '',
-    minLikes: 0,
+    minScore: 0,
     minViews: 0
   }, {
     serialize: (v) => {
@@ -96,7 +96,7 @@ export function useSearchFilterSortState() {
       if (v.hasFactCheck) nonDefaults.hasFactCheck = v.hasFactCheck;
       if (v.dateRange !== 'all') nonDefaults.dateRange = v.dateRange;
       if (v.author) nonDefaults.author = v.author;
-      if (v.minLikes > 0) nonDefaults.minLikes = v.minLikes;
+      if (v.minScore > 0) nonDefaults.minScore = v.minScore;
       if (v.minViews > 0) nonDefaults.minViews = v.minViews;
       
       return Object.keys(nonDefaults).length > 0 ? JSON.stringify(nonDefaults) : '';
@@ -107,7 +107,7 @@ export function useSearchFilterSortState() {
         hasFactCheck: false,
         dateRange: 'all',
         author: '',
-        minLikes: 0,
+        minScore: 0,
         minViews: 0
       };
       
@@ -117,7 +117,7 @@ export function useSearchFilterSortState() {
         hasFactCheck: parsed.hasFactCheck || false,
         dateRange: parsed.dateRange || 'all',
         author: parsed.author || '',
-        minLikes: parsed.minLikes || 0,
+        minScore: parsed.minScore || parsed.minLikes || 0, // Support legacy minLikes
         minViews: parsed.minViews || 0
       };
     },
@@ -133,7 +133,7 @@ export function useSearchFilterSortState() {
       hasFactCheck: false,
       dateRange: 'all',
       author: '',
-      minLikes: 0,
+      minScore: 0,
       minViews: 0
     });
   }, [setSearchQuery, setSearchType, setSortBy, setFilters]);

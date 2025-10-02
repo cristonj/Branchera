@@ -174,7 +174,7 @@ export function generateDiscussionStructuredData(discussion) {
       {
         '@type': 'InteractionCounter',
         interactionType: 'https://schema.org/LikeAction',
-        userInteractionCount: discussion.likes || 0
+        userInteractionCount: (discussion.upvotes || 0) + (discussion.downvotes || 0)
       },
       {
         '@type': 'InteractionCounter',
